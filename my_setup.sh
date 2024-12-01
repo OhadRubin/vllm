@@ -77,16 +77,14 @@ rm docker-24.0.7.tgz
 rm -rf docker/
 
 
-git clone https://github.com/vllm-project/vllm.git
+git clone https://github.com/OhadRubin/vllm.git
 cd vllm
-sudo docker build -t tpu-vm-base -f Dockerfile.tpu .
-sudo docker run -it tpu-vm-base
+sudo docker build -t tpu-vm-base2 -f Dockerfile.tpu .
+
 
 export HF_TOKEN=
 
-PJRT_DEVICE=TPU XLA_USE_SPMD=1
 
-
-pip install --pre --extra-index-url https://download.pytorch.org/whl/nightly/cpu --find-links https://storage.googleapis.com/libtpu-releases/index.html --find-links https://storage.googleapis.com/jax-releases/jax_nightly_releases.html --find-links https://storage.googleapis.com/jax-releases/jaxlib_nightly_releases.html torch==2.6.0.dev20241114+cpu torchvision==0.20.0.dev20241114+cpu "torch_xla[tpu] @ https://storage.googleapis.com/pytorch-xla-releases/wheels/tpuvm/torch_xla-2.6.0.dev20241114-cp310-cp310-linux_x86_64.whl" jaxlib==0.4.32.dev20240829 jax==0.4.32.dev20240829
+docker run --privileged --net host --shm-size=16G -it tpu-vm-base2 /bin/bash
 
 python3 examples/offline_inference_tpu.py

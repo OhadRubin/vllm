@@ -1,5 +1,6 @@
-ARG NIGHTLY_DATE="20241017"
-ARG BASE_IMAGE="us-central1-docker.pkg.dev/tpu-pytorch-releases/docker/xla:nightly_3.10_tpuvm"
+ARG NIGHTLY_DATE="20241201"
+ARG BASE_IMAGE="us-central1-docker.pkg.dev/tpu-pytorch-releases/docker/xla:nightly_3.10_tpuvm_$NIGHTLY_DATE"
+
 
 
 FROM $BASE_IMAGE
@@ -25,6 +26,7 @@ RUN python3 setup.py develop
 
 # install development dependencies (for testing)
 RUN python3 -m pip install -e tests/vllm_test_utils
+RUN python -m pip install --find-links https://storage.googleapis.com/libtpu-releases/index.html --find-links https://storage.googleapis.com/jax-releases/jax_nightly_releases.html --find-links https://storage.googleapis.com/jax-releases/jaxlib_nightly_releases.html jaxlib==0.4.36.dev20241122 jax==0.4.36.dev20241122
 
 
 
