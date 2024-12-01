@@ -87,4 +87,15 @@ export HF_TOKEN=
 
 docker run --privileged --net host --shm-size=16G -it tpu-vm-base2 /bin/bash
 
+docker run --privileged \
+  --net host \
+  --shm-size=16G \
+  -v ${HOME}/.cache/huggingface:/root/.cache/huggingface \
+  -it tpu-vm-base2 /bin/bash
+
 python3 examples/offline_inference_tpu.py
+
+vllm serve google/gemma-2b  --enable-prefix-caching
+# this fails: vllm serve meta-llama/Llama-3.1-8B  --enable-prefix-caching --max-num-seqs 1 --max-model-len 8192 --tensor-parallel-size 4
+vllm serve meta-llama/Llama-3.1-8B-Instruct  --enable-prefix-caching --max-model-len 16384 --max-num-seqs 8 --tensor-parallel-size 4
+vllm serve meta-llama/Llama-3.1-8B  --enable-prefix-caching --max-num-seqs 1 --enable-chunked-prefill

@@ -19,6 +19,7 @@ sampling_params = SamplingParams(temperature=0.7,
 
 # Set `enforce_eager=True` to avoid ahead-of-time compilation.
 # In real workloads, `enforace_eager` should be `False`.
+# vllm serve google/gemma-2b  --enable-prefix-caching
 llm = LLM(model="google/gemma-2b", enforce_eager=True)
 outputs = llm.generate(prompts, sampling_params)
 for output, answer in zip(outputs, answers):
