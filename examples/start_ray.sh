@@ -8,9 +8,9 @@ echo "Current IP address: ${CURRENT_IP}"
 RAY_START_CMD="ray start --block"
 
 if [ "${CURRENT_IP}" == "${HEAD_NODE_ADDRESS}" ]; then
-    RAY_START_CMD+=" --head --port=6379"
+    RAY_START_CMD+=" --head --port=6379 --num-cpus=220 --resources='{"tpu": 4}"
 else
-    RAY_START_CMD+=" --address=${HEAD_NODE_ADDRESS}:6379"
+    RAY_START_CMD+=" --address=${HEAD_NODE_ADDRESS}:6379 --num-cpus=220 --resources='{"tpu": 4}"
 fi
 
 echo "Starting Ray with command: ${RAY_START_CMD}"
