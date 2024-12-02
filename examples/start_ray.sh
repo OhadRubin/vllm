@@ -16,4 +16,4 @@ fi
 # echo "Starting Ray with command: ${RAY_START_CMD}"
 # ${RAY_START_CMD}
 
-ray start --block $RAY_START_CMD_AUX --num-cpus=220 --resources="{\"TPU\": 4}"
+ray start --block --num-cpus=220 --resources="{\"TPU\": 4}" $RAY_START_CMD_AUX 
