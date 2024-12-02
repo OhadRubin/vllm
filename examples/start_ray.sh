@@ -5,7 +5,7 @@ echo "Current IP address: ${CURRENT_IP}"
 
 
 # Command setup for head or worker node
-RESOURCES="{\"tpu\": 4}"
+RESOURCES="{"tpu": 4}"
 RAY_START_CMD="ray start --block"
 
 if [ "${CURRENT_IP}" == "${HEAD_NODE_ADDRESS}" ]; then
