@@ -233,9 +233,8 @@ def initialize_ray_cluster(
     # Connect to a ray cluster.
     if current_platform.is_rocm() or current_platform.is_xpu():
         # Try to connect existing ray instance and create a new one if not found
-        address = os.getenv("RAY_ADDRESS")
         try:
-            ray.init(address, ignore_reinit_error=True)
+            ray.init("auto", ignore_reinit_error=True)
         except ConnectionError:
             logger.warning(
                 "No existing RAY instance detected. "
