@@ -1,117 +1,58 @@
 
-
-# Download and extract Docker binaries
-wget https://download.docker.com/linux/static/stable/x86_64/docker-24.0.7.tgz
-tar xzvf docker-24.0.7.tgz
-
-# Remove existing Docker binaries
-sudo rm /usr/bin/containerd /usr/bin/containerd-shim-runc-v2 /usr/bin/ctr /usr/bin/docker /usr/bin/dockerd /usr/bin/docker-init /usr/bin/docker-proxy /usr/bin/runc
-
-# Install new Docker binaries
-sudo cp docker/* /usr/bin/
-
-# Kill existing Docker processes and clean up
-sudo pkill -f -9 docker
-sudo rm /var/run/docker.pid
-
-# Download and setup Docker Compose
-sudo curl -SL https://github.com/docker/compose/releases/download/v2.23.0/docker-compose-linux-x86_64 -o /usr/local/bin/docker-compose
-sudo ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
-sudo chmod +x /usr/local/bin/docker-compose
-
-# Setup Docker group and permissions
-# Add user to docker group if not already a member
-if ! groups $USER | grep -q docker; then
-  sudo usermod -aG docker $USER
-  newgrp docker
-fi
-
-# Set permissions if .docker directory exists
-if [ -d "$HOME/.docker" ]; then
-  sudo chown "$USER":"$USER" "$HOME/.docker" -R
-  sudo chmod g+rwx "$HOME/.docker" -R
-fi
-
-# Create Docker daemon configuration
-sudo mkdir -p /etc/docker
-sudo tee /etc/docker/daemon.json <<EOF
-{
-  "log-driver": "json-file",
-  "log-opts": {
-    "max-size": "10m",
-    "max-file": "3"
-  }
-}
-EOF
-
-# Setup Docker service
-sudo tee /etc/systemd/system/docker.service <<EOF
-[Unit]
-Description=Docker Application Container Engine
-Documentation=https://docs.docker.com
-After=network-online.target
-Wants=network-online.target
-
-[Service]
-Type=notify
-ExecStart=/usr/bin/dockerd
-ExecReload=/bin/kill -s HUP \$MAINPID
-TimeoutSec=0
-RestartSec=2
-Restart=always
-StartLimitBurst=3
-StartLimitInterval=60s
-LimitNOFILE=infinity
-LimitNPROC=infinity
-LimitCORE=infinity
-TasksMax=infinity
-Delegate=yes
-KillMode=process
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-# Enable and start Docker services
-sudo systemctl daemon-reload
-sudo systemctl enable docker.service
-sudo systemctl enable containerd.service
-sudo systemctl start docker.service
-
-# Cleanup downloaded files
-rm docker-24.0.7.tgz
-rm -rf docker/
-
-
 git clone https://github.com/OhadRubin/vllm.git
+
 cd vllm
-sudo docker build -t tpu-vm-base2 -f Dockerfile.tpu .
+
+sudo apt-get update && sudo apt-get install -y git ffmpeg libsm6 libxext6 libgl1
 
 
-export HF_TOKEN=
+# pip install torch_xla[tpu] -f https://storage.googleapis.com/libtpu-releases/index.html
+# pip3 install torch==2.5.0.dev20241201+cpu
+
+
+
+
+python3.10 -m pip install torch==2.6.0.dev20241201+cpu --index-url https://download.pytorch.org/whl/nightly/cpu
+python3.10 -m pip install https://storage.googleapis.com/pytorch-xla-releases/wheels/tpuvm/torch_xla-2.6.0.dev20241201-cp310-cp310-linux_x86_64.whl
+
+
+
+# python3.10 -m pip install https://storage.googleapis.com/libtpu-nightly-releases/wheels/libtpu-nightly/libtpu_nightly-0.1.dev20241201+nightly-py3-none-linux_x86_64.whl
+python3.10 -m pip install -r requirements-tpu.txt
+python3.10 -m pip install --upgrade pip setuptools wheel
+VLLM_TARGET_DEVICE="tpu" pip install -e .
+
+python3.10 -m pip install --find-links https://storage.googleapis.com/libtpu-releases/index.html --find-links https://storage.googleapis.com/jax-releases/jax_nightly_releases.html --find-links https://storage.googleapis.com/jax-releases/jaxlib_nightly_releases.html jaxlib==0.4.36.dev20241122 jax==0.4.36.dev20241122
+
+
+
+cmd bash /home/ohadr/vllm/examples/start_ray.sh 35.186.1.120
 
 
 mkdir -p /dev/shm/huggingface
-
-
-sudo docker run --entrypoint /bin/bash --privileged --net host --shm-size=16G -e HF_TOKEN=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 -v /dev/shm/huggingface:/root/.cache/huggingface -it tpu-vm-base2 /bin/bash -c ray start --block --port=6379 --address=35.186.1.120:6379
-
- -c "ray start --block --address=10.130.0.187:6379"
  
+rm -rf ~/.cache/huggingface
+
+# Now create the new directory in shared memory
+mkdir -p /dev/shm/huggingface
+
+# Finally, create the symbolic link
+ln -s /dev/shm/huggingface ~/.cache/huggingface
 
 
-sudo docker run --entrypoint /bin/bash --privileged --net host --shm-size=16G -e HF_TOKEN=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 -v /dev/shm/huggingface:/root/.cache/huggingface -it tpu-vm-base2
+# sudo docker run --entrypoint /bin/bash --privileged --net host --shm-size=16G -v /dev/shm/huggingface:/root/.cache/huggingface -it tpu-vm-base2
+
+
+python3.10 -m pip uninstall -y tensorflow && python3.10 -m pip install tensorflow-cpu
+
 echo $(curl https://checkip.amazonaws.com)
 
-cmd export HF_TOKEN=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
-python3 examples/offline_inference_tpu.py
 
-vllm serve google/gemma-2b  --enable-prefix-caching
-# this fails: vllm serve meta-llama/Llama-3.1-8B  --enable-prefix-caching --max-num-seqs 1 --max-model-len 8192 --tensor-parallel-size 4
+
 vllm serve meta-llama/Llama-3.1-70B-Instruct  --enable-prefix-caching --max-model-len 16384 --max-num-seqs 8 --tensor-parallel-size 4
-vllm serve meta-llama/Llama-3.1-8B  --enable-prefix-caching --max-num-seqs 1 --enable-chunked-prefill
+vllm serve meta-llama/Llama-3.1-8B-Instruct  --max-model-len 1024 --max-num-seqs 8 --tensor-parallel-size 4 --port 8001
 
-python3 -m vllm.entrypoints.openai.api_server --host=0.0.0.0 --port=8000 --tensor-parallel-size=8 --max-model-len=8192 --model=meta-llama/Llama-3.1-70B-Instruct
+python3.10 -m vllm.entrypoints.openai.api_server --host=0.0.0.0 --port=8000 --tensor-parallel-size=8 --max-model-len=8192 --model=meta-llama/Llama-3.1-70B-Instruct
 #  --download-dir=/data
 
 35.186.1.120
