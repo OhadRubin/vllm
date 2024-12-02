@@ -48,9 +48,9 @@ python3.10 -m pip uninstall -y tensorflow && python3.10 -m pip install tensorflo
 echo $(curl https://checkip.amazonaws.com)
 
 
-
+export RAY_ADDRESS=35.186.1.120:6379
 vllm serve meta-llama/Llama-3.1-70B-Instruct  --enable-prefix-caching --max-model-len 16384 --max-num-seqs 8 --tensor-parallel-size 4
-vllm serve meta-llama/Llama-3.1-8B-Instruct  --max-model-len 1024 --max-num-seqs 8 --tensor-parallel-size 4 --port 8001
+vllm serve meta-llama/Llama-3.1-8B-Instruct  --max-model-len 1024 --max-num-seqs 8 --tensor-parallel-size 4 --port 8000
 
 python3.10 -m vllm.entrypoints.openai.api_server --host=0.0.0.0 --port=8000 --tensor-parallel-size=8 --max-model-len=8192 --model=meta-llama/Llama-3.1-70B-Instruct
 #  --download-dir=/data
