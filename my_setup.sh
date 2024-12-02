@@ -55,7 +55,3 @@ vllm serve meta-llama/Llama-3.1-8B-Instruct  --max-model-len 1024 --max-num-seqs
 python3.10 -m vllm.entrypoints.openai.api_server --host=0.0.0.0 --port=8000 --tensor-parallel-size=8 --max-model-len=8192 --model=meta-llama/Llama-3.1-70B-Instruct
 #  --download-dir=/data
 
-35.186.1.120
-
-ray start --block --head --port=6379
-ray start --block --address=35.186.1.120:6379
