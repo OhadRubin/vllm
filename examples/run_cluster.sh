@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Get the current IP address
+CURRENT_IP=$(curl https://checkip.amazonaws.com)
+echo "Current IP address: ${CURRENT_IP}"
+
 # Check for minimum number of required arguments
 if [ $# -lt 4 ]; then
     echo "Usage: $0 docker_image head_node_address --head|--worker path_to_hf_home [additional_args...]"
