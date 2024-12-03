@@ -845,6 +845,9 @@ def get_world_group() -> GroupCoordinator:
 
 def init_world_group(ranks: List[int], local_rank: int,
                      backend: str) -> GroupCoordinator:
+    print(f"{ranks=}")
+    print(f"{local_rank=}")
+    print(f"{backend=}")
     return GroupCoordinator(
         group_ranks=[ranks],
         local_rank=local_rank,
@@ -868,6 +871,9 @@ def init_model_parallel_group(
 ) -> GroupCoordinator:
     if use_custom_allreduce is None:
         use_custom_allreduce = _ENABLE_CUSTOM_ALL_REDUCE
+    print(f"{group_ranks=}")
+    print(f"{local_rank=}")
+    print(f"{backend=}")
     return GroupCoordinator(
         group_ranks=group_ranks,
         local_rank=local_rank,
