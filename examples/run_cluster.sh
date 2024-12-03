@@ -54,7 +54,7 @@ sudo docker run \
     -e HF_TOKEN="${HF_TOKEN}" \
     -v "${PATH_TO_HF_HOME}:/root/.cache/huggingface" \
     "${ADDITIONAL_ARGS[@]}" \
-    "${DOCKER_IMAGE}" -c "cd /workspace/vllm && git pull &&  ${RAY_START_CMD}"
+    "${DOCKER_IMAGE}" -c "cd /workspace/vllm && git config --global --add safe.directory \"$(pwd)\" && git pull  &&  ${RAY_START_CMD}"
 
 # use this to get into the container
 # cmd bash /home/ohadr/vllm/examples/run_cluster.sh tpu-vm-base2 35.186.69.167 <hftoken> /dev/shm/huggingface
