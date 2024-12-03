@@ -40,7 +40,10 @@ fi
 
 # cmd sudo docker build -t tpu-vm-base2 -f Dockerfile.tpu .
 # Run the docker command with the user specified parameters and additional arguments
+
+# docker run -v $(pwd):/workspace/vllm -it your-image-name
 sudo docker run \
+    -v $(pwd):/workspace/vllm \
     --entrypoint /bin/bash \
     --network host \
     --name node \
