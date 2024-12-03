@@ -105,7 +105,7 @@ MODEL_OPTS = {
     },
 }
 
-FLAGS = args_parse.parse_common_options(
+FLAGS = parse_common_options(
     datadir='/tmp/imagenet',
     batch_size=None,
     num_epochs=None,
