@@ -44,7 +44,20 @@ fi
 
 
 # docker run -v $(pwd):/workspace/vllm -it your-image-name
+SHOULD_RUN_INTERACTIVE=true
+
+if [ "${SHOULD_RUN_INTERACTIVE}" == "true" ]; then
+    RUN_INTERACTIVE_FLAG="-it"
+    SUFFIX="\"${DOCKER_IMAGE}\""
+else
+    RUN_INTERACTIVE_FLAG=""
+    SUFFIX="\"${DOCKER_IMAGE}\" -c \"cd /workspace/vllm && git config --global --add safe.directory /workspace/vllm  && git pull  &&  ${RAY_START_CMD}\""
+fi
+
+
+
 sudo docker run \
+    ${RUN_INTERACTIVE_FLAG} \
     -v /home/$USER/vllm:/workspace/vllm \
     --entrypoint /bin/bash \
     --network host \
@@ -53,10 +66,9 @@ sudo docker run \
     --privileged \
     -e HF_TOKEN="${HF_TOKEN}" \
     -v "${PATH_TO_HF_HOME}:/root/.cache/huggingface" \
-    -it \
     "${ADDITIONAL_ARGS[@]}" \
-    "${DOCKER_IMAGE}"
-    # "${DOCKER_IMAGE}" -c "cd /workspace/vllm && git config --global --add safe.directory /workspace/vllm  && git pull  &&  ${RAY_START_CMD}"
+    ${SUFFIX}
+    # 
 
 # use this to get into the container
 # cmd bash /home/ohadr/vllm/examples/run_cluster.sh tpu-vm-base2 35.186.69.167 <hftoken> /dev/shm/huggingface
