@@ -60,8 +60,8 @@ sudo docker run \
     #  -c "cd /workspace/vllm && git config --global --add safe.directory /workspace/vllm  && git pull  &&  ${RAY_START_CMD}"
     # 
 
-
-python examples/test_train_mp_imagenet.py
+git clone https://github.com/pytorch/xla.git
+python xla/test/test_train_mp_imagenet.py
 # use this to get into the container
 # cmd bash /home/ohadr/vllm/examples/run_cluster.sh tpu-vm-base2 35.186.69.167 <hftoken> /dev/shm/huggingface
 # docker exec -it node /bin/bash
