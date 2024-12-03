@@ -38,8 +38,8 @@ cmd bash /home/ohadr/vllm/examples/start_ray.sh 35.186.69.167
 
 # Finally, create the symbolic link
 
-
-# sudo docker run --entrypoint /bin/bash --privileged --net host --shm-size=16G -v /dev/shm/huggingface:/root/.cache/huggingface -it tpu-vm-base2
+sudo docker build -t tpu-vm-base2 -f Dockerfile.tpu .
+sudo docker run --entrypoint /bin/bash --privileged --net host --shm-size=16G -v /dev/shm/huggingface:/root/.cache/huggingface -it tpu-vm-base2
 
 
 echo $(curl https://checkip.amazonaws.com)
