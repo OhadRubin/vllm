@@ -40,14 +40,14 @@ class TpuCommunicator:
             num_nodes = num_nodes_in_pg
         local_world_size = global_world_size // num_nodes
         
-        try:
-            local_rank = global_rank % local_world_size
-        except Exception as e:
-            print(f"{global_world_size=}")
-            print(f"{global_rank=}")
-            print(f"{local_world_size=}")
-            print(f"{e=}")
-            raise AssertionError(f"Failed to calculate local rank: {global_world_size=}, {global_rank=}, {local_world_size=}")
+        local_rank = global_rank % local_world_size
+        # try:
+        # except Exception as e:
+        #     print(f"{global_world_size=}")
+        #     print(f"{global_rank=}")
+        #     print(f"{local_world_size=}")
+        #     print(f"{e=}")
+        #     raise AssertionError(f"Failed to calculate local rank: {global_world_size=}, {global_rank=}, {local_world_size=}")
 
         # Ensure environment variables are set for multihost deployments.
         # On GKE, this is needed for libtpu and TPU driver to know which TPU
