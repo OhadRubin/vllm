@@ -64,6 +64,8 @@ class TPUWorker(LoraNotSupportedWorkerBase, LocalOrDistributedWorkerBase):
             distributed_init_method=self.distributed_init_method,
             backend="gloo",
         )
+        
+        
         ensure_model_parallel_initialized(
             self.parallel_config.tensor_parallel_size,
             self.parallel_config.pipeline_parallel_size)
