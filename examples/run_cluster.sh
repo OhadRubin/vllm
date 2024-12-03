@@ -56,8 +56,8 @@ sudo docker run \
     --privileged \
     -e HF_TOKEN="${HF_TOKEN}" \
     -v "${PATH_TO_HF_HOME}:/root/.cache/huggingface" \
-    "${ADDITIONAL_ARGS[@]}" "${DOCKER_IMAGE}" \
-     -c "cd /workspace/vllm && git config --global --add safe.directory /workspace/vllm  && git pull  &&  ${RAY_START_CMD}"
+    "${ADDITIONAL_ARGS[@]}" "${DOCKER_IMAGE}"
+    #  -c "cd /workspace/vllm && git config --global --add safe.directory /workspace/vllm  && git pull  &&  ${RAY_START_CMD}"
     # 
 
 
