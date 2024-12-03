@@ -61,7 +61,7 @@ sudo docker run \
     # 
 
 
-python vllm/examples/test_train_mp_imagenet.py
+python examples/test_train_mp_imagenet.py
 # use this to get into the container
 # cmd bash /home/ohadr/vllm/examples/run_cluster.sh tpu-vm-base2 35.186.69.167 <hftoken> /dev/shm/huggingface
 # docker exec -it node /bin/bash
