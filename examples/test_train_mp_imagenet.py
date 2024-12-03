@@ -257,7 +257,7 @@ FLAGS = parse_common_options(
 
 import os
 import sys
-import schedulers
+# import schedulers
 import numpy as np
 import torch
 import torch.nn as nn
@@ -457,7 +457,7 @@ def train_imagenet():
       weight_decay=1e-4)
   num_training_steps_per_epoch = train_dataset_len // (
       FLAGS.batch_size * xr.world_size())
-  lr_scheduler = schedulers.wrap_optimizer_with_scheduler(
+  lr_scheduler = wrap_optimizer_with_scheduler(
       optimizer,
       scheduler_type=getattr(FLAGS, 'lr_scheduler_type', None),
       scheduler_divisor=getattr(FLAGS, 'lr_scheduler_divisor', None),
