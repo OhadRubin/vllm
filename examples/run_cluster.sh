@@ -10,6 +10,8 @@ if [ $# -lt 4 ]; then
     exit 1
 fi
 
+ 
+
 # Assign the first three arguments and shift them away
 DOCKER_IMAGE="$1"
 HEAD_NODE_ADDRESS="$2"
@@ -37,7 +39,7 @@ else
 fi
 
 # Run the docker command with the user specified parameters and additional arguments
-docker run \
+sudo docker run \
     --entrypoint /bin/bash \
     --network host \
     --name node \
