@@ -41,6 +41,8 @@ fi
 # cmd sudo docker build -t tpu-vm-base2 -f Dockerfile.tpu .
 # Run the docker command with the user specified parameters and additional arguments
 
+
+
 # docker run -v $(pwd):/workspace/vllm -it your-image-name
 sudo docker run \
     -v /home/$USER/vllm:/workspace/vllm \
@@ -52,7 +54,7 @@ sudo docker run \
     -e HF_TOKEN="${HF_TOKEN}" \
     -v "${PATH_TO_HF_HOME}:/root/.cache/huggingface" \
     "${ADDITIONAL_ARGS[@]}" \
-    "${DOCKER_IMAGE}" -c "${RAY_START_CMD}"
+    "${DOCKER_IMAGE}" -c "cd /workspace/vllm && git pull &&  ${RAY_START_CMD}"
 
 # use this to get into the container
 # cmd bash /home/ohadr/vllm/examples/run_cluster.sh tpu-vm-base2 35.186.69.167 <hftoken> /dev/shm/huggingface
