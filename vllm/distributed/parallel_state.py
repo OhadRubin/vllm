@@ -949,7 +949,7 @@ def init_distributed_environment(
     local_rank: int = -1,
     backend: str = "nccl",
 ):
-    logger.debug(
+    logger.info(
         "world_size=%d rank=%d local_rank=%d "
         "distributed_init_method=%s backend=%s", world_size, rank, local_rank,
         distributed_init_method, backend)
@@ -1014,6 +1014,7 @@ def initialize_model_parallel(
     world_size: int = torch.distributed.get_world_size()
     backend = backend or torch.distributed.get_backend(
         get_world_group().device_group)
+
 
     if (world_size !=
             tensor_model_parallel_size * pipeline_model_parallel_size):
