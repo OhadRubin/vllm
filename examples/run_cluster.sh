@@ -43,7 +43,7 @@ fi
 
 # docker run -v $(pwd):/workspace/vllm -it your-image-name
 sudo docker run \
-    -v $(pwd):/workspace/vllm \
+    -v /home/$USER/vllm:/workspace/vllm \
     --entrypoint /bin/bash \
     --network host \
     --name node \
