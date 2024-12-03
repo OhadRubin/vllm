@@ -1,5 +1,5 @@
 #!/bin/bash
-
+git pull
 # Get the current IP address
 CURRENT_IP=$(curl https://checkip.amazonaws.com)
 echo "Current IP address: ${CURRENT_IP}"
