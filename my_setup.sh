@@ -54,7 +54,7 @@ vllm serve meta-llama/Llama-3.1-70B-Instruct  --enable-prefix-caching --max-mode
 vllm serve meta-llama/Llama-3.1-8B-Instruct  --max-model-len 1024 --max-num-seqs 8  --distributed-executor-backend ray --tensor-parallel-size 4
  
 
-docker exec -it node /bin/bash -c "vllm serve meta-llama/Llama-3.1-8B-Instruct  --max-model-len 1024 --max-num-seqs 8  --distributed-executor-backend ray --tensor-parallel-size 4"
+sudo docker exec -it node /bin/bash -c "vllm serve meta-llama/Llama-3.1-8B-Instruct  --max-model-len 1024 --max-num-seqs 8  --distributed-executor-backend ray --tensor-parallel-size 4"
 python3 -m vllm.entrypoints.openai.api_server --model=meta-llama/Llama-3.1-8B-Instruct --max-model-len=1024
  
 
