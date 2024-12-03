@@ -838,6 +838,9 @@ def get_world_group() -> GroupCoordinator:
 
 def init_world_group(ranks: List[int], local_rank: int,
                      backend: str) -> GroupCoordinator:
+    print(f"init_world_group: {ranks=}")
+    print(f"init_world_group: {local_rank=}")
+    print(f"init_world_group: {backend=}")
     return GroupCoordinator(
         group_ranks=[ranks],
         local_rank=local_rank,
@@ -859,6 +862,9 @@ def init_model_parallel_group(
 ) -> GroupCoordinator:
     if use_custom_allreduce is None:
         use_custom_allreduce = _ENABLE_CUSTOM_ALL_REDUCE
+    print(f"init_model_parallel_group: {group_ranks=}")
+    print(f"init_model_parallel_group: {local_rank=}")
+    print(f"init_model_parallel_group: {backend=}")
     return GroupCoordinator(
         group_ranks=group_ranks,
         local_rank=local_rank,
@@ -932,7 +938,7 @@ def init_distributed_environment(
     local_rank: int = -1,
     backend: str = "nccl",
 ):
-    logger.debug(
+    logger.info(
         "world_size=%d rank=%d local_rank=%d "
         "distributed_init_method=%s backend=%s", world_size, rank, local_rank,
         distributed_init_method, backend)
