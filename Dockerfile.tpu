@@ -4,7 +4,7 @@ ARG BASE_IMAGE="us-central1-docker.pkg.dev/tpu-pytorch-releases/docker/xla:night
 
 
 FROM $BASE_IMAGE
-WORKDIR /workspace/vllm
+# WORKDIR /workspace/vllm
 
 # Install some basic utilities
 RUN apt-get update && apt-get install -y \
@@ -12,21 +12,26 @@ RUN apt-get update && apt-get install -y \
     ffmpeg libsm6 libxext6 libgl1
 
 # Build vLLM.
-COPY . .
+# COPY . .
 ARG GIT_REPO_CHECK=0
-RUN --mount=type=bind,source=.git,target=.git \
-    if [ "$GIT_REPO_CHECK" != 0 ]; then bash tools/check_repo.sh; fi
+# RUN --mount=type=bind,source=.git,target=.git \
+#     if [ "$GIT_REPO_CHECK" != 0 ]; then bash tools/check_repo.sh; fi
 
 ENV VLLM_TARGET_DEVICE="tpu"
+
+COPY requirements-tpu.txt .
+
 RUN --mount=type=cache,target=/root/.cache/pip \
     --mount=type=bind,source=.git,target=.git \
     python3 -m pip install \
         -r requirements-tpu.txt
-RUN python3 setup.py develop
+# RUN python3 setup.py develop
 
 # install development dependencies (for testing)
-RUN python3 -m pip install -e tests/vllm_test_utils
-RUN python -m pip install --find-links https://storage.googleapis.com/libtpu-releases/index.html --find-links https://storage.googleapis.com/jax-releases/jax_nightly_releases.html --find-links https://storage.googleapis.com/jax-releases/jaxlib_nightly_releases.html jaxlib==0.4.36.dev20241122 jax==0.4.36.dev20241122
+# RUN python3 -m pip install -e tests/vllm_test_utils
+
+
+
 
 
 
