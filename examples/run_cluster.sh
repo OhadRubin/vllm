@@ -25,8 +25,8 @@ ADDITIONAL_ARGS=("$@")
 
 # Define a function to cleanup on EXIT signal
 cleanup() {
-    docker stop node
-    docker rm node
+    sudo docker stop node
+    sudo docker rm node
 }
 trap cleanup EXIT
 
