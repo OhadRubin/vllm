@@ -40,7 +40,7 @@ cmd bash /home/ohadr/vllm/examples/start_ray.sh 35.186.69.167
 cmd sudo mkdir -p /dev/shm/huggingface && sudo chown $USER:$USER /dev/shm/huggingface && sudo rm -rf ~/.cache/huggingface && sudo ln -s /dev/shm/huggingface ~/.cache/huggingface
 cmd cd vllm
 cmd git pull
-cmd sudo docker build -t tpu-vm-base2 -f Dockerfile.tpu .
+cmd sudo docker build -t tpu-vm-base3 -f Dockerfile.tpu2 .
 # cmd sudo docker run --entrypoint /bin/bash --privileged --net host --shm-size=16G -v /dev/shm/huggingface:/root/.cache/huggingface -it tpu-vm-base2
 
 
