@@ -34,20 +34,24 @@ class TpuCommunicator:
         # nodes is computed by the total number of TPUs divided by the
         # number of TPU accelerators per node, to account for clusters
         # with both CPUs and TPUs.
-        num_nodes = ray_utils.get_num_tpu_nodes()
+        num_nodes_get_num_tpu_nodes = ray_utils.get_num_tpu_nodes()
         num_nodes_in_pg = ray_utils.get_num_nodes_in_placement_group()
         if num_nodes_in_pg > 0:
             num_nodes = num_nodes_in_pg
+        else:
+            num_nodes = num_nodes_get_num_tpu_nodes
         local_world_size = global_world_size // num_nodes
         
-        local_rank = global_rank % local_world_size
-        # try:
-        # except Exception as e:
-        #     print(f"{global_world_size=}")
-        #     print(f"{global_rank=}")
-        #     print(f"{local_world_size=}")
-        #     print(f"{e=}")
-        #     raise AssertionError(f"Failed to calculate local rank: {global_world_size=}, {global_rank=}, {local_world_size=}")
+        try:
+            local_rank = global_rank % local_world_size
+        except Exception as e:
+            print(f"{global_world_size=}")
+            print(f"{global_rank=}")
+            print(f"{local_world_size=}")
+            print(f"{num_nodes_get_num_tpu_nodes=}")
+            print(f"{num_nodes_in_pg=}")
+            print(f"{e=}")
+            raise AssertionError(f"Failed to calculate local rank: {global_world_size=}, {global_rank=}, {local_world_size=}")
 
         # Ensure environment variables are set for multihost deployments.
         # On GKE, this is needed for libtpu and TPU driver to know which TPU

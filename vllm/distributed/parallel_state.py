@@ -224,6 +224,7 @@ class GroupCoordinator:
             TpuCommunicator)
         self.tpu_communicator: Optional[TpuCommunicator] = None
         if use_tpu_communicator and self.world_size > 1:
+            print(f"{self.cpu_group=}")
             self.tpu_communicator = TpuCommunicator(group=self.cpu_group)
 
         from vllm.distributed.device_communicators.hpu_communicator import (
