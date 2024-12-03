@@ -46,8 +46,8 @@ fi
 # docker run -v $(pwd):/workspace/vllm -it your-image-name
 
 
+# -it \
 sudo docker run \
-    -it \
     -v /home/$USER/vllm:/workspace/vllm \
     --entrypoint /bin/bash \
     --network host \
@@ -57,8 +57,8 @@ sudo docker run \
     -e HF_TOKEN="${HF_TOKEN}" \
     -v "${PATH_TO_HF_HOME}:/root/.cache/huggingface" \
     "${ADDITIONAL_ARGS[@]}" \
-     "${DOCKER_IMAGE}" -c "python examples/test_xla.py"
-    # "${DOCKER_IMAGE}" -c "cd /workspace/vllm && git config --global --add safe.directory /workspace/vllm  && git pull  &&  ${RAY_START_CMD}"
+    #  "${DOCKER_IMAGE}" -c "python examples/test_xla.py"
+    "${DOCKER_IMAGE}" -c "cd /workspace/vllm && git config --global --add safe.directory /workspace/vllm  && git pull  &&  ${RAY_START_CMD}"
     # 
 
 # git clone https://github.com/pytorch/xla.git
