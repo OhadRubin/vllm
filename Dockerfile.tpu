@@ -19,6 +19,7 @@ ARG GIT_REPO_CHECK=0
 
 ENV VLLM_TARGET_DEVICE="tpu"
 
+COPY requirements-common.txt .
 COPY requirements-tpu.txt .
 
 RUN --mount=type=cache,target=/root/.cache/pip \
