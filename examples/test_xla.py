@@ -13,6 +13,8 @@ def _mp_fn(index):
   if xm.xla_device_hw(device) in ('TPU', 'CUDA', 'NEURON'):
     world_size = xr.world_size()
     rank = xr.global_ordinal()
+    print(f"{world_size=}")
+    print(f"{rank=}")
 
     dist.init_process_group('xla', init_method='xla://')
 
