@@ -1,5 +1,5 @@
 
-git clone https://github.com/OhadRubin/vllm.git
+git clone https://github.com/OhadRubin/vllm.git --branch v0.6.3-post1
 
 cd vllm
 
@@ -27,7 +27,7 @@ bash install.sh
 
 
 
-cmd bash /home/ohadr/vllm/examples/start_ray.sh 35.186.1.120
+cmd bash /home/ohadr/vllm/examples/start_ray.sh 35.186.110.85
 
 cmd bash /home/ohadr/vllm/examples/start_ray.sh 35.186.69.167
 
@@ -40,7 +40,7 @@ cmd bash /home/ohadr/vllm/examples/start_ray.sh 35.186.69.167
 cmd sudo mkdir -p /dev/shm/huggingface && sudo chown $USER:$USER /dev/shm/huggingface && sudo rm -rf ~/.cache/huggingface && sudo ln -s /dev/shm/huggingface ~/.cache/huggingface
 cmd cd vllm
 cmd git pull
-cmd sudo docker build -t tpu-vm-base3 -f Dockerfile.tpu2 .
+cmd sudo docker build -t tpu-vm-base -f Dockerfile.tpu .
 # cmd sudo docker run --entrypoint /bin/bash --privileged --net host --shm-size=16G -v /dev/shm/huggingface:/root/.cache/huggingface -it tpu-vm-base2
 
 

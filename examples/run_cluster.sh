@@ -64,7 +64,7 @@ sudo docker run \
 # git clone https://github.com/pytorch/xla.git
 
 # use this to get into the container
-# cmd bash /home/ohadr/vllm/examples/run_cluster.sh tpu-vm-base2 35.186.69.167 <hftoken> /dev/shm/huggingface
+# cmd bash /home/ohadr/vllm/examples/run_cluster.sh tpu-vm-base2 35.186.110.85 <hftoken> /dev/shm/huggingface
 # docker exec -it node /bin/bash
 # export  PT_XLA_DEBUG_LEVEL=2
 # vllm serve meta-llama/Llama-3.1-8B-Instruct  --max-model-len 1024 --max-num-seqs 8  --distributed-executor-backend ray --tensor-parallel-size 4
