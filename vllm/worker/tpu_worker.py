@@ -59,6 +59,8 @@ class TPUWorker(LoraNotSupportedWorkerBase, LocalOrDistributedWorkerBase):
         # own context.
         
         logger.warning(f"Starting to init distributed environment with config: {str(self.parallel_config)}", )
+        
+        torch.distributed.init_process_group('xla', init_method='xla://')
         init_distributed_environment(
             world_size=self.parallel_config.world_size,
             rank=self.rank,
