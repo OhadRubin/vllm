@@ -32,7 +32,7 @@ from unittest.mock import patch
 
 import torch
 import torch.distributed
-torch.distributed.init_process_group('xla', init_method='xla://')
+
 from torch.distributed import Backend, ProcessGroup
 
 import vllm.envs as envs
