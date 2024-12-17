@@ -1,5 +1,5 @@
 
-git clone https://github.com/OhadRubin/vllm.git --branch v0.6.3-post1
+git clone https://github.com/OhadRubin/vllm.git
 
 cd vllm
 
@@ -21,12 +21,7 @@ bash install.sh
 
 
 # TODO move to install.sh
-cmd sudo 
 docker build -t tpu-vm-base -f Dockerfile.tpu .
-
-
-
-
 
 
 # Now create the new directory in shared memory
@@ -42,19 +37,15 @@ cmd git pull
 
 echo $(curl https://checkip.amazonaws.com)
 
---max-num-seqs 8
 
-export VLLM_LOG_LEVEL="DEBUG"
 vllm serve meta-llama/Llama-3.1-70B-Instruct  --enable-prefix-caching --max-model-len 16384  --tensor-parallel-size 8 --distributed-executor-backend ray
 
-vllm serve meta-llama/Llama-3.1-8B-Instruct  --max-model-len 1024 --max-num-seqs 8 --tensor-parallel-size 4
-  --distributed-executor-backend ray --tensor-parallel-size 4
+vllm serve meta-llama/Llama-3.2-1B-Instruct  --max-model-len 1024 --max-num-seqs 8 --tensor-parallel-size 4
+# vllm serve meta-llama/Llama-3.1-8B-Instruct  --max-model-len 1024 --max-num-seqs 8 --tensor-parallel-size 4
  
 
 sudo docker exec -it node /bin/bash -c "vllm serve meta-llama/Llama-3.1-8B-Instruct  --max-model-len 1024 --max-num-seqs 8  --distributed-executor-backend ray --tensor-parallel-size 4"
-python3 -m vllm.entrypoints.openai.api_server --model=meta-llama/Llama-3.1-8B-Instruct --max-model-len=1024
- 
-
-python3.10 -m vllm.entrypoints.openai.api_server --host=0.0.0.0 --port=8000 --tensor-parallel-size=8 --max-model-len=8192 --model=meta-llama/Llama-3.1-70B-Instruct
+# python3 -m vllm.entrypoints.openai.api_server --model=meta-llama/Llama-3.1-8B-Instruct --max-model-len=1024
+# python3.10 -m vllm.entrypoints.openai.api_server --host=0.0.0.0 --port=8000 --tensor-parallel-size=8 --max-model-len=8192 --model=meta-llama/Llama-3.1-70B-Instruct
 #  --download-dir=/data
 

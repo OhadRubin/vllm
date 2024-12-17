@@ -871,9 +871,9 @@ def init_model_parallel_group(
 ) -> GroupCoordinator:
     if use_custom_allreduce is None:
         use_custom_allreduce = _ENABLE_CUSTOM_ALL_REDUCE
-    print(f"init_model_parallel_group: {group_ranks=}")
-    print(f"init_model_parallel_group: {local_rank=}")
-    print(f"init_model_parallel_group: {backend=}")
+    print(f"init_model_parallel_group bla bla: {group_ranks=}")
+    print(f"init_model_parallel_group bla bla: {local_rank=}")
+    print(f"init_model_parallel_group bla bla: {backend=}")
     return GroupCoordinator(
         group_ranks=group_ranks,
         local_rank=local_rank,
