@@ -57,6 +57,7 @@ class TPUWorker(LoraNotSupportedWorkerBase, LocalOrDistributedWorkerBase):
         # the input objects on CPU. The all-reduce and all-gather ops on TPU
         # are invoked by `xm.all_reduce` and `xm.all_gather` which use their
         # own context.
+        logger.warning("Starting to init distributed environment with config: ", self.parallel_config)
         init_distributed_environment(
             world_size=self.parallel_config.world_size,
             rank=self.rank,

@@ -30,7 +30,9 @@ class TPUExecutor(ExecutorBase):
 
         # Instantiate the worker and load the model to the device.
         self.driver_worker = self._create_worker()
+        logger.warning("Starting to init device")
         self.driver_worker.init_device()
+        logger.warning("Starting to load model")
         self.driver_worker.load_model()
 
     def _get_worker_kwargs(
