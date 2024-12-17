@@ -1,5 +1,5 @@
 
-git clone https://github.com/OhadRubin/vllm.git
+git clone https://github.com/OhadRubin/vllm.git --branch v0.6.3-post1
 
 cd vllm
 
@@ -21,15 +21,11 @@ bash install.sh
 
 
 # TODO move to install.sh
+cmd sudo 
+docker build -t tpu-vm-base -f Dockerfile.tpu .
 
 
 
-
-
-
-cmd bash /home/ohadr/vllm/examples/start_ray.sh 35.186.1.120
-
-cmd bash /home/ohadr/vllm/examples/start_ray.sh 35.186.69.167
 
 
 
@@ -40,7 +36,7 @@ cmd bash /home/ohadr/vllm/examples/start_ray.sh 35.186.69.167
 cmd sudo mkdir -p /dev/shm/huggingface && sudo chown $USER:$USER /dev/shm/huggingface && sudo rm -rf ~/.cache/huggingface && sudo ln -s /dev/shm/huggingface ~/.cache/huggingface
 cmd cd vllm
 cmd git pull
-cmd sudo docker build -t tpu-vm-base3 -f Dockerfile.tpu2 .
+
 # cmd sudo docker run --entrypoint /bin/bash --privileged --net host --shm-size=16G -v /dev/shm/huggingface:/root/.cache/huggingface -it tpu-vm-base2
 
 
@@ -51,7 +47,8 @@ echo $(curl https://checkip.amazonaws.com)
 export VLLM_LOG_LEVEL="DEBUG"
 vllm serve meta-llama/Llama-3.1-70B-Instruct  --enable-prefix-caching --max-model-len 16384  --tensor-parallel-size 8 --distributed-executor-backend ray
 
-vllm serve meta-llama/Llama-3.1-8B-Instruct  --max-model-len 1024 --max-num-seqs 8  --distributed-executor-backend ray --tensor-parallel-size 4
+vllm serve meta-llama/Llama-3.1-8B-Instruct  --max-model-len 1024 --max-num-seqs 8 --tensor-parallel-size 4
+  --distributed-executor-backend ray --tensor-parallel-size 4
  
 
 sudo docker exec -it node /bin/bash -c "vllm serve meta-llama/Llama-3.1-8B-Instruct  --max-model-len 1024 --max-num-seqs 8  --distributed-executor-backend ray --tensor-parallel-size 4"

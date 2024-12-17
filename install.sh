@@ -1,3 +1,4 @@
+# wget -qO- https://gist.githubusercontent.com/OhadRubin/a570cf7e828cdfc348beeea80cfa728a/raw/2cee658099f1ed6e7fb340cacbe1dd408844b0ae/setup_doc.sh | sudo bash
 sudo apt-get update && sudo apt-get install -y git ffmpeg libsm6 libxext6 libgl1
 python3.10 -m pip install torch==2.6.0.dev20241201+cpu --index-url https://download.pytorch.org/whl/nightly/cpu
 python3.10 -m pip install https://storage.googleapis.com/pytorch-xla-releases/wheels/tpuvm/torch_xla-2.6.0.dev20241201-cp310-cp310-linux_x86_64.whl
