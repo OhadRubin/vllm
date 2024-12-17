@@ -38,7 +38,7 @@ else
     RAY_START_CMD+=" --address=${HEAD_NODE_ADDRESS}:6379"
 fi
 
-# cmd sudo docker build -t tpu-vm-base2 -f Dockerfile.tpu .
+# cmd sudo docker build -t tpu-vm-base4 -f Dockerfile.tpu .
 # Run the docker command with the user specified parameters and additional arguments
 
 
