@@ -47,7 +47,8 @@ echo $(curl https://checkip.amazonaws.com)
 export VLLM_LOG_LEVEL="DEBUG"
 vllm serve meta-llama/Llama-3.1-70B-Instruct  --enable-prefix-caching --max-model-len 16384  --tensor-parallel-size 8 --distributed-executor-backend ray
 
-vllm serve meta-llama/Llama-3.1-8B-Instruct  --max-model-len 1024 --max-num-seqs 8  --distributed-executor-backend ray --tensor-parallel-size 4
+vllm serve meta-llama/Llama-3.1-8B-Instruct  --max-model-len 1024 --max-num-seqs 8 --tensor-parallel-size 4
+  --distributed-executor-backend ray --tensor-parallel-size 4
  
 
 sudo docker exec -it node /bin/bash -c "vllm serve meta-llama/Llama-3.1-8B-Instruct  --max-model-len 1024 --max-num-seqs 8  --distributed-executor-backend ray --tensor-parallel-size 4"
