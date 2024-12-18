@@ -45,7 +45,7 @@ fi
 
 # docker run -v $(pwd):/workspace/vllm -it your-image-name
 
-
+# -e VLLM_HOST_IP="${CURRENT_IP}" \
 # -it \
 sudo docker run \
     -v /home/$USER/vllm:/workspace/vllm \
@@ -55,7 +55,7 @@ sudo docker run \
     --shm-size 10.24g \
     --privileged \
     -e HF_TOKEN="${HF_TOKEN}" \
-    -e VLLM_HOST_IP="${CURRENT_IP}" \
+    -e GLOO_SOCKET_IFNAME=ens8 \
     -v "${PATH_TO_HF_HOME}:/root/.cache/huggingface" \
     "${ADDITIONAL_ARGS[@]}" \
     "${DOCKER_IMAGE}" -c "cd /workspace/vllm && git config --global --add safe.directory /workspace/vllm  && git pull  &&  ${RAY_START_CMD}"
