@@ -21,16 +21,19 @@ class TpuCommunicator:
             self.disabled = True
             return
         self.disabled = False
-        self.group_ranks = group_ranks
-        self.ranks = ranks
+        self.group_ranks = [tuple(x) for x in group_ranks]
+        self.ranks = tuple(ranks)
 
         # NOTE(woosuk): When using TP > 1 on TPUs, every TPU on the same node
         # must be used together. Therefore, the local rank and world size can
         # be simply calculated as follows.
-        global_rank = dist.get_rank(group)
-        global_world_size = dist.get_world_size(group)
+        # global_rank = dist.get_rank(group)
+        # global_world_size = dist.get_world_size(group)
         
-        
+        global_rank = self.ranks[dist.get_rank(group)]
+        global_world_size = sum(len(x) for x in self.group_ranks)
+        local_world_size = len(self.ranks)
+        local_rank = global_rank % local_world_size
 
         # Calculate how many TPU nodes are in the current deployment. This
         # is the Ray placement group if it is deployed with Ray. Default
@@ -38,26 +41,26 @@ class TpuCommunicator:
         # nodes is computed by the total number of TPUs divided by the
         # number of TPU accelerators per node, to account for clusters
         # with both CPUs and TPUs.
-        num_nodes_get_num_tpu_nodes = ray_utils.get_num_tpu_nodes()
-        num_nodes_in_pg = ray_utils.get_num_nodes_in_placement_group()
-        if num_nodes_in_pg > 0:
-            num_nodes = num_nodes_in_pg
-        else:
-            num_nodes = num_nodes_get_num_tpu_nodes
-        local_world_size = global_world_size // num_nodes
+        # num_nodes_get_num_tpu_nodes = ray_utils.get_num_tpu_nodes()
+        # num_nodes_in_pg = ray_utils.get_num_nodes_in_placement_group()
+        # if num_nodes_in_pg > 0:
+        #     num_nodes = num_nodes_in_pg
+        # else:
+        #     num_nodes = num_nodes_get_num_tpu_nodes
+        # local_world_size = global_world_size // num_nodes
         
-        try:
-            local_rank = global_rank % local_world_size
-        except Exception as e:
-            print(f"{global_world_size=}")
-            print(f"{global_rank=}")
-            print(f"{local_world_size=}")
-            print(f"{num_nodes_get_num_tpu_nodes=}")
-            print(f"{num_nodes_in_pg=}")
-            print(f"{ranks=}")
-            print(f"{group_ranks=}")
-            print(f"{e=}")
-            raise AssertionError(f"Failed to calculate local rank: {global_world_size=}, {global_rank=}, {local_world_size=}")
+        # try:
+        #     local_rank = global_rank % local_world_size
+        # except Exception as e:
+        #     print(f"{global_world_size=}")
+        #     print(f"{global_rank=}")
+        #     print(f"{local_world_size=}")
+        #     print(f"{num_nodes_get_num_tpu_nodes=}")
+        #     print(f"{num_nodes_in_pg=}")
+        #     print(f"{ranks=}")
+        #     print(f"{group_ranks=}")
+        #     print(f"{e=}")
+        #     raise AssertionError(f"Failed to calculate local rank: {global_world_size=}, {global_rank=}, {local_world_size=}")
 
         # global_rank = dist.get_rank(group)
         # global_world_size = dist.get_world_size(group)
