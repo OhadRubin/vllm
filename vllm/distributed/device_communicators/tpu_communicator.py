@@ -13,20 +13,23 @@ if current_platform.is_tpu():
 
     from vllm.executor import ray_utils
 
-
+from typing import List
 class TpuCommunicator:
 
-    def __init__(self, group: ProcessGroup):
+    def __init__(self, group: ProcessGroup, ranks: List[List[int]]):
         if not current_platform.is_tpu():
             self.disabled = True
             return
         self.disabled = False
+        self.ranks = ranks
 
         # NOTE(woosuk): When using TP > 1 on TPUs, every TPU on the same node
         # must be used together. Therefore, the local rank and world size can
         # be simply calculated as follows.
         global_rank = dist.get_rank(group)
         global_world_size = dist.get_world_size(group)
+        
+        
 
         # Calculate how many TPU nodes are in the current deployment. This
         # is the Ray placement group if it is deployed with Ray. Default
@@ -50,9 +53,12 @@ class TpuCommunicator:
             print(f"{local_world_size=}")
             print(f"{num_nodes_get_num_tpu_nodes=}")
             print(f"{num_nodes_in_pg=}")
+            print(f"{ranks=}")
             print(f"{e=}")
             raise AssertionError(f"Failed to calculate local rank: {global_world_size=}, {global_rank=}, {local_world_size=}")
 
+        # global_rank = dist.get_rank(group)
+        # global_world_size = dist.get_world_size(group)
         # Ensure environment variables are set for multihost deployments.
         # On GKE, this is needed for libtpu and TPU driver to know which TPU
         # chip is actually visible. Otherwise the TPU driver will fail to

@@ -45,7 +45,7 @@ fi
 
 # docker run -v $(pwd):/workspace/vllm -it your-image-name
 
-# -e VLLM_HOST_IP="${CURRENT_IP}" \
+
 # -it \
 sudo docker run \
     -v /home/$USER/vllm:/workspace/vllm \

@@ -40,7 +40,7 @@ echo $(curl https://checkip.amazonaws.com)
 
 VLLM_HOST_IP=35.186.110.85
 VLLM_HOST_IP=35.186.110.85 
-vllm serve meta-llama/Llama-3.2-1B-Instruct  --max-model-len 1024 --tensor-parallel-size 4 --pipeline_parallel_size 8 --distributed-executor-backend ray
+VLLM_HOST_IP=35.186.110.85 vllm serve meta-llama/Llama-3.2-1B-Instruct  --max-model-len 1024 --tensor-parallel-size 4 --pipeline_parallel_size 8 --distributed-executor-backend ray
 vllm serve meta-llama/Llama-3.2-1B-Instruct  --max-model-len 1024 --distributed-executor-backend ray
 # --max-num-seqs 8 --tensor-parallel-size 4
 # vllm serve meta-llama/Llama-3.1-8B-Instruct  --max-model-len 1024 --max-num-seqs 8 --tensor-parallel-size 4
