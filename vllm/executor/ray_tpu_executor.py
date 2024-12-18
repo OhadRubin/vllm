@@ -135,6 +135,7 @@ class RayTPUExecutor(TPUExecutor):
         # close to each other, and the workers on the driver
         # node will be placed first.
         self.workers = sorted(self.workers, key=sort_by_driver_then_worker_ip)
+        logger.info("ray workers: %s", self.workers)
 
         # Get the set of TPU IDs used on each node.
         worker_node_and_gpu_ids = self._run_workers("get_node_and_gpu_ids",
