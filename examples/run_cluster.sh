@@ -55,6 +55,7 @@ sudo docker run \
     --shm-size 10.24g \
     --privileged \
     -e HF_TOKEN="${HF_TOKEN}" \
+    -e VLLM_HOST_IP="${HEAD_NODE_ADDRESS}" \
     -v "${PATH_TO_HF_HOME}:/root/.cache/huggingface" \
     "${ADDITIONAL_ARGS[@]}" \
     "${DOCKER_IMAGE}" -c "cd /workspace/vllm && git config --global --add safe.directory /workspace/vllm  && git pull  &&  ${RAY_START_CMD}"
