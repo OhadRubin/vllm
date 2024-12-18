@@ -16,11 +16,12 @@ if current_platform.is_tpu():
 from typing import List
 class TpuCommunicator:
 
-    def __init__(self, group: ProcessGroup, ranks: List[List[int]]):
+    def __init__(self, group: ProcessGroup, group_ranks: List[List[int]], ranks: List[int]):
         if not current_platform.is_tpu():
             self.disabled = True
             return
         self.disabled = False
+        self.group_ranks = group_ranks
         self.ranks = ranks
 
         # NOTE(woosuk): When using TP > 1 on TPUs, every TPU on the same node
@@ -54,6 +55,7 @@ class TpuCommunicator:
             print(f"{num_nodes_get_num_tpu_nodes=}")
             print(f"{num_nodes_in_pg=}")
             print(f"{ranks=}")
+            print(f"{group_ranks=}")
             print(f"{e=}")
             raise AssertionError(f"Failed to calculate local rank: {global_world_size=}, {global_rank=}, {local_world_size=}")
 
