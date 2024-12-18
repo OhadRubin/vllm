@@ -52,7 +52,7 @@ class TPUWorker(LoraNotSupportedWorkerBase, LocalOrDistributedWorkerBase):
         os.environ["PJRT_DEVICE"] = "TPU"
         torch.set_grad_enabled(False)
         torch.set_default_dtype(self.model_config.dtype)
-        torch.distributed.init_process_group('xla', init_method='xla://')
+        # torch.distributed.init_process_group('xla', init_method='xla://')
 
         # NOTE(woosuk): This is just to initialize the TP group and broadcast
         # the input objects on CPU. The all-reduce and all-gather ops on TPU
