@@ -256,6 +256,7 @@ def initialize_ray_cluster(
         device_str = 'HPU'
     # Create placement group for worker processes
     current_placement_group = ray.util.get_current_placement_group()
+    logger.info(f"initial current_placement_group: {current_placement_group}")
     if current_placement_group:
         # We are in a placement group
         bundles = current_placement_group.bundle_specs
