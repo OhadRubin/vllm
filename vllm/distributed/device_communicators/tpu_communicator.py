@@ -32,7 +32,7 @@ class TpuCommunicator:
         
         global_rank = self.ranks[dist.get_rank(group)]
         global_world_size = sum(len(x) for x in self.group_ranks)
-        local_world_size = len(self.ranks)
+        local_world_size = global_world_size//4
         local_rank = global_rank % local_world_size
         print(f"{global_rank=}")
         print(f"{global_world_size=}")
