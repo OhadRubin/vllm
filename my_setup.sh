@@ -37,7 +37,7 @@ cmd git pull
 
 echo $(curl https://checkip.amazonaws.com)
 
-vllm serve meta-llama/Llama-3.2-1B-Instruct  --max-model-len 1024 --tensor-parallel-size 4 --pipeline_parallel_size 8 --distributed-executor-backend ray
+vllm serve meta-llama/Llama-3.1-8B-Instruct  --max-model-len 1024 --tensor-parallel-size 8 --pipeline_parallel_size 1 --distributed-executor-backend ray
 vllm serve meta-llama/Llama-3.2-1B-Instruct  --max-model-len 1024 --distributed-executor-backend ray
 # --max-num-seqs 8 --tensor-parallel-size 4
 # vllm serve meta-llama/Llama-3.1-8B-Instruct  --max-model-len 1024 --max-num-seqs 8 --tensor-parallel-size 4

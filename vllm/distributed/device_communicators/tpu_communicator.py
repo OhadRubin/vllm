@@ -34,6 +34,10 @@ class TpuCommunicator:
         global_world_size = sum(len(x) for x in self.group_ranks)
         local_world_size = len(self.ranks)
         local_rank = global_rank % local_world_size
+        print(f"{global_rank=}")
+        print(f"{global_world_size=}")
+        print(f"{local_world_size=}")
+        print(f"{local_rank=}")
 
         # Calculate how many TPU nodes are in the current deployment. This
         # is the Ray placement group if it is deployed with Ray. Default
