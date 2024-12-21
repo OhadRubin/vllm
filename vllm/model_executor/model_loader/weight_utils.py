@@ -400,7 +400,7 @@ from safetensors.torch import safe_open
 from tqdm import tqdm
 import os
 
-def safetensors_weights_iterator(
+def _safetensors_weights_iterator(
     hf_weights_files: List[str],
     num_workers: int = 4,
 ) -> Generator[Tuple[str, torch.Tensor], None, None]:
@@ -472,7 +472,7 @@ def safetensors_weights_iterator(
         
     print(f"\nLoaded {loaded_bytes/1e9:.1f}GB from {len(hf_weights_files)} files")
 
-def _safetensors_weights_iterator(
+def safetensors_weights_iterator(
     hf_weights_files: List[str]
 ) -> Generator[Tuple[str, torch.Tensor], None, None]:
     """Iterate over the weights in the model safetensor files."""
