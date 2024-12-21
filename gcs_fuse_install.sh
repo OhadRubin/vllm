@@ -32,5 +32,6 @@ if ! mountpoint -q /gcs_bucket; then
         --file-cache-max-size-mb -1 \
         --file-cache-cache-file-for-range-read \
         --file-cache-download-chunk-size-mb 100 \
+        --file-cache-cache-dir /root/.cache/gcs_cache  \
         meliad2_us2_backup /gcs_bucket
 fi
