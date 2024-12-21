@@ -36,12 +36,12 @@ if ! mountpoint -q /mnt/gcs_bucket; then
         -o allow_other \
         --cache-dir /dev/shm/gcs_cache  \
         meliad2_us2_backup /mnt/gcs_bucket
-    export MOUNT_POINT=/mnt/gcs_bucket
-    echo 1024 | sudo tee /sys/class/bdi/0:$(stat -c "%d" $MOUNT_POINT)/read_ahead_kb
-    ls -R /mnt/gcs_bucket/models/Llama-3.1-70B-Instruct > /dev/null
-    sudo mkdir -p /mnt/gcs_bucket/vllm_cache
-    sudo chmod 777 /mnt/gcs_bucket/vllm_cache
-    sudo ln -s /mnt/gcs_bucket /mnt/gcs_bucket_sym
+    # export MOUNT_POINT=/mnt/gcs_bucket
+    # echo 1024 | sudo tee /sys/class/bdi/0:$(stat -c "%d" $MOUNT_POINT)/read_ahead_kb
+    # ls -R /mnt/gcs_bucket/models/Llama-3.1-70B-Instruct > /dev/null
+    # sudo mkdir -p /mnt/gcs_bucket/vllm_cache
+    # sudo chmod 777 /mnt/gcs_bucket/vllm_cache
+    # sudo ln -s /mnt/gcs_bucket /mnt/gcs_bucket_sym
 fi
 
 # Function to unmount GCS bucket
