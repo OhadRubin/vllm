@@ -49,3 +49,9 @@ vllm serve meta-llama/Llama-3.2-1B-Instruct  --max-model-len 1024 --distributed-
 # python3.10 -m vllm.entrypoints.openai.api_server --host=0.0.0.0 --port=8000 --tensor-parallel-size=8 --max-model-len=8192 --model=meta-llama/Llama-3.1-70B-Instruct
 #  --download-dir=/data
 
+# sudo mkdir -p /dev/shm/huggingface
+# sudo chmod 777 /dev/shm/huggingface
+# sudo rm -rf ~/.cache/huggingface
+# sudo ln -s /dev/shm/huggingface ~/.cache/huggingface
+
+# ohadr@v4-16-node-6:~/vllm$ gsutil -m cp /dev/shm/huggingface/hub/models--meta-llama--Llama-3.1-70B-Instruct/snapshots/1605565b47bb9346c5515c34102e054115b4f98b/* gs://meliad2_us2_backup/models/Llama-3.1-70B-Instruct/
