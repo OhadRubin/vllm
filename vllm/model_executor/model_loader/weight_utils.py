@@ -400,15 +400,17 @@ from safetensors.torch import safe_open
 from tqdm import tqdm
 import os
 
-def _safetensors_weights_iterator(
+def safetensors_weights_iterator(
     hf_weights_files: List[str],
-    num_workers: int = 8,
+    num_workers: int = 2,
 ) -> Generator[Tuple[str, torch.Tensor], None, None]:
     """Iterate over weights using persistent workers."""
     tensor_queue = queue.Queue()
     error_queue = queue.Queue()
     hf_weights_files = sorted(hf_weights_files)
     # Calculate total size
+    enable_tqdm = enable_tqdm = not torch.distributed.is_initialized(
+    ) or torch.distributed.get_rank() == 0
     total_bytes = sum(os.path.getsize(f) for f in hf_weights_files)
     
     def worker(file_list: List[str]):
@@ -442,7 +444,11 @@ def _safetensors_weights_iterator(
             threads.append(thread)
     
     # Process results
-    with tqdm(total=total_bytes, unit='B', unit_scale=True) as pbar:
+    with tqdm(total=total_bytes, unit='B', unit_scale=True,
+              disable=not enable_tqdm,
+                bar_format=_BAR_FORMAT,
+              
+              ) as pbar:
         while remaining_files > 0:
             # Handle errors
             while not error_queue.empty():

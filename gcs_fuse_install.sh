@@ -28,7 +28,7 @@ if ! mountpoint -q /gcs_bucket; then
         --limit-bytes-per-sec -1 \
         --file-cache-max-parallel-downloads -1 \
         --file-cache-enable-parallel-downloads \
-        --file-cache-parallel-downloads-per-file 100 \
+        --file-cache-parallel-downloads-per-file 1000 \
         --file-cache-max-size-mb -1 \
         --file-cache-cache-file-for-range-read \
         --file-cache-download-chunk-size-mb 100 \
