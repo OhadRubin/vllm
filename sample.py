@@ -14,12 +14,19 @@ client = OpenAI(
     # base_url="https://9752-35-186-106-186.ngrok-free.app/v1",
 )
 
+# import subprocess
+
+# curl_command = ["curl", "http://0.0.0.0:8000/v1/models"]
+# response = subprocess.run(curl_command, capture_output=True, text=True)
+# print(response.stdout)
+
 # from transformers import AutoTokenizer
 # tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-3.1-8B-Instruct")
 
 def generate(messages, verbose=False):
   model = client.chat.completions.create(
-      model="meta-llama/Llama-3.1-70B-Instruct",
+    #   model="meta-llama/Llama-3.1-70B-Instruct",
+      model="/mnt/gcs_bucket/models/Llama-3.1-70B-Instruct/",
       temperature=0.9,
       messages=messages,
       max_tokens=100,
