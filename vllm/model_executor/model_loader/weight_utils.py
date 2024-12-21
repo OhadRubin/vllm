@@ -407,7 +407,7 @@ def safetensors_weights_iterator(
     """Iterate over weights using persistent workers."""
     tensor_queue = queue.Queue()
     error_queue = queue.Queue()
-    
+    hf_weights_files = sorted(hf_weights_files)
     # Calculate total size
     total_bytes = sum(os.path.getsize(f) for f in hf_weights_files)
     
