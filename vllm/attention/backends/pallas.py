@@ -216,7 +216,7 @@ class PallasAttentionBackendImpl(AttentionImpl):
                 # Prefill with paged KV cache.
                 # TODO(woosuk): Tune the below knobs.
                 num_kv_pages_per_compute_block = 16
-                num_queries_per_compute_block = 16
+                num_queries_per_compute_block = 4
                 assert seq_len % num_queries_per_compute_block == 0
                 output = torch.ops.xla.multi_queries_paged_attention(
                     query,

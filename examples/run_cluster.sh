@@ -77,3 +77,4 @@ sudo docker run \
 # docker exec -it node /bin/bash
 # export  PT_XLA_DEBUG_LEVEL=2
 # vllm serve meta-llama/Llama-3.1-8B-Instruct  --max-model-len 1024 --max-num-seqs 8  --distributed-executor-backend ray --tensor-parallel-size 4
+# vllm serve /mnt/gcs_bucket/models/Llama-3.1-70B-Instruct/  --max-model-len 16384 --tensor-parallel-size 8 --pipeline_parallel_size 1 --distributed-executor-backend ray --max-num-seqs 1 --served-model-name meta-llama/Llama-3.1-70B-Instruct --enable_prefix_caching 
