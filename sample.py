@@ -14,8 +14,8 @@ client = OpenAI(
     # base_url="https://9752-35-186-106-186.ngrok-free.app/v1",
 )
 
-from transformers import AutoTokenizer
-tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-3.1-8B-Instruct")
+# from transformers import AutoTokenizer
+# tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-3.1-8B-Instruct")
 
 def generate(messages, verbose=False):
   model = client.chat.completions.create(
