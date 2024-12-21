@@ -19,6 +19,8 @@ fi
 # --file-cache-enable-parallel-downloads (default: disabled): Enable parallel downloads
 # --file-cache-parallel-downloads-per-file 100 (default: 16): Concurrent download requests per file
 # --file-cache-max-size-mb -1 (default: -1): Maximum size of file cache in MiB
+
+sudo mkdir -p /dev/shm/gcs_cache
 sudo mkdir -p /mnt/gcs_bucket
 if ! mountpoint -q /mnt/gcs_bucket; then
     gcsfuse \
@@ -28,8 +30,8 @@ if ! mountpoint -q /mnt/gcs_bucket; then
         --file-cache-max-parallel-downloads -1 \
         --file-cache-download-chunk-size-mb 10 \
         --file-cache-max-size-mb -1 \
-        --dir-mode 0777
-        --cache-dir /root/.cache/gcs_cache  \
+        --dir-mode 0777 \
+        --cache-dir /dev/shm/gcs_cache  \
         meliad2_us2_backup /mnt/gcs_bucket
     export MOUNT_POINT=/mnt/gcs_bucket
     echo 1024 | sudo tee /sys/class/bdi/0:$(stat -c "%d" $MOUNT_POINT)/read_ahead_kb
