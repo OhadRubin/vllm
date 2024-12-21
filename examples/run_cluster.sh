@@ -61,7 +61,7 @@ sudo docker run \
     --privileged \
     -e HF_TOKEN="${HF_TOKEN}" \
     -e GLOO_SOCKET_IFNAME=ens8 \
-    -e VLLM_XLA_CACHE_PATH=/data \
+    -e VLLM_XLA_CACHE_PATH=/gcs_bucket/xla_cache \
     -v "${PATH_TO_HF_HOME}:/root/.cache/huggingface" \
     -v ~/gcs_bucket:/data \
     "${ADDITIONAL_ARGS[@]}" \
