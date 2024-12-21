@@ -48,7 +48,7 @@ fi
 
 
 
-
+source ~/vllm/gcs_fuse_install.sh
 # - name: VLLM_XLA_CACHE_PATH
 # value: "/data"
 # -it \
@@ -62,6 +62,7 @@ sudo docker run \
     -e HF_TOKEN="${HF_TOKEN}" \
     -e GLOO_SOCKET_IFNAME=ens8 \
     -v "${PATH_TO_HF_HOME}:/root/.cache/huggingface" \
+    -v ~/gcs_bucket:/data \
     "${ADDITIONAL_ARGS[@]}" \
     "${DOCKER_IMAGE}" -c "cd /workspace/vllm && git config --global --add safe.directory /workspace/vllm  && git pull  &&  ${RAY_START_CMD}"
     #  "${DOCKER_IMAGE}" -c "python examples/test_xla.py"
