@@ -48,7 +48,7 @@ fi
 
 
 
-source ~/vllm/gcs_fuse_install.sh
+# source ~/vllm/gcs_fuse_install.sh
 # - name: VLLM_XLA_CACHE_PATH
 # value: "/data"
 # -it \

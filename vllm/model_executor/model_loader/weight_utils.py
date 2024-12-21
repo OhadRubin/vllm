@@ -392,7 +392,81 @@ def np_cache_weights_iterator(
         yield name, torch.from_numpy(param)
 
 
+import queue
+import threading
+from typing import List, Tuple, Generator
+import torch
+from safetensors.torch import safe_open
+from tqdm import tqdm
+import os
+
 def safetensors_weights_iterator(
+    hf_weights_files: List[str],
+    num_workers: int = 4,
+) -> Generator[Tuple[str, torch.Tensor], None, None]:
+    """Iterate over weights using persistent workers."""
+    tensor_queue = queue.Queue(maxsize=8)
+    error_queue = queue.Queue()
+    
+    # Calculate total size
+    total_bytes = sum(os.path.getsize(f) for f in hf_weights_files)
+    
+    def worker(file_list: List[str]):
+        """Worker processes its assigned files."""
+        for st_file in file_list:
+            try:
+                with safe_open(st_file, framework="pt") as f:
+                    # file_size = os.path.getsize(st_file)
+                    for name in f.keys():
+                        tensor = f.get_tensor(name)
+                        tensor_size = tensor.numel() * tensor.element_size()
+                        tensor_queue.put(((name, tensor), tensor_size))
+                    tensor_queue.put((None, None))  # Signal file completion
+            except Exception as e:
+                error_queue.put((st_file, e))
+    
+    # Divide files among workers
+    files_per_worker = [[] for _ in range(num_workers)]
+    for i, f in enumerate(hf_weights_files):
+        files_per_worker[i % num_workers].append(f)
+    
+    # Start workers
+    threads = []
+    remaining_files = len(hf_weights_files)
+    loaded_bytes = 0
+    
+    for worker_files in files_per_worker:
+        if worker_files:  # Only start workers that have files
+            thread = threading.Thread(target=worker, args=(worker_files,), daemon=True)
+            thread.start()
+            threads.append(thread)
+    
+    # Process results
+    with tqdm(total=total_bytes, unit='B', unit_scale=True) as pbar:
+        while remaining_files > 0:
+            # Handle errors
+            while not error_queue.empty():
+                st_file, error = error_queue.get()
+                print(f"Error loading {st_file}: {error}")
+                remaining_files -= 1
+            
+            try:
+                item, tensor_size  = tensor_queue.get(timeout=0.1)
+                if item is None:  # File completion marker
+                    remaining_files -= 1
+                    loaded_bytes += tensor_size
+                    pbar.update(tensor_size)
+                else:
+                    yield item
+            except queue.Empty:
+                continue
+    
+    for thread in threads:
+        thread.join()
+        
+    print(f"\nLoaded {loaded_bytes/1e9:.1f}GB from {len(hf_weights_files)} files")
+
+def _safetensors_weights_iterator(
     hf_weights_files: List[str]
 ) -> Generator[Tuple[str, torch.Tensor], None, None]:
     """Iterate over the weights in the model safetensor files."""
