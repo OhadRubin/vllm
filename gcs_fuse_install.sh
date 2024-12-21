@@ -22,6 +22,8 @@ fi
 
 sudo mkdir -p /dev/shm/gcs_cache
 sudo mkdir -p /mnt/gcs_bucket
+sudo chmod 777 /dev/shm/gcs_cache
+sudo chmod 777 /mnt/gcs_bucket
 if ! mountpoint -q /mnt/gcs_bucket; then
     gcsfuse \
         --implicit-dirs \
