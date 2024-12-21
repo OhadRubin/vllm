@@ -21,7 +21,7 @@ bash install.sh
 
 
 # TODO move to install.sh
-docker build -t tpu-vm-base -f Dockerfile.tpu .
+sudo docker build -t tpu-vm-base -f Dockerfile.tpu .
 
 
 # Now create the new directory in shared memory

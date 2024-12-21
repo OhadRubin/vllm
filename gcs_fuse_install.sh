@@ -1,12 +1,12 @@
-if ! command -v gcsfuse &> /dev/null; then
-    export GCSFUSE_REPO=gcsfuse-`lsb_release -c -s`
-    echo "deb [signed-by=/usr/share/keyrings/cloud.google.asc] https://packages.cloud.google.com/apt $GCSFUSE_REPO main" | sudo tee /etc/apt/sources.list.d/gcsfuse.list
-    curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo tee /usr/share/keyrings/cloud.google.asc
-    sudo apt-get update
-    sudo apt-get install gcsfuse
-fi
+# if ! command -v gcsfuse &> /dev/null; then
+#     export GCSFUSE_REPO=gcsfuse-`lsb_release -c -s`
+#     echo "deb [signed-by=/usr/share/keyrings/cloud.google.asc] https://packages.cloud.google.com/apt $GCSFUSE_REPO main" | sudo tee /etc/apt/sources.list.d/gcsfuse.list
+#     curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo tee /usr/share/keyrings/cloud.google.asc
+#     sudo apt-get update
+#     sudo apt-get install gcsfuse
+# fi
 
-mkdir -p ~/gcs_bucket
+
 # mountOptions: "implicit-dirs,file-cache:enable-parallel-downloads:true,file-cache:parallel-downloads-per-file:100,file-cache:max-parallel-downloads:-1,file-cache:download-chunk-size-mb:10,file-cache:max-size-mb:-1"
 
 
@@ -19,8 +19,8 @@ mkdir -p ~/gcs_bucket
 # --file-cache-enable-parallel-downloads (default: disabled): Enable parallel downloads
 # --file-cache-parallel-downloads-per-file 100 (default: 16): Concurrent download requests per file
 # --file-cache-max-size-mb -1 (default: -1): Maximum size of file cache in MiB
-
-if ! mountpoint -q ~/gcs_bucket; then
+mkdir -p /gcs_bucket
+if ! mountpoint -q /gcs_bucket; then
     gcsfuse \
         --implicit-dirs \
         --sequential-read-size-mb 10 \
@@ -30,5 +30,5 @@ if ! mountpoint -q ~/gcs_bucket; then
         --file-cache-enable-parallel-downloads \
         --file-cache-parallel-downloads-per-file 100 \
         --file-cache-max-size-mb -1 \
-        meliad2_us2_backup ~/gcs_bucket
+        meliad2_us2_backup /gcs_bucket
 fi
