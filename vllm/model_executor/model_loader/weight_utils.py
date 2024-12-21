@@ -405,7 +405,7 @@ def safetensors_weights_iterator(
     num_workers: int = 8,
 ) -> Generator[Tuple[str, torch.Tensor], None, None]:
     """Iterate over weights using persistent workers."""
-    tensor_queue = queue.Queue(maxsize=8)
+    tensor_queue = queue.Queue()
     error_queue = queue.Queue()
     
     # Calculate total size
