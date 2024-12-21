@@ -25,8 +25,8 @@ client = OpenAI(
 
 def generate(messages, verbose=False):
   model = client.chat.completions.create(
-    #   model="meta-llama/Llama-3.1-70B-Instruct",
-      model="/mnt/gcs_bucket/models/Llama-3.1-70B-Instruct/",
+      model="meta-llama/Llama-3.1-70B-Instruct",
+    #   model="/mnt/gcs_bucket/models/Llama-3.1-70B-Instruct/",
       temperature=0.9,
       messages=messages,
       max_tokens=100,
