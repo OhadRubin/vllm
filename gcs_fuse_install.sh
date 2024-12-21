@@ -20,11 +20,11 @@ fi
 # --file-cache-parallel-downloads-per-file 100 (default: 16): Concurrent download requests per file
 # --file-cache-max-size-mb -1 (default: -1): Maximum size of file cache in MiB
 
-sudo mkdir -p /dev/shm/gcs_cache
-sudo mkdir -p /mnt/gcs_bucket
-sudo chmod 777 /dev/shm/gcs_cache
-sudo chmod 777 /mnt/gcs_bucket
 if ! mountpoint -q /mnt/gcs_bucket; then
+    sudo mkdir -p /dev/shm/gcs_cache
+    sudo mkdir -p /mnt/gcs_bucket
+    sudo chmod 777 /dev/shm/gcs_cache
+    sudo chmod 777 /mnt/gcs_bucket
     gcsfuse \
         --implicit-dirs \
         --file-cache-enable-parallel-downloads \
@@ -37,10 +37,10 @@ if ! mountpoint -q /mnt/gcs_bucket; then
         meliad2_us2_backup /mnt/gcs_bucket
     export MOUNT_POINT=/mnt/gcs_bucket
     echo 1024 | sudo tee /sys/class/bdi/0:$(stat -c "%d" $MOUNT_POINT)/read_ahead_kb
+    ls -R /mnt/gcs_bucket/models/Llama-3.1-70B-Instruct > /dev/null
 fi
 
 # --file-cache-download-chunk-size-mb 100 \
 # --file-cache-cache-file-for-range-read \
 # ls  /gcs_bucket/models/Llama-3.1-70B-Instruct/
 
-ls -R /mnt/gcs_bucket/models/Llama-3.1-70B-Instruct > /dev/null
