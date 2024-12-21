@@ -33,7 +33,7 @@ if ! mountpoint -q /mnt/gcs_bucket; then
         --file-cache-download-chunk-size-mb 10 \
         --file-cache-max-size-mb -1 \
         --dir-mode 0777 \
-        -o allow_other \
+        -o allow_other,user_allow_other \
         --cache-dir /dev/shm/gcs_cache  \
         meliad2_us2_backup /mnt/gcs_bucket
     # export MOUNT_POINT=/mnt/gcs_bucket
