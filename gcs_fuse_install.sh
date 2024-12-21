@@ -23,7 +23,7 @@ mkdir -p /gcs_bucket
 if ! mountpoint -q /gcs_bucket; then
     gcsfuse \
         --implicit-dirs \
-        --sequential-read-size-mb 10 \
+        --sequential-read-size-mb 1024 \
         --limit-ops-per-sec -1 \
         --limit-bytes-per-sec -1 \
         --file-cache-max-parallel-downloads -1 \
