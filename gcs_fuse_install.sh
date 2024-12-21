@@ -27,9 +27,9 @@ if ! mountpoint -q /gcs_bucket; then
         --limit-ops-per-sec -1 \
         --limit-bytes-per-sec -1 \
         --file-cache-max-parallel-downloads -1 \
-        --file-cache-enable-parallel-downloads true \
+        --file-cache-enable-parallel-downloads \
         --file-cache-parallel-downloads-per-file 100 \
         --file-cache-max-size-mb -1 \
-        --file-cache-cache-file-for-range-read true \
+        --file-cache-cache-file-for-range-read \
         meliad2_us2_backup /gcs_bucket
 fi
