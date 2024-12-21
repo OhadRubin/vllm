@@ -402,7 +402,7 @@ import os
 
 def safetensors_weights_iterator(
     hf_weights_files: List[str],
-    num_workers: int = 2,
+    num_workers: int = 4,
 ) -> Generator[Tuple[str, torch.Tensor], None, None]:
     """Iterate over weights using persistent workers."""
     tensor_queue = queue.Queue()
