@@ -20,8 +20,8 @@
 # --file-cache-parallel-downloads-per-file 100 (default: 16): Concurrent download requests per file
 # --file-cache-max-size-mb -1 (default: -1): Maximum size of file cache in MiB
 
-sudo mkdir -p /mnt/gcs_bucket
-sudo chmod 777 /mnt/gcs_bucket
+mkdir -p /mnt/gcs_bucket
+chmod 777 /mnt/gcs_bucket
 if ! mountpoint -q /mnt/gcs_bucket; then
 
     gcsfuse \
