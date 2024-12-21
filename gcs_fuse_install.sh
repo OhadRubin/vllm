@@ -34,7 +34,7 @@ if ! mountpoint -q /mnt/gcs_bucket; then
         --file-cache-max-size-mb -1 \
         --dir-mode 0777 \
         --cache-dir /dev/shm/gcs_cache  \
-        -o allow_other \
+        -o allow_root \
         meliad2_us2_backup /mnt/gcs_bucket
         # -o user_allow_other \
     # export MOUNT_POINT=~mnt/gcs_bucket
