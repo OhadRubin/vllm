@@ -45,13 +45,13 @@ if ! mountpoint -q /mnt/gcs_bucket; then
 fi
 
 # Function to unmount GCS bucket
-unmount_gcs() {
-    if mountpoint -q /mnt/gcs_bucket; then
-        sudo fusermount -u /mnt/gcs_bucket
-        sudo rm -f /mnt/gcs_bucket_sym
-        sudo rm -rf /dev/shm/gcs_cache
-    fi
-}
+# unmount_gcs() {
+#     if mountpoint -q /mnt/gcs_bucket; then
+#         sudo fusermount -u /mnt/gcs_bucket
+#         sudo rm -f /mnt/gcs_bucket_sym
+#         sudo rm -rf /dev/shm/gcs_cache
+#     fi
+# }
 
 # --file-cache-download-chunk-size-mb 100 \
 # --file-cache-cache-file-for-range-read \
