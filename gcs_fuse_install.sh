@@ -40,6 +40,7 @@ if ! mountpoint -q /mnt/gcs_bucket; then
     ls -R /mnt/gcs_bucket/models/Llama-3.1-70B-Instruct > /dev/null
     sudo mkdir -p /mnt/gcs_bucket/vllm_cache
     sudo chmod 777 /mnt/gcs_bucket/vllm_cache
+    sudo ln -s /mnt/gcs_bucket /mnt/gcs_bucket_sym
 fi
 
 # --file-cache-download-chunk-size-mb 100 \
