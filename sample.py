@@ -5,9 +5,9 @@ from openai import OpenAI
 
 
 client = OpenAI(
-    # base_url="http://0.0.0.0:8007/v1",
+    base_url="http://0.0.0.0:8000/v1",
     api_key="bla",
-    base_url="https://9752-35-186-106-186.ngrok-free.app/v1",
+    # base_url="https://9752-35-186-106-186.ngrok-free.app/v1",
 )
 
 from transformers import AutoTokenizer
