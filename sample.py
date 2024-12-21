@@ -1,5 +1,9 @@
 
-
+# /// script
+# dependencies = [
+#   "openai==1.17.0",
+# ]
+# ///
 from openai import OpenAI
 
 
