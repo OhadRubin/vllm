@@ -48,11 +48,13 @@ fi
 
 
 
-source ~/vllm/gcs_fuse_install.sh
+# source ~/vllm/gcs_fuse_install.sh
 # - name: VLLM_XLA_CACHE_PATH
 # value: "/data"
 # -it \
 
+sudo mkdir -p /dev/shm/gcs_cache
+sudo chmod 777 /dev/shm/gcs_cache
 sudo docker run \
     -v /home/$USER/vllm:/workspace/vllm \
     --entrypoint /bin/bash \
@@ -64,9 +66,9 @@ sudo docker run \
     -e GLOO_SOCKET_IFNAME=ens8 \
     -e VLLM_XLA_CACHE_PATH=/gcs_bucket/xla_cache \
     -v "${PATH_TO_HF_HOME}:/root/.cache/huggingface" \
-    -v "/mnt/gcs_bucket_sym/:/root/gcs_bucket" \
+    -v "/dev/shm/gcs_cache:/dev/shm/gcs_cache" \
     "${ADDITIONAL_ARGS[@]}" \
-    "${DOCKER_IMAGE}" -c "cd /workspace/vllm && git config --global --add safe.directory /workspace/vllm  && git pull  &&  ${RAY_START_CMD}"
+    "${DOCKER_IMAGE}" -c "cd /workspace/vllm && git config --global --add safe.directory /workspace/vllm  && git pull  &&  bash gcs_fuse_install.sh && ${RAY_START_CMD}"
     # "${DOCKER_IMAGE}" -c "cd /workspace/vllm && git config --global --add safe.directory /workspace/vllm  && git pull && bash gcs_fuse_install.sh  &&  ${RAY_START_CMD}"
     #  "${DOCKER_IMAGE}" -c "python examples/test_xla.py"
     # 
