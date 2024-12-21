@@ -454,9 +454,9 @@ def safetensors_weights_iterator(
                 item, tensor_size  = tensor_queue.get(timeout=0.1)
                 if item is None:  # File completion marker
                     remaining_files -= 1
+                else:
                     loaded_bytes += tensor_size
                     pbar.update(tensor_size)
-                else:
                     yield item
             except queue.Empty:
                 continue
