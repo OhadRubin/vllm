@@ -45,7 +45,6 @@ fi
 
 # docker run -v $(pwd):/workspace/vllm -it your-image-name
 
-# mountOptions: "implicit-dirs,file-cache:enable-parallel-downloads:true,file-cache:parallel-downloads-per-file:100,file-cache:max-parallel-downloads:-1,file-cache:download-chunk-size-mb:10,file-cache:max-size-mb:-1"
 
 
 
