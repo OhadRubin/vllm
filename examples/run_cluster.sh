@@ -64,7 +64,7 @@ sudo docker run \
     -e GLOO_SOCKET_IFNAME=ens8 \
     -e VLLM_XLA_CACHE_PATH=/gcs_bucket/xla_cache \
     -v "${PATH_TO_HF_HOME}:/root/.cache/huggingface" \
-    -v "/mnt/gcs_bucket:/root/gcs_bucket" \
+    -v "/mnt/gcs_bucket/:/root/gcs_bucket" \
     "${ADDITIONAL_ARGS[@]}" \
     "${DOCKER_IMAGE}" -c "cd /workspace/vllm && git config --global --add safe.directory /workspace/vllm  && git pull  &&  ${RAY_START_CMD}"
     # "${DOCKER_IMAGE}" -c "cd /workspace/vllm && git config --global --add safe.directory /workspace/vllm  && git pull && bash gcs_fuse_install.sh  &&  ${RAY_START_CMD}"
