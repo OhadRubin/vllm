@@ -20,11 +20,11 @@ fi
 # --file-cache-parallel-downloads-per-file 100 (default: 16): Concurrent download requests per file
 # --file-cache-max-size-mb -1 (default: -1): Maximum size of file cache in MiB
 
-if ! mountpoint -q /mnt/bucket_gcs; then
+if ! mountpoint -q ~/bucket_gcs; then
     sudo mkdir -p /dev/shm/gcs_cache
-    sudo mkdir -p /mnt/bucket_gcs
+    sudo mkdir -p ~/bucket_gcs
     sudo chmod 777 /dev/shm/gcs_cache
-    sudo chmod 777 /mnt/bucket_gcs
+    sudo chmod 777 ~/bucket_gcs
     gcsfuse \
         --implicit-dirs \
         --file-cache-enable-parallel-downloads \
@@ -35,19 +35,19 @@ if ! mountpoint -q /mnt/bucket_gcs; then
         --dir-mode 0777 \
         -o user_allow_other \
         --cache-dir /dev/shm/gcs_cache  \
-        meliad2_us2_backup /mnt/bucket_gcs
-    # export MOUNT_POINT=/mnt/bucket_gcs
+        meliad2_us2_backup ~/bucket_gcs
+    # export MOUNT_POINT=~mnt/bucket_gcs
     # echo 1024 | sudo tee /sys/class/bdi/0:$(stat -c "%d" $MOUNT_POINT)/read_ahead_kb
-    # ls -R /mnt/bucket_gcs/models/Llama-3.1-70B-Instruct > /dev/null
-    # sudo mkdir -p /mnt/bucket_gcs/vllm_cache
-    # sudo chmod 777 /mnt/bucket_gcs/vllm_cache
-    # sudo ln -s /mnt/bucket_gcs /mnt/bucket_sym_gcs
+    # ls -R ~/bucket_gcs/models/Llama-3.1-70B-Instruct > /dev/null
+    # sudo mkdir -p ~/bucket_gcs/vllm_cache
+    # sudo chmod 777 ~/bucket_gcs/vllm_cache
+    # sudo ln -s ~/bucket_gcs /mnt/bucket_sym_gcs
 fi
 
 # Function to unmount GCS bucket
 # unmount_gcs() {
-#     if mountpoint -q /mnt/bucket_gcs; then
-#         sudo fusermount -u /mnt/bucket_gcs
+#     if mountpoint -q ~/bucket_gcs; then
+#         sudo fusermount -u ~/bucket_gcs
 #         sudo rm -f /mnt/bucket_sym_gcs
 #         sudo rm -rf /dev/shm/gcs_cache
 #     fi
