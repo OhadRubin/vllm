@@ -33,6 +33,7 @@ if ! mountpoint -q /mnt/gcs_bucket; then
         --file-cache-download-chunk-size-mb 10 \
         --file-cache-max-size-mb -1 \
         --dir-mode 0777 \
+        -o allow_other \
         --cache-dir /dev/shm/gcs_cache  \
         meliad2_us2_backup /mnt/gcs_bucket
     export MOUNT_POINT=/mnt/gcs_bucket
@@ -42,6 +43,15 @@ if ! mountpoint -q /mnt/gcs_bucket; then
     sudo chmod 777 /mnt/gcs_bucket/vllm_cache
     sudo ln -s /mnt/gcs_bucket /mnt/gcs_bucket_sym
 fi
+
+# Function to unmount GCS bucket
+unmount_gcs() {
+    if mountpoint -q /mnt/gcs_bucket; then
+        sudo fusermount -u /mnt/gcs_bucket
+        sudo rm -f /mnt/gcs_bucket_sym
+        sudo rm -rf /dev/shm/gcs_cache
+    fi
+}
 
 # --file-cache-download-chunk-size-mb 100 \
 # --file-cache-cache-file-for-range-read \
