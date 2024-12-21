@@ -30,5 +30,5 @@ if ! mountpoint -q ~/gcs_bucket; then
         --file-cache-enable-parallel-downloads \
         --file-cache-parallel-downloads-per-file 100 \
         --file-cache-max-size-mb -1 \
-        gs://meliad2_us2_backup ~/gcs_bucket
+        meliad2_us2_backup ~/gcs_bucket
 fi
