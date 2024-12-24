@@ -19,10 +19,17 @@ def main():
 
     command = f"huggingface-cli download --token {args.hf_token} --exclude '*original*' --local-dir /mnt/gcs_bucket/models/Llama-3.3-70B-Instruct/worker_{args.worker_id:02d}  meta-llama/Llama-3.3-70B-Instruct"
     for file in my_files:
+        if os.path.exists(f"/mnt/gcs_bucket/models/Llama-3.3-70B-Instruct/{file}"):
+            print(f"Skipping {file} as it already exists")
+            continue
         command += f" {file}"
     
     print(f"Executing command: {command}")
     os.system(command)
+    # Move files from worker folder to base folder
+    move_command = f"mv /mnt/gcs_bucket/models/Llama-3.3-70B-Instruct/worker_{args.worker_id:02d}/* /mnt/gcs_bucket/models/Llama-3.3-70B-Instruct/"
+    print(f"Moving files: {move_command}")
+    os.system(move_command)
 
 if __name__ == "__main__":
     main()
