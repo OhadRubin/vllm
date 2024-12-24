@@ -14,7 +14,7 @@ def main():
     args = parser.parse_args()
 
     files = [f"model-{str(i+1).zfill(5)}-of-00030.safetensors" for i in range(30)]
-    chunks = list(more_itertools.chunked(files, args.num_workers))
+    chunks = list(more_itertools.chunked(files, len(files) // args.num_workers))
     my_files = chunks[args.worker_id]
 
     command = f"huggingface-cli download --token {args.hf_token} --exclude '*original*' --local-dir /mnt/gcs_bucket/models/Llama-3.3-70B-Instruct/worker_{args.worker_id:02d}  meta-llama/Llama-3.3-70B-Instruct"
