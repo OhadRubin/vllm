@@ -5,7 +5,7 @@ import sys
 import more_itertools
 import argparse
 
-# usage: python3 download_model.py --num-workers 2 --worker-id 0 --hf-token <>
+# usage: python3.10 download_model.py --num-workers 2 --worker-id $MY_WORKER_ID --hf-token <>
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--num-workers', type=int, default=2)
@@ -14,7 +14,8 @@ def main():
     args = parser.parse_args()
 
     files = [f"model-{str(i+1).zfill(5)}-of-00030.safetensors" for i in range(30)]
-    my_files = list(more_itertools.chunked(files, args.num_workers)[args.worker_id])
+    chunks = list(more_itertools.chunked(files, args.num_workers))
+    my_files = chunks[args.worker_id]
 
     command = f"huggingface-cli download --token {args.hf_token} --exclude '*original*' --local-dir /mnt/gcs_bucket/models/Llama-3.3-70B-Instruct/worker_{args.worker_id:02d}  meta-llama/Llama-3.3-70B-Instruct"
     for file in my_files:
