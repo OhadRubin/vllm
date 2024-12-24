@@ -20,6 +20,7 @@ fi
 
 
 #  chown -R $USER:$USER /mnt/gcs_bucket/models/Llama-3.3-70B-Instruct
+#  chmod -R 777 /mnt/gcs_bucket/models/Llama-3.3-70B-Instruct
 #  to unmount the gcs bucket
 # fusermount -u /mnt/gcs_bucket
 # doesn't work?

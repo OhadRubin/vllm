@@ -32,6 +32,10 @@ def main():
     move_command = f"mv /mnt/gcs_bucket/models/Llama-3.3-70B-Instruct/worker_{args.worker_id:02d}/* /mnt/gcs_bucket/models/Llama-3.3-70B-Instruct/"
     print(f"Moving files: {move_command}")
     os.system(move_command)
+    
+    if args.worker_id==0:
+        # remove worker folders
+        os.system(f"huggingface-cli download --token {args.hf_token} --exclude '*original*' --local-dir /mnt/gcs_bucket/models/Llama-3.3-70B-Instruct  meta-llama/Llama-3.3-70B-Instruct config.json generation_config.json model.safetensors.index.json special_tokens_map.json tokenizer_config.json tokenizer.json")
 
 if __name__ == "__main__":
     main()
