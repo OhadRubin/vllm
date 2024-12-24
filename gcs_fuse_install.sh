@@ -19,7 +19,11 @@ if ! mountpoint -q /mnt/gcs_bucket; then
 fi
 
 
+#  chown -R $USER:$USER /mnt/gcs_bucket/models/Llama-3.3-70B-Instruct
 #  to unmount the gcs bucket
 # fusermount -u /mnt/gcs_bucket
-
+# doesn't work?
+# sudo umount -f /mnt/gcs_bucket
+# still doesn't work?
+# sudo umount -l /mnt/gcs_bucket
 
