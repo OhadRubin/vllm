@@ -20,7 +20,7 @@ def main():
     command = f"huggingface-cli download --token {args.hf_token} --exclude '*original*' --local-dir /mnt/gcs_bucket/models/Llama-3.3-70B-Instruct/worker_{args.worker_id:02d}  meta-llama/Llama-3.3-70B-Instruct"
     files_to_download = []
     for file in my_files:
-        if os.path.exists(f"/mnt/gcs_bucket/models/Llama-3.3-70B-Instruct/{file}"):
+        if os.path.exists(f"/mnt/gcs_bucket/models/Llama-3.3-70B-Instruct/worker_{args.worker_id:02d}/{file}"):
             print(f"Skipping {file} as it already exists")
             continue
         files_to_download.append(file)
