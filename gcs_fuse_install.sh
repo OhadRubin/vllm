@@ -17,3 +17,9 @@ if ! mountpoint -q /mnt/gcs_bucket; then
     echo 1024 | tee /sys/class/bdi/0:$(stat -c "%d" $MOUNT_POINT)/read_ahead_kb
     ls -R /mnt/gcs_bucket/models/Llama-3.1-70B-Instruct > /dev/null
 fi
+
+
+#  to unmount the gcs bucket
+# fusermount -u /mnt/gcs_bucket
+
+

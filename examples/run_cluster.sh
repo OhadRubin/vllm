@@ -48,13 +48,17 @@ fi
 
 
 
+
 # source ~/vllm/gcs_fuse_install.sh
 # - name: VLLM_XLA_CACHE_PATH
 # value: "/data"
 # -it \
 
+# setup cache folder
 sudo mkdir -p /dev/shm/gcs_cache
 sudo chmod 777 /dev/shm/gcs_cache
+
+# gcs_fuse_install.sh sets up the actual mount point on /mnt/gcs_bucket
 sudo docker run \
     -v /home/$USER/vllm:/workspace/vllm \
     --entrypoint /bin/bash \
