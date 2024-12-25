@@ -7,8 +7,13 @@ if ! command -v gcsfuse &> /dev/null; then
 fi
 
 
-mkdir -p /mnt/gcs_bucket
-chmod 777 /mnt/gcs_bucket
+if ! sudo mkdir -p /mnt/gcs_bucket 2>/dev/null; then
+    mkdir -p /mnt/gcs_bucket
+fi
+
+if ! sudo chmod 777 /mnt/gcs_bucket 2>/dev/null; then
+    chmod 777 /mnt/gcs_bucket
+fi
 if ! mountpoint -q /mnt/gcs_bucket; then
     gcsfuse \
         --implicit-dirs \
