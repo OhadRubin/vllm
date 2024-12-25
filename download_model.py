@@ -17,10 +17,10 @@ def main():
     chunks = list(more_itertools.chunked(files, len(files) // args.num_workers))
     my_files = chunks[args.worker_id]
 
-    command = f"huggingface-cli download --token {args.hf_token} --exclude '*original*' --local-dir /mnt/gcs_bucket/models/Llama-3.3-70B-Instruct/worker_{args.worker_id:02d}  meta-llama/Llama-3.3-70B-Instruct"
+    command = f"huggingface-cli download --token {args.hf_token} --exclude '*original*' --local-dir /mnt/gcs_bucket/models/Llama-3.1-70B/worker_{args.worker_id:02d}  meta-llama/Llama-3.1-70B"
     files_to_download = []
     for file in my_files:
-        if os.path.exists(f"/mnt/gcs_bucket/models/Llama-3.3-70B-Instruct/worker_{args.worker_id:02d}/{file}"):
+        if os.path.exists(f"/mnt/gcs_bucket/models/Llama-3.1-70B/worker_{args.worker_id:02d}/{file}"):
             print(f"Skipping {file} as it already exists")
             continue
         files_to_download.append(file)
@@ -29,13 +29,13 @@ def main():
         print(f"Executing command: {command}")
         os.system(command)
     # Move files from worker folder to base folder
-    move_command = f"mv /mnt/gcs_bucket/models/Llama-3.3-70B-Instruct/worker_{args.worker_id:02d}/* /mnt/gcs_bucket/models/Llama-3.3-70B-Instruct/"
+    move_command = f"mv /mnt/gcs_bucket/models/Llama-3.1-70B/worker_{args.worker_id:02d}/* /mnt/gcs_bucket/models/Llama-3.1-70B/"
     print(f"Moving files: {move_command}")
     os.system(move_command)
     
     if args.worker_id==0:
         # remove worker folders
-        os.system(f"huggingface-cli download --token {args.hf_token} --exclude '*original*' --local-dir /mnt/gcs_bucket/models/Llama-3.3-70B-Instruct  meta-llama/Llama-3.3-70B-Instruct config.json generation_config.json model.safetensors.index.json special_tokens_map.json tokenizer_config.json tokenizer.json")
+        os.system(f"huggingface-cli download --token {args.hf_token} --exclude '*original*' --local-dir /mnt/gcs_bucket/models/Llama-3.1-70B  meta-llama/Llama-3.1-70B config.json generation_config.json model.safetensors.index.json special_tokens_map.json tokenizer_config.json tokenizer.json")
 
 if __name__ == "__main__":
     main()
