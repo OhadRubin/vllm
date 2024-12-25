@@ -1,8 +1,10 @@
 
+wget -qO- https://gist.githubusercontent.com/OhadRubin/a570cf7e828cdfc348beeea80cfa728a/raw/2cee658099f1ed6e7fb340cacbe1dd408844b0ae/setup_doc.sh | sudo bash
 git clone https://github.com/OhadRubin/vllm.git
-
 cd vllm
-
+sudo docker build -t tpu-vm-base -f Dockerfile.tpu .
+sudo mkdir -p /dev/shm/huggingface && sudo chown $USER:$USER /dev/shm/huggingface && sudo rm -rf ~/.cache/huggingface && sudo ln -s /dev/shm/huggingface ~/.cache/huggingface
+curl https://checkip.amazonaws.com
 # pip install torch_xla[tpu] -f https://storage.googleapis.com/libtpu-releases/index.html
 # pip3 install torch==2.5.0.dev20241201+cpu
 # sudo apt-get update && sudo apt-get install -y git ffmpeg libsm6 libxext6 libgl1
@@ -21,25 +23,23 @@ bash install.sh
 
 
 # TODO move to install.sh
-sudo docker build -t tpu-vm-base -f Dockerfile.tpu .
+
 
 
 # Now create the new directory in shared memory
 
 
 # Finally, create the symbolic link
-cmd sudo mkdir -p /dev/shm/huggingface && sudo chown $USER:$USER /dev/shm/huggingface && sudo rm -rf ~/.cache/huggingface && sudo ln -s /dev/shm/huggingface ~/.cache/huggingface
-cmd cd vllm
-cmd git pull
 
+# cmd cd vllm
+# cmd git pull
+
+# echo $(curl https://checkip.amazonaws.com)
 # cmd sudo docker run --entrypoint /bin/bash --privileged --net host --shm-size=16G -v /dev/shm/huggingface:/root/.cache/huggingface -it tpu-vm-base2
 
 
-echo $(curl https://checkip.amazonaws.com)
 
-vllm serve meta-llama/Llama-3.1-8B-Instruct  --max-model-len 1024 --tensor-parallel-size 8 --pipeline_parallel_size 1 --distributed-executor-backend ray
-vllm serve meta-llama/Llama-3.2-1B-Instruct  --max-model-len 1024 --distributed-executor-backend ray
-# --max-num-seqs 8 --tensor-parallel-size 4
+
 # vllm serve meta-llama/Llama-3.1-8B-Instruct  --max-model-len 1024 --max-num-seqs 8 --tensor-parallel-size 4
  
 

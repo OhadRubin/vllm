@@ -6,6 +6,7 @@ import more_itertools
 import argparse
 
 # usage: python3.10 download_model.py --num-workers 2 --worker-id $MY_WORKER_ID --hf-token <>
+# usage: python3.10 download_model.py --num-workers 2 --worker-id $MY_WORKER_ID --hf-token <>
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--num-workers', type=int, default=2)
