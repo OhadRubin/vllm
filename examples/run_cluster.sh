@@ -20,6 +20,7 @@ ADDITIONAL_ARGS=("$@")
 # Define a function to cleanup on EXIT signal
 sudo docker stop node
 sudo docker rm node
+pkill -f -9 start_tunnel.sh
 # cleanup() {
 # }
 # trap cleanup EXIT
@@ -53,6 +54,14 @@ sudo docker run -d \
     -v "/dev/shm/gcs_cache:/dev/shm/gcs_cache" \
     "${ADDITIONAL_ARGS[@]}" \
     "${DOCKER_IMAGE}" -c "cd /workspace/vllm && git config --global --add safe.directory /workspace/vllm  && git pull  &&  bash gcs_fuse_install.sh && ${RAY_START_CMD}"
+
+
+if [ "${CURRENT_IP}" == "${HEAD_NODE_ADDRESS}" ]; then
+    # Wait for container to be ready
+    bash start_tunnel.sh & 
+    # Install requirements and start server
+    sudo docker exec node /bin/bash -c "cd /workspace/vllm && pip install -e '.[ray]' && pip install ray[default]"
+fi
 
 # git clone https://github.com/pytorch/xla.git
 
