@@ -1,4 +1,5 @@
 #!/bin/bash
+# bash /home/ohadr/vllm/examples/run_cluster.sh
 (cd ~/vllm && git pull)
 # Get the current IP address
 CURRENT_IP=$(curl https://checkip.amazonaws.com)
