@@ -18,11 +18,11 @@ ADDITIONAL_ARGS=("$@")
 
 
 # Define a function to cleanup on EXIT signal
-cleanup() {
-    sudo docker stop node
-    sudo docker rm node
-}
-trap cleanup EXIT
+sudo docker stop node
+sudo docker rm node
+# cleanup() {
+# }
+# trap cleanup EXIT
 
 # Command setup for head or worker node
 RAY_START_CMD="ray start --block --num-cpus=220 --resources='{\"TPU\": 4}'"
