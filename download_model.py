@@ -16,12 +16,10 @@ ip_addr = leader_election.ip_addr
 import more_itertools
 import argparse
 
-# usage: python3.10 download_model.py --num-workers 2 --worker-id $MY_WORKER_ID --hf-token <>
-# usage: python3.10 download_model.py --num-workers 2 --worker-id $MY_WORKER_ID --hf-token <>
+
+# usage: python3.10 download_model.py --hf-token $HF_TOKEN --model-name meta-llama/Llama-3.1-405B --n-chunks 191
 def main():
     parser = argparse.ArgumentParser()
-    # parser.add_argument('--num-workers', type=int, default=2)
-    # parser.add_argument('--worker-id', type=int, default=0)
     parser.add_argument('--hf-token', type=str, required=True)
     parser.add_argument('--model-name', type=str, default="meta-llama/Llama-3.1-70B")
     parser.add_argument('--n-chunks', type=int, default=30)
