@@ -2,6 +2,17 @@
 
 import os
 import sys
+import importlib.util
+
+# Import leader_election.py using importlib
+spec = importlib.util.spec_from_file_location(
+    "leader_election", 
+    "/home/ohadr/vllm/examples/leader_election.py"
+)
+leader_election = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(leader_election)
+ip_addr = leader_election.ip_addr
+print(f"IP address: {ip_addr()}")
 import more_itertools
 import argparse
 

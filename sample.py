@@ -9,7 +9,7 @@ from openai import OpenAI
 
 
 client = OpenAI(
-    base_url="http://0.0.0.0:8000/v1",
+    base_url="https://v4-32-node-11.ohadrubin.com/v1",
     api_key="bla",
     # base_url="https://9752-35-186-106-186.ngrok-free.app/v1",
 )
@@ -25,7 +25,7 @@ client = OpenAI(
 
 def generate(messages, verbose=False):
   model = client.chat.completions.create(
-      model="meta-llama/Llama-3.1-70B-Instruct",
+      model="meta-llama/Llama-3.1-70B",
     #   model="/mnt/gcs_bucket/models/Llama-3.1-70B-Instruct/",
       temperature=0.9,
       messages=messages,
