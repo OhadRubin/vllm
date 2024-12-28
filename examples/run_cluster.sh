@@ -39,7 +39,7 @@ sudo mkdir -p /dev/shm/gcs_cache
 sudo chmod 777 /dev/shm/gcs_cache
 sudo chown -R $USER:$USER /dev/shm/gcs_cache
 # gcs_fuse_install.sh sets up the actual mount point on /mnt/gcs_bucket
-sudo docker run \
+sudo docker run -d \
     -v /home/$USER/vllm:/workspace/vllm \
     --entrypoint /bin/bash \
     --network host \
