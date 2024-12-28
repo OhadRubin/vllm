@@ -4,20 +4,13 @@
 CURRENT_IP=$(curl https://checkip.amazonaws.com)
 echo "Current IP address: ${CURRENT_IP}"
 
-# Check for minimum number of required arguments
-if [ $# -lt 4 ]; then
-    echo "Usage: $0 docker_image head_node_address hf_token path_to_hf_home [additional_args...]"
-    exit 1
-fi
-
  
-
+source ~/.bashrc
 # Assign the first three arguments and shift them away
-DOCKER_IMAGE="$1"
-HEAD_NODE_ADDRESS="$2"
-HF_TOKEN="$3"  # Should be --head or --worker
-PATH_TO_HF_HOME="$4"
-shift 4
+DOCKER_IMAGE=tpu-vm-base
+HEAD_NODE_ADDRESS=$(python3.10 examples/leader_election.py)
+PATH_TO_HF_HOME=~/.cache/huggingface
+
 
 # Additional arguments are passed directly to the Docker command
 ADDITIONAL_ARGS=("$@")
@@ -38,21 +31,7 @@ else
     RAY_START_CMD+=" --address=${HEAD_NODE_ADDRESS}:6379"
 fi
 
-# cmd sudo docker build -t tpu-vm-base2 -f Dockerfile.tpu .
-# Run the docker command with the user specified parameters and additional arguments
 
-
-
-# docker run -v $(pwd):/workspace/vllm -it your-image-name
-
-
-
-
-
-# source ~/vllm/gcs_fuse_install.sh
-# - name: VLLM_XLA_CACHE_PATH
-# value: "/data"
-# -it \
 
 # setup cache folder
 sudo mkdir -p /dev/shm/gcs_cache
