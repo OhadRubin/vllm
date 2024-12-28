@@ -10,7 +10,7 @@ def ip_addr():
     for endpoint in json.loads(res)['networkEndpoints']:
         ip_address = endpoint["accessConfig"]['externalIp']
         addr_list.append(ip_address)
-    my_ip = res = subprocess.getoutput("curl https://checkip.amazonaws.com")
+    my_ip =  subprocess.getoutput("curl https://checkip.amazonaws.com").split("\n")[-1]
     leader_ip = min(addr_list)
     return addr_list, leader_ip, my_ip
 
