@@ -11,8 +11,9 @@ def ip_addr():
         ip_address = endpoint["accessConfig"]['externalIp']
         addr_list.append(ip_address)
     my_ip =  subprocess.getoutput("curl https://checkip.amazonaws.com").split("\n")[-1]
-    leader_ip = min(addr_list)
-    return addr_list, leader_ip, my_ip
+    sorted_addr_list = sorted(addr_list)
+    leader_ip = sorted_addr_list[0]
+    return sorted_addr_list, leader_ip, my_ip
 
 def get_leader_ip():
     addr_list, leader_ip, my_ip = ip_addr()
