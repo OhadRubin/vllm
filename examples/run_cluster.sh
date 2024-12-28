@@ -52,7 +52,6 @@ sudo docker run -d \
     -e VLLM_XLA_CACHE_PATH=/mnt/gcs_bucket/xla_cache \
     -v "${PATH_TO_HF_HOME}:/root/.cache/huggingface" \
     -v "/dev/shm/gcs_cache:/dev/shm/gcs_cache" \
-    "${ADDITIONAL_ARGS[@]}" \
     "${DOCKER_IMAGE}" -c "cd /workspace/vllm && git config --global --add safe.directory /workspace/vllm  && git pull  &&  bash gcs_fuse_install.sh && ${RAY_START_CMD}"
 
 
@@ -60,7 +59,7 @@ if [ "${CURRENT_IP}" == "${HEAD_NODE_ADDRESS}" ]; then
     # Wait for container to be ready
     bash start_tunnel.sh & 
     # Install requirements and start server
-    sudo docker exec node /bin/bash -c "cd /workspace/vllm && pip install -e '.[ray]' && pip install ray[default]"
+    sudo docker exec node /bin/bash -c "${ADDITIONAL_ARGS[@]}"
 fi
 
 # git clone https://github.com/pytorch/xla.git
