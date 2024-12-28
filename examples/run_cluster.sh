@@ -20,6 +20,7 @@ ADDITIONAL_ARGS=("$@")
 # Define a function to cleanup on EXIT signal
 sudo docker stop node
 sudo docker rm node
+pkill -f -9 portr
 pkill -f -9 start_tunnel.sh
 # cleanup() {
 # }
