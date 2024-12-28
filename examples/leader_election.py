@@ -4,7 +4,7 @@ import subprocess
 import json
 
 def ip_addr():
-    hostname = os.getenv("HOSTNAME")
+    hostname = os.uname().nodename
     DESCRIBE = "gcloud alpha compute tpus tpu-vm describe {hostname}  --zone us-central2-b --format json"
     res = subprocess.getoutput(DESCRIBE.format(hostname=hostname))
     addr_list = []
