@@ -20,11 +20,11 @@ ADDITIONAL_ARGS=("$@")
 # Define a function to cleanup on EXIT signal
 sudo docker stop node
 sudo docker rm node
-pkill -f -9 portr
-pkill -f -9 start_tunnel.sh
-# cleanup() {
-# }
-# trap cleanup EXIT
+cleanup() {
+    pkill -f -9 portr
+    pkill -f -9 start_tunnel.sh
+}
+
 
 # Command setup for head or worker node
 RAY_START_CMD="ray start --block --num-cpus=220 --resources='{\"TPU\": 4}'"
@@ -58,6 +58,7 @@ sudo docker run -d \
 
 if [ "${CURRENT_IP}" == "${HEAD_NODE_ADDRESS}" ]; then
     # Wait for container to be ready
+    trap cleanup EXIT
     bash start_tunnel.sh & 
     # Install requirements and start server
     
