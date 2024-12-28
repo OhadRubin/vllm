@@ -11,7 +11,8 @@ def ip_addr():
     for endpoint in json.loads(res)['networkEndpoints']:
         ip_address = endpoint["accessConfig"]['externalIp']
         addr_list.append(ip_address)
-    return hostname,addr_list
+    leader_ip = min(addr_list)
+    return leader_ip
 
 if __name__ == "__main__":
     print(ip_addr())
