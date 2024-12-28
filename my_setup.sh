@@ -4,6 +4,10 @@ git clone https://github.com/OhadRubin/vllm.git
 cd vllm
 sudo docker build -t tpu-vm-base -f Dockerfile.tpu .
 sudo mkdir -p /dev/shm/huggingface && sudo chown $USER:$USER /dev/shm/huggingface && sudo rm -rf ~/.cache/huggingface && sudo ln -s /dev/shm/huggingface ~/.cache/huggingface
+sudo mkdir -p /dev/shm/gcs_cache
+sudo chmod 777 /dev/shm/gcs_cache
+sudo chown -R $USER:$USER /dev/shm/gcs_cache
+
 curl https://checkip.amazonaws.com
 # pip install torch_xla[tpu] -f https://storage.googleapis.com/libtpu-releases/index.html
 # pip3 install torch==2.5.0.dev20241201+cpu
@@ -19,7 +23,8 @@ curl https://checkip.amazonaws.com
 
 # mkdir -p /dev/shm/huggingface && rm -rf ~/.cache/huggingface && ln -s /dev/shm/huggingface ~/.cache/huggingface
 
-bash install.sh
+# bash install.sh
+
 
 
 # TODO move to install.sh
