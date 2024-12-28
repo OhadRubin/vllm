@@ -59,7 +59,10 @@ if [ "${CURRENT_IP}" == "${HEAD_NODE_ADDRESS}" ]; then
     # Wait for container to be ready
     bash start_tunnel.sh & 
     # Install requirements and start server
-    sudo docker exec node /bin/bash -c "${ADDITIONAL_ARGS[@]}"
+    
+    # Convert array to space-separated string and wrap in quotes
+    COMMAND="${ADDITIONAL_ARGS[*]}"
+    sudo docker exec node /bin/bash -c "$COMMAND"
 fi
 
 # git clone https://github.com/pytorch/xla.git
