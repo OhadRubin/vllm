@@ -22,30 +22,32 @@ fi
 # Unmount if already mounted
 if mountpoint -q /mnt/gcs_bucket; then
     # echo
-    echo "Unmounting /mnt/gcs_bucket"
-    sudo fusermount -u /mnt/gcs_bucket || sudo umount -f /mnt/gcs_bucket || sudo umount -l /mnt/gcs_bucket
+    sudo umount -l /mnt/gcs_bucket
+    # echo "Unmounting /mnt/gcs_bucket"
+    # sudo fusermount -u /mnt/gcs_bucket || sudo umount -f /mnt/gcs_bucket || sudo umount -l /mnt/gcs_bucket
 fi
 
 # Mount with proper user permissions
-if ! mountpoint -q /mnt/gcs_bucket; then
-    gcsfuse \
-        --implicit-dirs \
-        --file-cache-enable-parallel-downloads \
-        --file-cache-parallel-downloads-per-file 100 \
-        --file-cache-max-parallel-downloads -1 \
-        --file-cache-download-chunk-size-mb 10 \
-        --file-cache-max-size-mb -1 \
-        --dir-mode 0777 \
-        --file-mode 0666 \
-        --uid $(id -u) \
-        --gid $(id -g) \
-        --cache-dir /dev/shm/gcs_cache \
-        meliad2_us2_backup /mnt/gcs_bucket
+gcsfuse \
+    --implicit-dirs \
+    --file-cache-enable-parallel-downloads \
+    --file-cache-parallel-downloads-per-file 100 \
+    --file-cache-max-parallel-downloads -1 \
+    --file-cache-download-chunk-size-mb 10 \
+    --file-cache-max-size-mb -1 \
+    --dir-mode 0777 \
+    --file-mode 0666 \
+    --uid $(id -u) \
+    --gid $(id -g) \
+    --cache-dir /dev/shm/gcs_cache \
+    meliad2_us2_backup /mnt/gcs_bucket
 
-    export MOUNT_POINT=/mnt/gcs_bucket
-    echo 1024 | sudo tee /sys/class/bdi/0:$(stat -c "%d" $MOUNT_POINT)/read_ahead_kb
-    ls -R /mnt/gcs_bucket/models/Llama-3.3-70B-Instruct > /dev/null
-fi
+export MOUNT_POINT=/mnt/gcs_bucket
+# if ! mountpoint -q /mnt/gcs_bucket; then
+    
+#     # echo 1024 | tee /sys/class/bdi/0:$(stat -c "%d" $MOUNT_POINT)/read_ahead_kb
+#     ls -R /mnt/gcs_bucket/models/Llama-3.3-70B-Instruct > /dev/null
+# fi
 
 
 #  chown -R $USER:$USER /mnt/gcs_bucket/models/Llama-3.3-70B-Instruct
