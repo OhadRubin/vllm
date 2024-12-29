@@ -8,14 +8,22 @@ if ! command -v gcsfuse &> /dev/null; then
     sudo apt-get install gcsfuse
 fi
 
-
+# Create mount point if it doesn't exist
 if ! sudo mkdir -p /mnt/gcs_bucket 2>/dev/null; then
     mkdir -p /mnt/gcs_bucket
 fi
 
-if ! sudo chmod 777 /mnt/gcs_bucket 2>/dev/null; then
-    chmod 777 /mnt/gcs_bucket
+# Set permissions on mount point
+if ! sudo chmod -R 777 /mnt/gcs_bucket 2>/dev/null; then
+    chmod -R 777 /mnt/gcs_bucket
 fi
+
+# Unmount if already mounted
+if mountpoint -q /mnt/gcs_bucket; then
+    sudo fusermount -u /mnt/gcs_bucket || sudo umount -f /mnt/gcs_bucket || sudo umount -l /mnt/gcs_bucket
+fi
+
+# Mount with proper user permissions
 if ! mountpoint -q /mnt/gcs_bucket; then
     gcsfuse \
         --implicit-dirs \
@@ -25,10 +33,15 @@ if ! mountpoint -q /mnt/gcs_bucket; then
         --file-cache-download-chunk-size-mb 10 \
         --file-cache-max-size-mb -1 \
         --dir-mode 0777 \
-        --cache-dir /dev/shm/gcs_cache  \
+        --file-mode 0666 \
+        --uid $(id -u) \
+        --gid $(id -g) \
+        --allow-other \
+        --cache-dir /dev/shm/gcs_cache \
         meliad2_us2_backup /mnt/gcs_bucket
+
     export MOUNT_POINT=/mnt/gcs_bucket
-    echo 1024 | tee /sys/class/bdi/0:$(stat -c "%d" $MOUNT_POINT)/read_ahead_kb
+    echo 1024 | sudo tee /sys/class/bdi/0:$(stat -c "%d" $MOUNT_POINT)/read_ahead_kb
     ls -R /mnt/gcs_bucket/models/Llama-3.3-70B-Instruct > /dev/null
 fi
 
