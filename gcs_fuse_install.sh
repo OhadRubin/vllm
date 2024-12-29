@@ -14,7 +14,7 @@ if ! sudo mkdir -p /mnt/gcs_bucket 2>/dev/null; then
 fi
 
 if ! sudo chmod -R 777 /mnt/gcs_bucket 2>/dev/null; then
-    chmod -R777 /mnt/gcs_bucket
+    chmod -R 777 /mnt/gcs_bucket
 fi
 if ! mountpoint -q /mnt/gcs_bucket; then
     gcsfuse \
