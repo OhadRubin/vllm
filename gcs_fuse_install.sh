@@ -9,15 +9,28 @@ if ! command -v gcsfuse &> /dev/null; then
 fi
 
 
-if ! sudo mkdir -p /mnt/gcs_bucket 2>/dev/null; then
-    mkdir -p /mnt/gcs_bucket
+# Check if we have sudo access by attempting to run a harmless sudo command
+if sudo -n true 2>/dev/null; then
+    HAS_SUDO=true
+else
+    HAS_SUDO=false
 fi
 
-if ! sudo chmod -R 777 /mnt/gcs_bucket 2>/dev/null; then
-    chmod -R 777 /mnt/gcs_bucket
-fi
-if ! mountpoint -q /mnt/gcs_bucket; then
+if [ "$HAS_SUDO" = true ]; then
+    sudo mkdir -p /mnt/gcs_bucket 2>/dev/null
+    sudo chmod -R 777 /mnt/gcs_bucket 2>/dev/null
     echo "user_allow_other" | sudo tee /etc/fuse.conf
+    sudo mkdir -p /dev/shm/gcs_cache
+    sudo chmod 777 /dev/shm/gcs_cache
+    sudo chown -R $USER:$USER /dev/shm/gcs_cache
+else
+    mkdir -p /mnt/gcs_bucket 2>/dev/null
+    chmod -R 777 /mnt/gcs_bucket 2>/dev/null
+    echo "user_allow_other" | tee /etc/fuse.conf
+fi
+
+killall gcsfuse
+if ! mountpoint -q /mnt/gcs_bucket; then
     
     gcsfuse \
         --implicit-dirs \
@@ -31,7 +44,11 @@ if ! mountpoint -q /mnt/gcs_bucket; then
         --cache-dir /dev/shm/gcs_cache  \
         meliad2_us2_backup /mnt/gcs_bucket &> ~/gcs_log.log &
     export MOUNT_POINT=/mnt/gcs_bucket
-    echo 1024 | tee /sys/class/bdi/0:$(stat -c "%d" $MOUNT_POINT)/read_ahead_kb
+    if [ "$HAS_SUDO" = true ]; then
+        echo 1024 | sudo tee /sys/class/bdi/0:$(stat -c "%d" $MOUNT_POINT)/read_ahead_kb
+    else
+        echo 1024 | tee /sys/class/bdi/0:$(stat -c "%d" $MOUNT_POINT)/read_ahead_kb
+    fi
     ls -R /mnt/gcs_bucket/models/Llama-3.3-70B-Instruct > /dev/null
 fi
 
