@@ -17,6 +17,8 @@ if ! sudo chmod -R 777 /mnt/gcs_bucket 2>/dev/null; then
     chmod -R 777 /mnt/gcs_bucket
 fi
 if ! mountpoint -q /mnt/gcs_bucket; then
+    echo "user_allow_other" | sudo tee /etc/fuse.conf
+    
     gcsfuse \
         --implicit-dirs \
         --file-cache-enable-parallel-downloads \
