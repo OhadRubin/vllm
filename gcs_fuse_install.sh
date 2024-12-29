@@ -20,6 +20,8 @@ fi
 
 # Unmount if already mounted
 if mountpoint -q /mnt/gcs_bucket; then
+    # echo
+    echo "Unmounting /mnt/gcs_bucket"
     sudo fusermount -u /mnt/gcs_bucket || sudo umount -f /mnt/gcs_bucket || sudo umount -l /mnt/gcs_bucket
 fi
 
