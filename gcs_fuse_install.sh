@@ -1,5 +1,6 @@
 #  bash gcs_fuse_install.sh
 if ! command -v gcsfuse &> /dev/null; then
+    echo "Installing gcsfuse"
     export GCSFUSE_REPO=gcsfuse-`lsb_release -c -s`
     echo "deb [signed-by=/usr/share/keyrings/cloud.google.asc] https://packages.cloud.google.com/apt $GCSFUSE_REPO main" | sudo tee /etc/apt/sources.list.d/gcsfuse.list
     curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo tee /usr/share/keyrings/cloud.google.asc
@@ -14,8 +15,8 @@ if ! sudo mkdir -p /mnt/gcs_bucket 2>/dev/null; then
 fi
 
 # Set permissions on mount point
-if ! sudo chmod -R 777 /mnt/gcs_bucket 2>/dev/null; then
-    chmod -R 777 /mnt/gcs_bucket
+if ! sudo chmod 777 /mnt/gcs_bucket 2>/dev/null; then
+    chmod 777 /mnt/gcs_bucket
 fi
 
 # Unmount if already mounted
