@@ -29,7 +29,7 @@ else
     echo "user_allow_other" | tee /etc/fuse.conf
 fi
 
-pkill -f -9 gcsfuse
+# pkill -f -9 gcsfuse
 if ! mountpoint -q /mnt/gcs_bucket; then
     
     gcsfuse \
