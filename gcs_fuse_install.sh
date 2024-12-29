@@ -25,9 +25,9 @@ if ! mountpoint -q /mnt/gcs_bucket; then
         --file-cache-download-chunk-size-mb 10 \
         --file-cache-max-size-mb -1 \
         --dir-mode 0777 \
-        -o allow_other \
+        -o allow_other --foreground \
         --cache-dir /dev/shm/gcs_cache  \
-        meliad2_us2_backup /mnt/gcs_bucket
+        meliad2_us2_backup /mnt/gcs_bucket &> ~/gcs_log.log &
     export MOUNT_POINT=/mnt/gcs_bucket
     echo 1024 | tee /sys/class/bdi/0:$(stat -c "%d" $MOUNT_POINT)/read_ahead_kb
     ls -R /mnt/gcs_bucket/models/Llama-3.3-70B-Instruct > /dev/null
