@@ -39,7 +39,6 @@ if ! mountpoint -q /mnt/gcs_bucket; then
         --file-mode 0666 \
         --uid $(id -u) \
         --gid $(id -g) \
-        --allow-other \
         --cache-dir /dev/shm/gcs_cache \
         meliad2_us2_backup /mnt/gcs_bucket
 
