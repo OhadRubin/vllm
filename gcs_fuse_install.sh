@@ -38,7 +38,7 @@ if ! mountpoint -q /mnt/gcs_bucket; then
         --file-cache-parallel-downloads-per-file 100 \
         --file-cache-max-parallel-downloads -1 \
         --file-cache-download-chunk-size-mb 10 \
-        --file-cache-max-size-mb -1 \
+        --file-cache-max-size-mb 153600 \
         --dir-mode 0777 \
         -o allow_other --foreground \
         --cache-dir /dev/shm/gcs_cache  \
