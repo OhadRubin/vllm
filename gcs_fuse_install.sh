@@ -31,7 +31,7 @@ fi
 
 # pkill -f -9 gcsfuse
 if ! mountpoint -q /mnt/gcs_bucket; then
-    
+    sudo umount -l /mnt/gcs_bucket
     gcsfuse \
         --implicit-dirs \
         --file-cache-enable-parallel-downloads \
