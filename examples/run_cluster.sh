@@ -1,4 +1,6 @@
 #!/bin/bash
+# bash /home/ohadr/vllm/examples/run_cluster.sh "vllm serve /mnt/gcs_bucket/models/Llama-3.1-70B/  --max-model-len 16384 --tensor-parallel-size 8 --pipeline_parallel_size 1 --distributed-executor-backend ray --max-num-seqs 16 --served-model-name meta-llama/Llama-3.1-70B --chat-template examples/base.jinja"
+# bash /home/ohadr/vllm/examples/run_cluster.sh "vllm serve /mnt/gcs_bucket/models/Llama-3.1-8B-Instruct/  --max-model-len 16384 --tensor-parallel-size 8 --pipeline_parallel_size 1 --distributed-executor-backend ray --max-num-seqs 16 --served-model-name meta-llama/Llama-3.1-8B-Instruct"
 # bash /home/ohadr/vllm/examples/run_cluster.sh
 (cd ~/vllm && git pull)
 # Get the current IP address
@@ -21,8 +23,6 @@ ADDITIONAL_ARGS=("$@")
 cleanup() {
     sudo docker stop node
     sudo docker rm node
-    # pkill -f -9 portr
-    # pkill -f -9 start_tunnel.sh
 }
 trap cleanup EXIT
 
@@ -35,16 +35,6 @@ else
     RAY_START_CMD+=" --address=${HEAD_NODE_ADDRESS}:6379"
 fi
 
-
-
-# setup cache folder
-# sudo mkdir -p /dev/shm/gcs_cache
-# sudo chmod 777 /dev/shm/gcs_cache
-# sudo chown -R $USER:$USER /dev/shm/gcs_cache
-# sudo chown -R $USER:$USER /mnt/gcs_bucket
-# source gcs_fuse_install.sh
-# -v "${PATH_TO_HF_HOME}:/root/.cache/huggingface" \
-# gcs_fuse_install.sh sets up the actual mount point on /mnt/gcs_bucket
 sudo docker run  \
     -d \
     -v /home/$USER/vllm:/workspace/vllm \
@@ -59,16 +49,9 @@ sudo docker run  \
     -v "/dev/shm/gcs_cache:/dev/shm/gcs_cache" \
     "${DOCKER_IMAGE}" -c "cd /workspace/vllm && git config --global --add safe.directory /workspace/vllm  && git pull  &&  bash gcs_fuse_install.sh && ${RAY_START_CMD}"
 echo "done loading ray process"
-# while true; do
-#     sleep 60
-# done
 
 if [ "${CURRENT_IP}" == "${HEAD_NODE_ADDRESS}" ]; then
     # Wait for container to be ready
-    # trap cleanup EXIT
-    # bash start_tunnel.sh & 
-    # Install requirements and start server
-    # sleep 10
     # Convert array to space-separated string and wrap in quotes
     COMMAND="${ADDITIONAL_ARGS[*]}"
     
