@@ -98,7 +98,7 @@ def run_files(config):
         initargs=(config,),
     ) as pool:
         outputs = []
-        with tqdm(total=len(tups)) as pbar:
+        with tqdm(total=max_examples) as pbar:
             for example in pool.imap_unordered(process_example, tups):
                 outputs.append(example)
                 pbar.update(1)
