@@ -16,7 +16,7 @@ PATH_TO_HF_HOME=~/.cache/huggingface
 # Additional arguments are passed directly to the Docker command
 ADDITIONAL_ARGS=("$@")
 
-
+rm -rf ~/.cache/huggingface
 # Define a function to cleanup on EXIT signal
 sudo docker stop node
 sudo docker rm node
@@ -41,6 +41,7 @@ sudo mkdir -p /dev/shm/gcs_cache
 sudo chmod 777 /dev/shm/gcs_cache
 sudo chown -R $USER:$USER /dev/shm/gcs_cache
 sudo chown -R $USER:$USER /mnt/gcs_bucket
+# -v "${PATH_TO_HF_HOME}:/root/.cache/huggingface" \
 # gcs_fuse_install.sh sets up the actual mount point on /mnt/gcs_bucket
 sudo docker run -d \
     -v /home/$USER/vllm:/workspace/vllm \
@@ -52,7 +53,6 @@ sudo docker run -d \
     -e HF_TOKEN="${HF_TOKEN}" \
     -e GLOO_SOCKET_IFNAME=ens8 \
     -e VLLM_XLA_CACHE_PATH=/mnt/gcs_bucket/xla_cache \
-    -v "${PATH_TO_HF_HOME}:/root/.cache/huggingface" \
     -v "/dev/shm/gcs_cache:/dev/shm/gcs_cache" \
     "${DOCKER_IMAGE}" -c "cd /workspace/vllm && git config --global --add safe.directory /workspace/vllm  && git pull  &&  bash gcs_fuse_install.sh && ${RAY_START_CMD}"
 
