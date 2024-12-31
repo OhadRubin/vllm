@@ -45,7 +45,7 @@ fi
 # source gcs_fuse_install.sh
 # -v "${PATH_TO_HF_HOME}:/root/.cache/huggingface" \
 # gcs_fuse_install.sh sets up the actual mount point on /mnt/gcs_bucket
-sudo docker run -d \
+sudo docker run  \
     -v /home/$USER/vllm:/workspace/vllm \
     --entrypoint /bin/bash \
     --network host \
