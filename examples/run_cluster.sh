@@ -16,7 +16,7 @@ PATH_TO_HF_HOME=~/.cache/huggingface
 # Additional arguments are passed directly to the Docker command
 ADDITIONAL_ARGS=("$@")
 
-rm -rf ~/.cache/huggingface
+# rm -rf ~/.cache/huggingface
 # Define a function to cleanup on EXIT signal
 sudo docker stop node
 sudo docker rm node
@@ -60,8 +60,8 @@ sudo docker run -d \
 
 if [ "${CURRENT_IP}" == "${HEAD_NODE_ADDRESS}" ]; then
     # Wait for container to be ready
-    trap cleanup EXIT
-    bash start_tunnel.sh & 
+    # trap cleanup EXIT
+    # bash start_tunnel.sh & 
     # Install requirements and start server
     
     # Convert array to space-separated string and wrap in quotes
