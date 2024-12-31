@@ -74,7 +74,6 @@ if [ "$HAS_SUDO" = true ]; then
         else
             echo 1024 | tee /sys/class/bdi/0:$(stat -c "%d" $MOUNT_POINT)/read_ahead_kb
         fi
-    fi
 else
     export MOUNT_POINT=/mnt/gcs_bucket
     gcsfuse \
