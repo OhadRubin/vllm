@@ -55,7 +55,9 @@ fi
 echo "checking if gcsfuse is mounted"
 if ! mountpoint -q /mnt/gcs_bucket; then
     echo "mounting gcsfuse"
-    sudo umount -l /mnt/gcs_bucket
+    if [ "$HAS_SUDO" = true ]; then
+        sudo umount -l /mnt/gcs_bucket
+    fi
     gcsfuse \
         --implicit-dirs \
         --file-cache-enable-parallel-downloads \
