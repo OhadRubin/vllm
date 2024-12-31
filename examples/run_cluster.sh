@@ -72,6 +72,7 @@ done
 #     COMMAND="${ADDITIONAL_ARGS[*]}"
     
 #     sudo docker exec -it node /bin/bash -c "$COMMAND"
+#     sudo docker exec -it node /bin/bash -c "vllm serve /mnt/gcs_bucket/models/Llama-3.1-70B/  --max-model-len 16384 --tensor-parallel-size 8 --pipeline_parallel_size 1 --distributed-executor-backend ray --max-num-seqs 16 --served-model-name meta-llama/Llama-3.1-70B --chat-template examples/base.jinja"
 # else
 #     while true; do
 #         sleep 60
