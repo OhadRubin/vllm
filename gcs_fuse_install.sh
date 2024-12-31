@@ -51,31 +51,24 @@ else
 fi
 
 # pkill -f -9 gcsfuse
-
+export MOUNT_POINT=/mnt/gcs_bucket
 echo "checking if gcsfuse is mounted"
 if [ "$HAS_SUDO" = true ]; then
-    if ! mountpoint -q /mnt/gcs_bucket; then
-        echo "mounting gcsfuse"
-        sudo umount -l /mnt/gcs_bucket
-        gcsfuse \
-            --implicit-dirs \
-            --file-cache-enable-parallel-downloads \
-            --file-cache-parallel-downloads-per-file 100 \
-            --file-cache-max-parallel-downloads -1 \
-            --file-cache-download-chunk-size-mb 10 \
-            --file-cache-max-size-mb 153600 \
-            --dir-mode 0777 \
-            -o allow_other --foreground \
-            --cache-dir /dev/shm/gcs_cache  \
-            meliad2_us2_backup /mnt/gcs_bucket &> ~/gcs_log.log &
-        export MOUNT_POINT=/mnt/gcs_bucket
-        echo 1024 | sudo tee /sys/class/bdi/0:$(stat -c "%d" $MOUNT_POINT)/read_ahead_kb
-        if [ "$HAS_SUDO" = true ]; then
-        else
-            echo 1024 | tee /sys/class/bdi/0:$(stat -c "%d" $MOUNT_POINT)/read_ahead_kb
-        fi
+    echo "mounting gcsfuse"
+    sudo umount -l $MOUNT_POINT
+    gcsfuse \
+        --implicit-dirs \
+        --file-cache-enable-parallel-downloads \
+        --file-cache-parallel-downloads-per-file 100 \
+        --file-cache-max-parallel-downloads -1 \
+        --file-cache-download-chunk-size-mb 10 \
+        --file-cache-max-size-mb 153600 \
+        --dir-mode 0777 \
+        -o allow_other --foreground \
+        --cache-dir /dev/shm/gcs_cache  \
+        meliad2_us2_backup $MOUNT_POINT &> ~/gcs_log.log &
+    echo 1024 | sudo tee /sys/class/bdi/0:$(stat -c "%d" $MOUNT_POINT)/read_ahead_kb
 else
-    export MOUNT_POINT=/mnt/gcs_bucket
     gcsfuse \
     --implicit-dirs \
     --file-cache-enable-parallel-downloads \
