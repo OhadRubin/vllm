@@ -37,10 +37,11 @@ fi
 
 
 # setup cache folder
-sudo mkdir -p /dev/shm/gcs_cache
-sudo chmod 777 /dev/shm/gcs_cache
-sudo chown -R $USER:$USER /dev/shm/gcs_cache
-sudo chown -R $USER:$USER /mnt/gcs_bucket
+# sudo mkdir -p /dev/shm/gcs_cache
+# sudo chmod 777 /dev/shm/gcs_cache
+# sudo chown -R $USER:$USER /dev/shm/gcs_cache
+# sudo chown -R $USER:$USER /mnt/gcs_bucket
+source gcs_fuse_install.sh
 # -v "${PATH_TO_HF_HOME}:/root/.cache/huggingface" \
 # gcs_fuse_install.sh sets up the actual mount point on /mnt/gcs_bucket
 sudo docker run -d \
