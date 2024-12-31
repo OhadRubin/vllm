@@ -24,7 +24,7 @@ print("loading tokenizer")
 
 
 import pathlib
-from tenacity import retry, stop_after_attempt, wait_exponential
+# from tenacity import retry, stop_after_attempt, wait_exponential
 from ml_collections import ConfigDict
 
 class Worker:
@@ -38,9 +38,9 @@ class Worker:
         self.max_tokens = config.max_tokens
         self.verbose = self.config.verbose
 
-    @retry(
-        stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10)
-    )
+    # @retry(
+    #     stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10)
+    # )
     def __call__(self, tup):
         print("running generate")
         example_id, example = tup
