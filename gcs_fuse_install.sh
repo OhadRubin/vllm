@@ -48,7 +48,6 @@ if [ "$HAS_SUDO" = true ]; then
 else
     mkdir -p /mnt/gcs_bucket 2>/dev/null
     chmod -R 777 /mnt/gcs_bucket 2>/dev/null
-    echo "user_allow_other" | tee /etc/fuse.conf
 fi
 
 # pkill -f -9 gcsfuse

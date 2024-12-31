@@ -57,7 +57,7 @@ sudo docker run  \
     -e VLLM_XLA_CACHE_PATH=/mnt/gcs_bucket/xla_cache \
     -v "/dev/shm/gcs_cache:/dev/shm/gcs_cache" \
     "${DOCKER_IMAGE}" -c "cd /workspace/vllm && git config --global --add safe.directory /workspace/vllm  && git pull  &&  bash gcs_fuse_install.sh && ${RAY_START_CMD}"
-
+echo "done"
 while true; do
     sleep 60
 done
