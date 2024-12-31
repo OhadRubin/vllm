@@ -18,12 +18,13 @@ ADDITIONAL_ARGS=("$@")
 
 # rm -rf ~/.cache/huggingface
 # Define a function to cleanup on EXIT signal
-sudo docker stop node
-sudo docker rm node
 cleanup() {
-    pkill -f -9 portr
-    pkill -f -9 start_tunnel.sh
+    sudo docker stop node
+    sudo docker rm node
+    # pkill -f -9 portr
+    # pkill -f -9 start_tunnel.sh
 }
+trap cleanup EXIT
 
 
 # Command setup for head or worker node
@@ -66,7 +67,13 @@ if [ "${CURRENT_IP}" == "${HEAD_NODE_ADDRESS}" ]; then
     sleep 10
     # Convert array to space-separated string and wrap in quotes
     COMMAND="${ADDITIONAL_ARGS[*]}"
-    sudo docker exec node /bin/bash -c "$COMMAND"
+    
+    sudo docker exec -it node /bin/bash -c "$COMMAND"
+else
+    while true; do
+        sleep 60
+    done
+
 fi
 
 # git clone https://github.com/pytorch/xla.git
