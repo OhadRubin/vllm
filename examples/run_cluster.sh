@@ -58,6 +58,9 @@ sudo docker run -d \
     -v "/dev/shm/gcs_cache:/dev/shm/gcs_cache" \
     "${DOCKER_IMAGE}" -c "cd /workspace/vllm && git config --global --add safe.directory /workspace/vllm  && git pull  &&  bash gcs_fuse_install.sh && ${RAY_START_CMD}"
 
+while true; do
+    sleep 60
+done
 
 # if [ "${CURRENT_IP}" == "${HEAD_NODE_ADDRESS}" ]; then
 #     # Wait for container to be ready
