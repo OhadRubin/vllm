@@ -98,7 +98,7 @@ def run_files(config):
         initargs=(config,),
     ) as pool:
         outputs = []
-        with tqdm.tqdm(total=len(tups)) as pbar:
+        with tqdm(total=len(tups)) as pbar:
             for example in pool.imap_unordered(process_example, tups):
                 outputs.append(example)
                 pbar.update(1)
@@ -113,7 +113,7 @@ import pathlib
 
 
 # python3.10 gen_examples.py --model_name meta-llama/Llama-3.1-70B --base_url https://v4-32-node-11.ohadrubin.com/v1 --max_seq_length 16384 --prompt_folder prompts/v5 --num_workers 16 --max_tokens 2048 --suffix _v8 --max_steps 1 --verbose True --temperature 0.8 --shard_id 1
-# python3.10 examples/run_on_dataset.py --dataset_name iohadrubin/gpqa --config_name gold_sft_0 --max_seq_length 16384 --num_workers 16 --max_tokens 2048 --suffix _v0 --max_examples 1 --verbose True --temperature 0.8
+# python3.10 examples/run_on_dataset.py --dataset_name iohadrubin/gpqa --config_name gold_sft_0 --max_seq_length 16384 --num_workers 16 --max_tokens 2048 --suffix _v0  --verbose True --temperature 0.8
 import requests
 
 def main(dataset_name: str="iohadrubin/gpqa",
