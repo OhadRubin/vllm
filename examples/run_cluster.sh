@@ -63,7 +63,7 @@ if [ "${CURRENT_IP}" == "${HEAD_NODE_ADDRESS}" ]; then
     # trap cleanup EXIT
     # bash start_tunnel.sh & 
     # Install requirements and start server
-    
+    sleep 10
     # Convert array to space-separated string and wrap in quotes
     COMMAND="${ADDITIONAL_ARGS[*]}"
     sudo docker exec node /bin/bash -c "$COMMAND"
