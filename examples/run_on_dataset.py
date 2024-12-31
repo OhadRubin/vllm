@@ -1,4 +1,4 @@
-# system_message = system_message.split("\n")[0]
+
 from datasets import load_dataset
 from multiprocessing import Pool
 import os
@@ -56,6 +56,7 @@ class Worker:
             # }
         )
         prediction = response.choices[0].message.content
+        print(prediction)
         example["prediction"] = prediction
         return example
 
