@@ -26,7 +26,8 @@ cleanup() {
 }
 trap cleanup EXIT
 
-
+sudo docker stop node
+sudo docker rm node
 # Command setup for head or worker node
 RAY_START_CMD="ray start --block --num-cpus=220 --resources='{\"TPU\": 4}'"
 if [ "${CURRENT_IP}" == "${HEAD_NODE_ADDRESS}" ]; then
