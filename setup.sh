@@ -1,0 +1,1 @@
+sudo docker build -t tpu-vm-base -f Dockerfile.tpu .
