@@ -11,13 +11,11 @@ import datasets
 import pathlib
 import fire
 import json
-# import islice
 from itertools import islice
 from tqdm import tqdm  # Add this import
 
 logger.setLevel(logging.ERROR)
-# env_vars = dotenv_values(os.path.expanduser("~/.bashrc"))
-# OPENROUTER_API_KEY = env_vars.get("OPENROUTER_API_KEY")
+
 
 from transformers import AutoTokenizer
 print("loading tokenizer")
@@ -38,9 +36,6 @@ class Worker:
         self.max_tokens = config.max_tokens
         self.verbose = self.config.verbose
 
-    # @retry(
-    #     stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10)
-    # )
     def __call__(self, tup):
         print("running generate")
         example_id, example = tup
