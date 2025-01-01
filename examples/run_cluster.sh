@@ -17,7 +17,7 @@ PATH_TO_HF_HOME=~/.cache/huggingface
 
 # Additional arguments are passed directly to the Docker command
 ADDITIONAL_ARGS=("$@")
-
+python3.10 -m pip install openai==1.17.0 huggingface-hub
 # rm -rf ~/.cache/huggingface
 # Define a function to cleanup on EXIT signal
 cleanup() {
