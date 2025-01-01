@@ -126,16 +126,20 @@ def main(dataset_name: str="iohadrubin/gpqa",
          ):
     # model_name: str
     while True:
-        response = requests.get(f"{base_url}/models")
-        if response.status_code == 200:
-            models = response.json()["data"]
-            if len(models) > 0:
-                model_name = models[0]["id"]
-                break
+        try:
+            response = requests.get(f"{base_url}/models")
+            if response.status_code == 200:
+                models = response.json()["data"]
+                if len(models) > 0:
+                    model_name = models[0]["id"]
+                    break
+                else:
+                    raise ValueError("No models found in the server response")
             else:
-                raise ValueError("No models found in the server response")
-        else:
-            raise ValueError(f"Failed to get models from server. Status code: {response.status_code}")
+                raise ValueError(f"Failed to get models from server. Status code: {response.status_code}")
+        except Exception as e:
+            print(f"Failed to get models from server. Error: {e}")
+            time.sleep(1)
 
     output_file = f"outputs/{dataset_name.replace('/', '_')}_{config_name}_{model_name.replace('/', '_')}{suffix}.jsonl"
     pathlib.Path("outputs").mkdir(exist_ok=True)
