@@ -15,6 +15,13 @@ HEAD_NODE_ADDRESS=$(python3.10 examples/leader_election.py)
 PATH_TO_HF_HOME=~/.cache/huggingface
 
 
+# Check if tpu-vm-base image exists
+if ! sudo docker images | grep -q tpu-vm-base; then
+    echo "tpu-vm-base image not found, building..."
+    (cd ~/vllm && sudo docker build -t tpu-vm-base -f Dockerfile.tpu .)
+fi
+
+
 # Additional arguments are passed directly to the Docker command
 ADDITIONAL_ARGS=("$@")
 python3.10 -m pip install openai==1.17.0 huggingface-hub
@@ -53,8 +60,7 @@ sudo docker run  \
 
 echo "done loading ray process"
 
-cd ~/redis_queue
-python3.10 -m src.barrier start
+(cd ~/redis_queue && python3.10 -m src.barrier start)
 if [ "${CURRENT_IP}" == "${HEAD_NODE_ADDRESS}" ]; then
     # Wait for container to be ready
     # Convert array to space-separated string and wrap in quotes
@@ -63,23 +69,11 @@ if [ "${CURRENT_IP}" == "${HEAD_NODE_ADDRESS}" ]; then
     sudo docker exec -d node /bin/bash -c "$COMMAND"
     cd ~/vllm
     python3.10 examples/run_on_dataset.py --dataset_name iohadrubin/gpqa --config_name gold_sft_0 --max_seq_length 16384 --num_workers 16 --max_tokens 2048 --suffix _v0  --verbose True --temperature 0.8
-# else
-#     while true; do
-#         sleep 60
-#     done
 fi
-cd ~/redis_queue
-python3.10 -m src.barrier finish
+(cd ~/redis_queue && python3.10 -m src.barrier finish)
 sudo docker stop node
 sudo docker rm node
 
-
-# ls 
-# sleep 1 
-# ls 
-# pwd
-# cd ~/vllm
-# git pull
 # bash /home/ohadr/vllm/examples/run_cluster.sh "vllm serve /mnt/gcs_bucket/models/Llama-3.1-8B-Instruct/  --max-model-len 16384 --tensor-parallel-size 8 --pipeline_parallel_size 1 --distributed-executor-backend ray --max-num-seqs 16 --served-model-name meta-llama/Llama-3.1-8B-Instruct"
 # gsutil cp script.sh gs://meliad2_us2_backup/scripts/script.sh
 # python3.10 -m src.enqueue  "gsutil cat gs://meliad2_us2_backup/scripts/script.sh | bash"

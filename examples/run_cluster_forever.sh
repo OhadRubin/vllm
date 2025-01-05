@@ -14,6 +14,10 @@ DOCKER_IMAGE=tpu-vm-base
 HEAD_NODE_ADDRESS=$(python3.10 examples/leader_election.py)
 PATH_TO_HF_HOME=~/.cache/huggingface
 
+if ! sudo docker images | grep -q tpu-vm-base; then
+    echo "tpu-vm-base image not found, building..."
+    (cd ~/vllm && sudo docker build -t tpu-vm-base -f Dockerfile.tpu .)
+fi
 
 # Additional arguments are passed directly to the Docker command
 ADDITIONAL_ARGS=("$@")
