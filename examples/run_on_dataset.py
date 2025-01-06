@@ -33,6 +33,7 @@ class Worker:
         )
         self.max_tokens = config.max_tokens
         self.verbose = self.config.verbose
+        self.leave_last = config.leave_last
 
     def __call__(self, tup):
         print("running generate")
@@ -41,7 +42,7 @@ class Worker:
         response = self.client.chat.completions.create(
             model=self.config.model_name,
             temperature=self.config.temperature,
-            messages=example["messages"],
+            messages=example["messages"] if not self.leave_last else example["messages"][:-1],
             max_tokens=self.config.max_tokens,
         )
         prediction = response.choices[0].message.content
@@ -102,7 +103,7 @@ import pathlib
 # python3.10 examples/run_on_dataset.py --dataset_name iohadrubin/gpqa --config_name gold_sft_0  --num_workers 16 --max_tokens 2048 --suffix _v0  --verbose True --temperature 0.8
 # python3.10 examples/run_on_dataset.py --dataset_name iohadrubin/example_to_realign_v1 --config_name default  --num_workers 16 --max_tokens 4096 --suffix _v0  --verbose True --temperature 0.6 --split train --base_url https://api.openai.com/v1 --model_name gpt-4o-mini  --api_key $OPENAI_API_KEY 
 
-# python3.10 examples/run_on_dataset.py --dataset_name iohadrubin/reorder_thoughts_v1 --config_name default  --num_workers 16 --max_tokens 4096 --suffix _v0  --verbose True --temperature 0.1 --split test --base_url https://v4-16-node-20.ohadrubin.com/v1 --max_examples 100
+# python3.10 examples/run_on_dataset.py --dataset_name iohadrubin/reorder_thoughts_v1 --config_name default  --num_workers 16 --max_tokens 4096 --suffix _v0  --verbose True --temperature 0.1 --split test --base_url https://v4-16-node-20.ohadrubin.com/v1 --max_examples 100 --leave_last True
 
 
 
