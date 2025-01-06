@@ -34,10 +34,15 @@ trap cleanup EXIT
 
 sudo docker stop node
 sudo docker rm node
+# Kill any existing start_tunnel processes
+
 # Command setup for head or worker node
 RAY_START_CMD="ray start --block --num-cpus=220 --resources='{\"TPU\": 4}'"
 if [ "${CURRENT_IP}" == "${HEAD_NODE_ADDRESS}" ]; then
     RAY_START_CMD+=" --head --port=6379"
+    pkill -f -9 start_tunnel.sh
+    pkill -f -9 portr
+
 else
     RAY_START_CMD+=" --address=${HEAD_NODE_ADDRESS}:6379"
 fi
@@ -63,7 +68,7 @@ if [ "${CURRENT_IP}" == "${HEAD_NODE_ADDRESS}" ]; then
     # Wait for container to be ready
     # Convert array to space-separated string and wrap in quotes
     COMMAND="${ADDITIONAL_ARGS[*]}"
-    
+    (bash start_tunnel.sh &)
     sudo docker exec node /bin/bash -c "$COMMAND"
 else
     while true; do
