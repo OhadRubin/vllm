@@ -16,6 +16,8 @@ import fire
 from transformers import AutoTokenizer
 logger.setLevel(logging.ERROR)
 
+
+
 class Worker:
     def __init__(self, config):
         self.config = config
@@ -28,8 +30,8 @@ class Worker:
         self.model_name = config.model_name
         self.temperature = config.temperature
         self.tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-3.1-70B-Instruct")
-        self.verbose = config.verbose
         self.max_seq_length = config.max_seq_length
+        self.verbose = config.verbose
 
     async def process_example(self, example_id, example):
         if self.drop_last_msg:
@@ -62,6 +64,10 @@ class Worker:
 
 async def run_files(config):
     ds = load_dataset(config.dataset_name, config.config_name)[config.split]
+    
+    if config.shard_id is not None:
+        assert config.num_shards is not None, "num_shards must be provided if shard_id is provided"
+        ds = ds.shard(config.num_shards, config.shard_id)
 
     if config.max_examples != -1:
         max_examples = min(config.max_examples, len(ds))
@@ -80,11 +86,26 @@ async def run_files(config):
     for i in range(max_examples):
         tasks.append(asyncio.create_task(sem_task(i)))
 
-    pathlib.Path("outputs").mkdir(exist_ok=True)
+    pathlib.Path(config.output_dir).mkdir(exist_ok=True)
     with open(config.output_file, "w") as f:
         for future in tqdm(asyncio.as_completed(tasks), total=len(tasks)):
             result = await future
             f.write(json.dumps(result) + "\n")
+
+
+# python3.10 gen_examples.py --model_name meta-llama/Llama-3.1-70B --base_url https://v4-32-node-11.ohadrubin.com/v1  --prompt_folder prompts/v5 --num_workers 16 --max_tokens 2048 --suffix _v8 --max_steps 1 --verbose True --temperature 0.8 --shard_id 1 
+# python3.10 examples/run_on_dataset.py --dataset_name iohadrubin/gpqa --config_name gold_sft_0  --num_workers 16 --max_tokens 2048 --suffix _v0  --verbose True --temperature 0.8
+# python3.10 examples/run_on_dataset.py --dataset_name iohadrubin/example_to_realign_v1 --config_name default  --num_workers 16 --max_tokens 4096 --suffix _v0  --verbose True --temperature 0.6 --split train --base_url https://api.openai.com/v1 --model_name gpt-4o-mini  --api_key $OPENAI_API_KEY 
+
+# python3.10 examples/run_on_dataset.py --dataset_name iohadrubin/reorder_thoughts_v1 --config_name default  --num_workers 16 --max_tokens 4096 --suffix _v2  --verbose True --temperature 0.1 --split test --base_url https://v4-16-node-20.ohadrubin.com/v1 --max_examples 100 --drop_last_msg True
+
+# python3.10 ~/vllm/examples/run_on_dataset_async.py --dataset_name iohadrubin/reorder_thoughts_v1 --config_name default  --num_workers 16 --max_tokens 4096 --suffix _v3  --verbose True --temperature 0 --split train --base_url https://v4-16-node-20.ohadrubin.com/v1 --drop_last_msg True --output_dir /home/ohadr/general_o1/outputs --shard_id 0 --num_shards 16
+# python3.10 ~/vllm/examples/run_on_dataset_async.py --dataset_name iohadrubin/reorder_thoughts_v1 --config_name default  --num_workers 16 --max_tokens 4096 --suffix _v3  --verbose True --temperature 0 --split train --base_url https://v4-16-node-19.ohadrubin.com/v1 --drop_last_msg True --output_dir /home/ohadr/general_o1/outputs --shard_id 1 --num_shards 16
+# python3.10 ~/vllm/examples/run_on_dataset_async.py --dataset_name iohadrubin/reorder_thoughts_v1 --config_name default  --num_workers 16 --max_tokens 4096 --suffix _v3  --verbose True --temperature 0 --split train --base_url https://v4-16-node-18.ohadrubin.com/v1 --drop_last_msg True --output_dir /home/ohadr/general_o1/outputs --shard_id 2 --num_shards 16
+
+# python3.10 examples/run_on_dataset_async.py --dataset_name iohadrubin/reorder_thoughts_v1 --config_name default  --num_workers 16 --max_tokens 4096 --suffix _v3_test  --verbose True --temperature 0 --split test --base_url https://v4-16-node-19.ohadrubin.com/v1 --drop_last_msg True --output_dir /home/ohadr/general_o1/outputs
+
+# python3.10 examples/run_on_dataset.py --dataset_name iohadrubin/reorder_thoughts_v1 --config_name default  --num_workers 16 --max_tokens 4096 --suffix _v3  --verbose True --temperature 0 --split train --base_url http://localhost:8000/v1 --drop_last_msg True --output_dir /home/ohadr/general_o1/outputs
 
 
 def main(dataset_name: str="iohadrubin/gpqa",
@@ -100,6 +121,9 @@ def main(dataset_name: str="iohadrubin/gpqa",
          temperature:float = 0.7,
          api_key: str = "bla",
          drop_last_msg:bool = False,
+         output_dir: str = "outputs",
+         shard_id: Optional[int] = None,
+         num_shards: Optional[int] = None,
          ):
     if model_name is None:
         while True:
@@ -119,6 +143,8 @@ def main(dataset_name: str="iohadrubin/gpqa",
                 time.sleep(1)
 
     output_file = f"outputs/{dataset_name.replace('/', '_')}_{config_name}_{model_name.replace('/', '_')}{suffix}.jsonl"
+    if shard_id is not None:
+        output_file = f"{output_file}.{shard_id}"
 
     config = ConfigDict(
         dict(
@@ -136,6 +162,9 @@ def main(dataset_name: str="iohadrubin/gpqa",
             api_key=api_key,
             drop_last_msg=drop_last_msg,
             max_seq_length=16384,
+            output_dir=output_dir,
+            shard_id=shard_id,
+            num_shards=num_shards,
         )
     )
 

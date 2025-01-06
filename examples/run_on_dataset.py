@@ -34,6 +34,8 @@ class Worker:
         self.max_tokens = config.max_tokens
         self.verbose = self.config.verbose
         self.drop_last_msg = config.drop_last_msg
+        self.tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-3.1-70B-Instruct")
+        self.max_seq_length = config.max_seq_length
 
     def __call__(self, tup):
         print("running generate")
@@ -42,7 +44,10 @@ class Worker:
             messages = example["messages"][:-1]
         else:
             messages = example["messages"]
-
+        L = len(self.tokenizer.apply_chat_template(messages))
+        if (L+self.max_tokens) > self.max_seq_length:
+            example["prediction"] = ""
+            return example
         response = self.client.chat.completions.create(
             model=self.config.model_name,
             temperature=self.config.temperature,
@@ -71,11 +76,15 @@ def run_files(config):
     ds = datasets.load_dataset(config.dataset_name,
                                config.config_name
                                )[config.split]
-    
+    if config.shard_id is not None:
+        assert config.num_shards is not None, "num_shards must be provided if shard_id is provided"
+        ds = ds.shard(config.num_shards, config.shard_id)
+        
     if config.max_examples != -1:
         max_examples = min(config.max_examples, len(ds))
     else:
         max_examples = len(ds)
+    
 
     tups = range(max_examples)
 
@@ -131,6 +140,9 @@ def main(dataset_name: str="iohadrubin/gpqa",
          temperature:float = 0.7,
          api_key: str = "bla",
          drop_last_msg:bool = False,
+         output_dir: str = "outputs",
+         shard_id: Optional[int] = None,
+         num_shards: Optional[int] = None,
          ):
     # model_name: str
     if model_name is None:
@@ -150,8 +162,11 @@ def main(dataset_name: str="iohadrubin/gpqa",
                 print(f"Failed to get models from server. Error: {e}")
                 time.sleep(1)
 
-    output_file = f"outputs/{dataset_name.replace('/', '_')}_{config_name}_{model_name.replace('/', '_')}{suffix}.jsonl"
-    pathlib.Path("outputs").mkdir(exist_ok=True)
+    pathlib.Path(output_dir).mkdir(exist_ok=True)
+    output_file = f"{output_dir}/{dataset_name.replace('/', '_')}_{config_name}_{model_name.replace('/', '_')}{suffix}.jsonl"
+    if shard_id is not None:
+        output_file = f"{output_file}.{shard_id}"
+
     
 
     
@@ -170,6 +185,10 @@ def main(dataset_name: str="iohadrubin/gpqa",
             temperature=temperature,
             api_key=api_key,
             drop_last_msg=drop_last_msg,
+            max_seq_length=16384,
+            output_dir=output_dir,
+            shard_id=shard_id,
+            num_shards=num_shards,
         )
     )
     run_files(config)
