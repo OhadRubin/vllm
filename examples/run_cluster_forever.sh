@@ -4,12 +4,12 @@
 # bash /home/ohadr/vllm/examples/run_cluster_forever.sh "vllm serve /mnt/gcs_bucket/AI2_EasyLM/v6_use_cachingTrue_seq_length4096_num_epochs1_size8b/huggingface_params  --max-model-len 16384 --tensor-parallel-size 8 --pipeline_parallel_size 1 --distributed-executor-backend ray --max-num-seqs 16 --served-model-name meta-llama/Llama-3.1-8B-Instruct"
 # bash /home/ohadr/vllm/examples/run_cluster_forever.sh "vllm serve /mnt/gcs_bucket/AI2_EasyLM/v18_use_cachingFalse_seq_length4096_num_epochs2_size8b/streaming_params_248/  --max-model-len 16384 --tensor-parallel-size 8 --pipeline_parallel_size 1 --distributed-executor-backend ray --max-num-seqs 16 --served-model-name meta-llama/Llama-3.1-8B-Instruct"
 # bash /home/ohadr/vllm/examples/run_cluster_forever.sh
+ cd ~/vllm
 (cd ~/vllm && git pull)
 # Get the current IP address
 CURRENT_IP=$(curl https://checkip.amazonaws.com)
 echo "Current IP address: ${CURRENT_IP}"
 
- 
 source ~/.bashrc
 # Assign the first three arguments and shift them away
 DOCKER_IMAGE=tpu-vm-base
