@@ -137,7 +137,7 @@ SERVED_MODEL_NAME, served_model_name, meta-llama/Llama-3.1-8B-Instruct
 
 
 with dag.DAG() as experiment:
-  num_shards(16) >> shard_id(*range(16)) >> suffix("_v4")
+  num_shards(16) >> shard_id(*range(2, 16)) >> suffix("_v4")
 #   size("8b") >> num_epochs(4) >> dt("gold_sft") >> cvi(0)
 
         
@@ -159,11 +159,11 @@ for k, v in task_dict.items():
     print(f"gsutil cat {file_path} > /tmp/script.sh; bash /tmp/script.sh")
     with mlxu.open_file(file_path, 'w') as fin:
         fin.write(script)
-if False:
-    for k in tpu_dict.keys():
-        q_name = f"v4-{k}"
-        queue = RedisQueue(name=q_name)
-        for v in tpu_dict[k]:
-            cmd = f"gsutil cat {v} > /tmp/script.sh; bash /tmp/script.sh"
-            print(f"adding {cmd} to {q_name}")
-            queue.put(cmd)
+# if False:
+for k in tpu_dict.keys():
+    q_name = f"v4-{k}"
+    queue = RedisQueue(name=q_name)
+    for v in tpu_dict[k]:
+        cmd = f"gsutil cat {v} > /tmp/script.sh; bash /tmp/script.sh"
+        print(f"adding {cmd} to {q_name}")
+        queue.put(cmd)
