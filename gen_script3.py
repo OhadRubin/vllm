@@ -137,7 +137,8 @@ SERVED_MODEL_NAME, served_model_name, meta-llama/Llama-3.1-8B-Instruct
 
 
 with dag.DAG() as experiment:
-  num_shards(16) >> shard_id(*range(2, 16)) >> suffix("_v4")
+  num_shards(16) >> shard_id(1) >> suffix("_v4")
+#   num_shards(16) >> shard_id(*range(2, 16)) >> suffix("_v4")
 #   size("8b") >> num_epochs(4) >> dt("gold_sft") >> cvi(0)
 
         

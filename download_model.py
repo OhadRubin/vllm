@@ -16,7 +16,13 @@ ip_addr = leader_election.ip_addr
 import more_itertools
 import argparse
 
+"""
+curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | sudo bash
+sudo apt-get install git-lfs
+git lfs install
+git clone https://iohadrubin:$HF_TOKEN@huggingface.co/meta-llama/Llama-3.1-405B
 
+"""
 # usage: python3.10 download_model.py --hf-token $HF_TOKEN --model-name meta-llama/Llama-3.1-405B --n-chunks 191
 def main():
     parser = argparse.ArgumentParser()
