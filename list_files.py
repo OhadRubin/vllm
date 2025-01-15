@@ -2,6 +2,7 @@ import subprocess
 import os
 from urllib.parse import quote
 import tempfile
+
 def get_repo_file_sizes(token, repo_path):
     # Encode token for URL
     encoded_token = quote(token)
@@ -62,50 +63,70 @@ def pretty_print_size(size):
     else:
         return f"{size} bytes"
 
-
-"""ohadr@v4-128-node-20:~$ ls /mnt/gcs_bucket/models/Llama-3.1-405B/ | grep safetensors | tail
-model-00176-of-00191.safetensors
-model-00177-of-00191.safetensors
-model-00178-of-00191.safetensors
-model-00179-of-00191.safetensors
-model-00180-of-00191.safetensors
-model-00181-of-00191.safetensors
-model-00182-of-00191.safetensors
-model-00183-of-00191.safetensors
-model-00184-of-00191.safetensors"""
-
-
-def get_safetensors_files(repo_path, verbose=False):
+def get_safetensors_files_with_sizes(repo_path, verbose=False):
     token = subprocess.check_output("bash -ic 'source ~/.bashrc; echo $HF_TOKEN'", shell=True).decode().strip()
     if not token:
         print("Error: HF_TOKEN environment variable not set")
         exit(1)
     
-    all_paths = []
-    # Get and print file sizes
+    file_info = {}
     sizes = get_repo_file_sizes(token, repo_path)
     for line in sizes.split("\n"):
         if not line.strip():
             continue
-        # print(line)
         hash_str, path_size = line.split(" - ")
         path, size = path_size.split(" ", 1)
         if "safetensors" in path:
+            expected_size = parse_size(size)
             if verbose:
-                print(f"{path} {size} {pretty_print_size(parse_size(size))}")
-            all_paths.append(path)
-    return all_paths
-# python3.10 list_files.py
+                print(f"{path} {size} {pretty_print_size(expected_size)}")
+            file_info[path] = expected_size
+    return file_info
+
+def verify_file_integrity(file_path, expected_size):
+    actual_size = os.path.getsize(file_path)
+    return actual_size == expected_size
 
 def main(model_name="meta-llama/Llama-3.1-405B",
          model_dir="/mnt/gcs_bucket/models/Llama-3.1-405B",
          verbose=False):
-    all_paths = get_safetensors_files(model_name, verbose)
+    file_info = get_safetensors_files_with_sizes(model_name, verbose)
     existing_files = os.listdir(model_dir)
-    missing_files = [path for path in all_paths if path not in existing_files]
-    missing_str = " ".join(missing_files)
-
-    print(f"huggingface-cli download --local-dir {model_dir} {model_name} {missing_str}")
+    
+    corrupted_files = []
+    missing_files = []
+    
+    for filename, expected_size in file_info.items():
+        if filename not in existing_files:
+            missing_files.append(filename)
+        else:
+            full_path = os.path.join(model_dir, filename)
+            if not verify_file_integrity(full_path, expected_size):
+                corrupted_files.append(filename)
+                if verbose:
+                    actual_size = os.path.getsize(full_path)
+                    print(f"Corrupted file: {filename}")
+                    print(f"Expected size: {pretty_print_size(expected_size)}")
+                    print(f"Actual size: {pretty_print_size(actual_size)}")
+    
+    if corrupted_files:
+        print("\nCorrupted files detected:")
+        for file in corrupted_files:
+            print(f"- {file}")
+        corrupted_str = " ".join(corrupted_files)
+        print(f"\nTo re-download corrupted files:")
+        print(f"huggingface-cli download --local-dir {model_dir} {model_name} {corrupted_str}")
+    
+    if missing_files:
+        print("\nMissing files detected:")
+        for file in missing_files:
+            print(f"- {file}")
+        missing_str = " ".join(missing_files)
+        print(f"\nTo download missing files:")
+        print(f"huggingface-cli download --local-dir {model_dir} {model_name} {missing_str}")
+    
+    if not corrupted_files and not missing_files:
+        print("All files present and verified.")
 
 import fire
 if __name__ == "__main__":
