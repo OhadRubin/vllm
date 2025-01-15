@@ -103,7 +103,9 @@ def main(model_name="meta-llama/Llama-3.1-405B",
     all_paths = get_safetensors_files(model_name, verbose)
     existing_files = os.listdir(model_dir)
     missing_files = [path for path in all_paths if path not in existing_files]
-    print(missing_files)
+    missing_str = " ".join(missing_files)
+
+    print(f"huggingface-cli download --local-dir {model_dir} {missing_str}")
 
 import fire
 if __name__ == "__main__":
