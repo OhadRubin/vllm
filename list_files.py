@@ -105,7 +105,7 @@ def main(model_name="meta-llama/Llama-3.1-405B",
     missing_files = [path for path in all_paths if path not in existing_files]
     missing_str = " ".join(missing_files)
 
-    print(f"huggingface-cli download --local-dir {model_dir} {missing_str}")
+    print(f"huggingface-cli download --local-dir {model_dir} {model_name} {missing_str}")
 
 import fire
 if __name__ == "__main__":
