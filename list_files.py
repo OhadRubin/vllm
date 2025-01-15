@@ -75,7 +75,7 @@ model-00183-of-00191.safetensors
 model-00184-of-00191.safetensors"""
 
 
-def get_safetensors_files(repo_path):
+def get_safetensors_files(repo_path, verbose=False):
     token = subprocess.check_output("bash -ic 'source ~/.bashrc; echo $HF_TOKEN'", shell=True).decode().strip()
     if not token:
         print("Error: HF_TOKEN environment variable not set")
@@ -91,16 +91,22 @@ def get_safetensors_files(repo_path):
         hash_str, path_size = line.split(" - ")
         path, size = path_size.split(" ", 1)
         if "safetensors" in path:
-            print(f"{path} {size} {pretty_print_size(parse_size(size))}")
+            if verbose:
+                print(f"{path} {size} {pretty_print_size(parse_size(size))}")
             all_paths.append(path)
     return all_paths
 # python3.10 list_files.py
+
+def main(model_name="meta-llama/Llama-3.1-405B",
+         model_dir="/mnt/gcs_bucket/models/Llama-3.1-405B",
+         verbose=False):
+    all_paths = get_safetensors_files(model_name, verbose)
+    existing_files = os.listdir(model_dir)
+    missing_files = [path for path in all_paths if path not in existing_files]
+    print(missing_files)
+
+import fire
 if __name__ == "__main__":
-    all_paths = get_safetensors_files("meta-llama/Llama-3.1-405B")
-    print(all_paths[:10])
-    existing_files = os.listdir("/mnt/gcs_bucket/models/Llama-3.1-405B")
-    print(existing_files[:10])
-    # missing_files = [path for path in all_paths if path not in existing_files]
-    # print(missing_files)
+    fire.Fire(main)
     
     # Get token from environment variable
