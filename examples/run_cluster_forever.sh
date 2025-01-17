@@ -6,6 +6,7 @@
 # bash examples/run_cluster_forever.sh "vllm serve /mnt/gcs_bucket/AI2_EasyLM/v18_use_cachingFalse_seq_length4096_num_epochs2_size8b/streaming_params_248/  --max-model-len 16384 --tensor-parallel-size 8 --pipeline_parallel_size 1 --distributed-executor-backend ray --max-num-seqs 16 --served-model-name meta-llama/Llama-3.1-8B-Instruct"
 
 # bash examples/run_cluster_forever.sh "vllm serve /mnt/gcs_bucket/AI2_EasyLM/v38_remat_blockTrue_seq_length8192_stsTrue_size8b  --max-model-len 16384 --tensor-parallel-size 8 --pipeline_parallel_size 1 --distributed-executor-backend ray --max-num-seqs 16 --served-model-name meta-llama/Llama-3.1-8B-Instruct"
+# bash examples/run_cluster_forever.sh "vllm serve /mnt/gcs_bucket/AI2_EasyLM/v46_remat_blockFalse_use_raTrue_seq_length2048_size8b  --max-model-len 16384 --tensor-parallel-size 8 --pipeline_parallel_size 1 --distributed-executor-backend ray --max-num-seqs 16 --served-model-name meta-llama/Llama-3.1-8B-Instruct"
 
 
 # bash examples/run_cluster_forever.sh
