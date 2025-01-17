@@ -1,7 +1,8 @@
 # it was obtained from:
 # wget https://github.com/amalshaji/portr/releases/download/0.0.21-beta/portr_0.0.21-beta_Linux_x86_64.zip && unzip portr_0.0.21-beta_Linux_x86_64.zip 
 # 
-source ~/.bashrc && ~/vllm/portr  auth set --token $PORTR_KEY --remote ohadrubin.com
+export PORTR_KEY=$(bash -ic 'source ~/.bashrc; echo $PORTR_KEY')
+~/vllm/portr  auth set --token $PORTR_KEY --remote ohadrubin.com
 
 
 
