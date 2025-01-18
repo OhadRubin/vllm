@@ -50,7 +50,7 @@ SUFFIX, suffix, _v3
 
 
 with dag.DAG() as experiment:
-    model("70b_reorder") >> suffix("_v1")
+    model("70b_reorder") >> suffix("_v1") >> max_examples(100)
   
     
 task_dict, odict = dag.get_all_experiments(experiment, config, EXP_COUNTi)
@@ -62,7 +62,7 @@ def construct_command(bash_args_dict):
                             MODEL_NAME="meta-llama/Llama-3.1-8B-Instruct")
     elif bash_args_dict["MODEL"] == "70b_reorder":
         bash_args_dict.update(MODEL_PATH="/mnt/gcs_bucket/AI2_EasyLM/v48_remat_blockTrue_seq_length4096_stsFalse_size70b",
-                            MODEL_NAME="meta-llama/Llama-3.3-70B-Instruct")
+                            MODEL_NAME="meta-llama/Llama-3.3-70B-Instruct_reorderer1")
     else:
         raise ValueError(f"Invalid model: {bash_args_dict['MODEL']}")
     
