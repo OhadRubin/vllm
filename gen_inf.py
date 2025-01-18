@@ -47,11 +47,15 @@ NUM_WORKERS, num_workers, 16
 MAX_TOKENS, max_tokens, 4096
 SUFFIX, suffix, _v3
 SPLIT, split, train
+SHARD_ID, shard_id, None
+NUM_SHARDS, num_shards, None
 """)
 
 
 with dag.DAG() as experiment:
-    model("70b_enhance1") >> suffix("_v1") >> max_examples(100) >> ds_name("thought_enhancement_task_v1") >> split("test")
+    model("70b_enhance1") >> suffix("_v2") >> \
+    ds_name("thought_enhancement_task_v1") >> split("test") >> \
+    shard_id(*range(16)) >> num_shards(16)
   
     
 task_dict, odict = dag.get_all_experiments(experiment, config, EXP_COUNTi)
@@ -78,6 +82,12 @@ def construct_command(bash_args_dict):
     formatted_date = now.strftime("%d_%m_%Y")
     bash_args_dict["OUTPUT_DIR"] = f"{bash_args_dict['OUTPUT_DIR']}/{formatted_date}"
     bash_args_dict["DROP_LAST_MSG"] = str(bash_args_dict["SPLIT"]=="train")
+
+    # Add shard args construction
+    shard_args = ""
+    if bash_args_dict["SHARD_ID"] != "None" and bash_args_dict["NUM_SHARDS"] != "None":
+        shard_args = f"--shard_id {bash_args_dict['SHARD_ID']} --num_shards {bash_args_dict['NUM_SHARDS']}"
+    bash_args_dict["SHARD_ARGS"] = shard_args
 
     return bash_args_dict
 
@@ -106,6 +116,7 @@ dataset_cmd_args = (
         "--drop_last_msg {DROP_LAST_MSG}",
         "--output_dir {OUTPUT_DIR} ",
         "--max_examples {MAX_EXAMPLES}",
+        "{SHARD_ARGS}",
     )
 
 
@@ -124,8 +135,19 @@ echo "Done with $OUTPUT_DIR"
 import fire
 from typing import Optional
 # usage: python3.10 gen_script3.py "int_start 3 64 '{s}'"
-# python3.10 gen_script3.py "int_start {node_idx} 64 '{s}' &" --nodes [3,4,5,8]
-def main(format_str:str = '{s}', nodes: Optional[list[int]]  = None):
+
+# python3.10 gen_inf.py "int_start {node_idx} 16 '{s}' &" --nodes [14,16,17,21]
+# Example usage:
+# python3.10 gen_inf.py "int_start {node_idx} 16 '{s}' &" --node_range "14,31"
+
+def main(format_str:str = '{s}',
+         nodes: Optional[list[int]]  = None,
+         node_range: str = None,
+         ):
+    if node_range is not None:
+        node_range = range(node_range[0], node_range[1])
+        nodes = list(node_range)
+    
     now = datetime.datetime.now()
     path_prefix = "gs://meliad2_us2_backup/scripts"
     formatted_date = now.strftime("%d_%m_%Y")
