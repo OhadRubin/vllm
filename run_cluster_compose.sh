@@ -72,7 +72,8 @@ services:
     network_mode: host
     privileged: true
     shm_size: 10.24g
-    entrypoint: ["/bin/bash"]
+    entrypoint: ["/bin/bash", "/workspace/vllm/run_cluster_compose.sh", "entrypoint"]
+    command: []
     environment:
       - SERVICE_MODE=vllm
       - MODE=${MODE}
@@ -100,6 +101,8 @@ services:
       - LEADER_CMD=${LEADER_CMD}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+    entrypoint: ["/bin/bash", "/workspace/vllm/run_cluster_compose.sh", "entrypoint"]
+    command: []
 
   tunnel:
     image: tpu-vm-base
@@ -115,6 +118,8 @@ services:
       - PORTR_KEY=${PORTR_KEY}
     volumes:
       - /home/${USER}/vllm:/workspace/vllm
+    entrypoint: ["/bin/bash", "/workspace/vllm/run_cluster_compose.sh", "entrypoint"]
+    command: []
 
   dataset:
     image: tpu-vm-base
@@ -130,6 +135,8 @@ services:
       - DATASET_CMD=${DATASET_CMD}
     volumes:
       - /home/${USER}/vllm:/workspace/vllm
+    entrypoint: ["/bin/bash", "/workspace/vllm/run_cluster_compose.sh", "entrypoint"]
+    command: []
 EOF
 # Container roles:
 # - vllm: Main Ray container
@@ -252,6 +259,19 @@ elif [ "$1" = "entrypoint" ]; then
   #                          CONTAINER ENTRYPOINT
   #############################################################################
   echo "[CONTAINER] SERVICE_MODE=$SERVICE_MODE  MODE=$MODE"
+  
+  # Add error handling for missing SERVICE_MODE
+  if [ -z "$SERVICE_MODE" ]; then
+    echo "ERROR: SERVICE_MODE environment variable not set"
+    exit 1
+  fi
+
+  # Add error handling for missing MODE
+  if [ -z "$MODE" ]; then
+    echo "ERROR: MODE environment variable not set"
+    exit 1
+  fi
+
   # Common environment logic here, e.g., updating / installing in container
 
   case "$SERVICE_MODE" in
