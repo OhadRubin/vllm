@@ -46,11 +46,12 @@ MAX_EXAMPLES, max_examples, -1
 NUM_WORKERS, num_workers, 16
 MAX_TOKENS, max_tokens, 4096
 SUFFIX, suffix, _v3
+SPLIT, split, train
 """)
 
 
 with dag.DAG() as experiment:
-    model("70b_reorder") >> suffix("_v1") >> max_examples(100)
+    model("70b_enhance1") >> suffix("_v1") >> max_examples(100) >> ds_name("thought_enhancement_task_v1") >> split("test")
   
     
 task_dict, odict = dag.get_all_experiments(experiment, config, EXP_COUNTi)
@@ -63,6 +64,10 @@ def construct_command(bash_args_dict):
     elif bash_args_dict["MODEL"] == "70b_reorder":
         bash_args_dict.update(MODEL_PATH="/mnt/gcs_bucket/AI2_EasyLM/v48_remat_blockTrue_seq_length4096_stsFalse_size70b",
                             MODEL_NAME="meta-llama/Llama-3.3-70B-Instruct_reorderer1")
+    elif bash_args_dict["MODEL"] == "70b_enhance1":
+        bash_args_dict.update(MODEL_PATH="/mnt/gcs_bucket/AI2_EasyLM/v49_ds_nameenhance_seq_length8192_size70b",
+                            MODEL_NAME="meta-llama/Llama-3.3-70B-Instruct_enhance1")
+        
     else:
         raise ValueError(f"Invalid model: {bash_args_dict['MODEL']}")
     
@@ -90,7 +95,7 @@ dataset_cmd_args = (
         "--suffix {SUFFIX} ",
         "--verbose True ",
         "--temperature 0 ",
-        "--split train ",
+        "--split {SPLIT} ",
         "--base_url http://localhost:8000/v1",
         "--drop_last_msg True ",
         "--output_dir {OUTPUT_DIR} ",
