@@ -290,16 +290,13 @@ elif [ "$1" = "entrypoint" ]; then
       echo "[vllm]  CURRENT_IP=$CURRENT_IP"
       echo "[vllm] HEAD_NODE_ADDRESS=$HEAD_NODE_ADDRESS"
       # Build the Ray command (head vs. worker)
-      RAY_START_CMD="ray start --block --num-cpus=220 --resources='{\"TPU\": 4}'"
       if [ "$CURRENT_IP" = "$HEAD_NODE_ADDRESS" ]; then
-        RAY_START_CMD+=" --head --port=6379"
+        ray start --block --num-cpus=220 --resources='{"TPU": 4}' --head --port=6379
       else
-        RAY_START_CMD+=" --address=${HEAD_NODE_ADDRESS}:6379"
+        ray start --block --num-cpus=220 --resources='{"TPU": 4}' --address=$HEAD_NODE_ADDRESS:6379
       fi
-      echo "[vllm] $RAY_START_CMD"
       
-      # Run Ray (blocks)
-      exec $RAY_START_CMD
+
       ;;
 
     ###########################################################################
