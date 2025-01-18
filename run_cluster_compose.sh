@@ -261,6 +261,7 @@ if [ "$1" = "launch" ]; then
   export HF_TOKEN="$(bash -ic 'source ~/.bashrc; echo $HF_TOKEN')"
   # Clear /dev/shm/gcs_cache if large
   sudo rm -rf /tmp/libtpu_lockfile /tmp/tpu_logs
+  sleep 10
   sync_devices
   maybe_clear_cache
   mount_gcs
