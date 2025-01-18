@@ -1,12 +1,15 @@
 #!/usr/bin/env bash
 # set -e
 
+# python3.10 examples/run_on_dataset.py --dataset_name iohadrubin/reorder_thoughts_v1 --config_name default  --num_workers 16 --max_tokens 4096 --suffix _v3  --verbose True --temperature 0 --split train --base_url http://localhost:8000/v1 --drop_last_msg True --output_dir /vllm
 
 # Check and install ZMQ tools if not present
 check_zmq_tools() {
   if ! command -v zmq_pub >/dev/null 2>&1; then
     echo "Installing ZMQ tools..."
-    apt-get update && apt-get install -y libzmq3-dev zmqtools
+    apt-get update && apt-get install -y libzmq3-dev
+    pip3 install git+https://github.com/OhadRubin/zmcat
+    pip3 install fire ml_collections
   fi
 }
 
@@ -21,7 +24,7 @@ follower_loop() {
         
         # Using zmq_sub from zmqtools (needs to be installed)
         # Set timeout to 5 seconds (5000ms)
-        timeout 6 zmq_sub tcp://${leader_ip}:5556 2>/dev/null
+        timeout 5 zmcat sub "tcp://${leader_ip}:5556"
         
         if [ $? -eq 0 ]; then
             echo "follower $my_ip finished"
@@ -37,7 +40,7 @@ finish_barrier() {
     # Using zmq_pub from zmqtools
     # Sleep to allow subscribers to connect
     sleep 1
-    echo "finish" | zmq_pub tcp://*:5556
+    echo "finish" | zmcat pub "tcp://*:5556"
 }
 
 
@@ -312,18 +315,19 @@ elif [ "$1" = "entrypoint" ]; then
 
   # Common environment logic here, e.g., updating / installing in container
 
+  cd /workspace/vllm
+  git config --global --add safe.directory /workspace/vllm
+  git pull
+  bash gcs_fuse_install.sh
+  check_zmq_tools
+
   case "$SERVICE_MODE" in
     ###########################################################################
     # 1) vllm container: sets up the VLLM environment, runs Ray, blocks forever
     ###########################################################################
     vllm)
       echo "[vllm] Starting Ray..."
-      
       # Setup workspace
-      cd /workspace/vllm
-      git config --global --add safe.directory /workspace/vllm
-      git pull
-      bash gcs_fuse_install.sh
       
       echo "[vllm]  CURRENT_IP=$CURRENT_IP"
       echo "[vllm] HEAD_NODE_ADDRESS=$HEAD_NODE_ADDRESS"
@@ -415,6 +419,7 @@ elif [ "$1" = "entrypoint" ]; then
   esac
 
 else
+  # bash run_cluster_compose.sh launch forever "vllm serve /mnt/gcs_bucket/models/Llama-3.1-8B-Instruct/  --max-model-len 16384 --tensor-parallel-size 8 --pipeline_parallel_size 1 --distributed-executor-backend ray --max-num-seqs 16 --served-model-name meta-llama/Llama-3.1-8B-Instruct" ""
   # bash run_cluster_compose.sh launch forever "vllm serve /mnt/gcs_bucket/AI2_EasyLM/v48_remat_blockTrue_seq_length4096_stsFalse_size70b  --max-model-len 16384 --tensor-parallel-size 8 --pipeline_parallel_size 1 --distributed-executor-backend ray --max-num-seqs 16 --served-model-name meta-llama/Llama-3.1-70B-Instruct" ""
   #############################################################################
   # If we get here => We didn't call 'launch' or 'entrypoint'
