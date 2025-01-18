@@ -284,6 +284,14 @@ if [ "$1" = "launch" ]; then
     echo "[HOST] To view logs from all containers in real-time, run:"
     echo "    $COMPOSE_CMD logs -f"
 
+    # Register cleanup trap to handle ctrl+C
+    cleanup() {
+        echo "[HOST] Cleaning up containers..."
+        $COMPOSE_CMD down
+        exit 0
+    }
+    trap cleanup EXIT
+
     $DOCKER_CMD wait dataset_container
     
     echo "[HOST] dataset_container finished => shutting down entire cluster..."
