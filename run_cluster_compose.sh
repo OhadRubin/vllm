@@ -228,20 +228,20 @@ if [ "$1" = "launch" ]; then
 
   # Start all services in the background
   build_docker_image tpu-vm-base
-  $COMPOSE_CMD up -d
+  $COMPOSE_CMD up --detach
 
   # If dataset mode: wait for the 'dataset' container to finish, then tear down
   if [ "$MODE" = "dataset" ]; then
     echo "[HOST] dataset mode => waiting for dataset_container to finish..."
     echo "[HOST] To view logs from all containers in real-time, run:"
-    echo "    $COMPOSE_CMD logs -f"
+    echo "    $COMPOSE_CMD logs --follow"
     $DOCKER_CMD wait dataset_container
     echo "[HOST] dataset_container finished => shutting down entire cluster..."
     $COMPOSE_CMD down
   else
     echo "[HOST] forever mode => containers keep running."
     echo "To view logs from all containers in real-time, run:"
-    echo "    $COMPOSE_CMD logs -f"
+    echo "    $COMPOSE_CMD logs --follow"
     echo "To stop all containers, run:"
     echo "    $COMPOSE_CMD down"
   fi
