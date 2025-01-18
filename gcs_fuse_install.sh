@@ -3,10 +3,14 @@
 
 BUCKET_NAME=${1:-meliad2_us2_backup}
 export MOUNT_POINT=/mnt/gcs_bucket
+# Unmount if already mounted and remove directory
+fusermount -u $MOUNT_POINT 2>/dev/null || true
+rm -rf $MOUNT_POINT 2>/dev/null || true
+
 echo "mounting $BUCKET_NAME"
-    mkdir -p /mnt/gcs_bucket 2>/dev/null
-    chmod -R 777 /mnt/gcs_bucket 2>/dev/null
-    gcsfuse \
+mkdir -p $MOUNT_POINT 2>/dev/null
+chmod -R 777 /mnt/gcs_bucket 2>/dev/null
+gcsfuse \
     --implicit-dirs \
     --file-cache-enable-parallel-downloads \
     --file-cache-parallel-downloads-per-file 100 \
