@@ -41,7 +41,7 @@ TPU, tpu, 16
 MODEL, model, 8b_instruct 
 ENTITY_NAME, entity_name, iohadrubin
 DS_NAME, ds_name, reorder_thoughts_v1
-OUTPUT_DIR, output_dir, /workspace/vllm/blabla
+OUTPUT_DIR, output_dir, /mnt/gcs_bucket/generated_data
 MAX_EXAMPLES, max_examples, -1
 NUM_WORKERS, num_workers, 16
 MAX_TOKENS, max_tokens, 4096
@@ -73,6 +73,12 @@ def construct_command(bash_args_dict):
     
     bash_args_dict["DATASET_NAME"] = f"{bash_args_dict['ENTITY_NAME']}/{bash_args_dict['DS_NAME']}"
     
+
+    now = datetime.datetime.now()
+    formatted_date = now.strftime("%d_%m_%Y")
+    bash_args_dict["OUTPUT_DIR"] = f"{bash_args_dict['OUTPUT_DIR']}/{formatted_date}"
+    bash_args_dict["DROP_LAST_MSG"] = str(bash_args_dict["SPLIT"]=="train")
+
     return bash_args_dict
 
 vllm_cmd_args = (
@@ -97,7 +103,7 @@ dataset_cmd_args = (
         "--temperature 0 ",
         "--split {SPLIT} ",
         "--base_url http://localhost:8000/v1",
-        "--drop_last_msg True ",
+        "--drop_last_msg {DROP_LAST_MSG}",
         "--output_dir {OUTPUT_DIR} ",
         "--max_examples {MAX_EXAMPLES}",
     )
