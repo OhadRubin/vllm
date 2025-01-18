@@ -101,6 +101,7 @@ services:
       - LEADER_CMD=${LEADER_CMD}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - /home/${USER}/vllm:/workspace/vllm
     entrypoint: ["/bin/bash", "/workspace/vllm/run_cluster_compose.sh", "entrypoint"]
     command: []
 
