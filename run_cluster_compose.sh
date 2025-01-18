@@ -309,7 +309,7 @@ elif [ "$1" = "entrypoint" ]; then
       
       if [ "$CURRENT_IP" = "$HEAD_NODE_ADDRESS" ] && [ -n "$LEADER_CMD" ]; then
         echo "[leaderexec] I am leader => docker exec in vllm_container: $LEADER_CMD"
-        $DOCKER_CMD exec -d vllm_container /bin/bash -c "$LEADER_CMD"
+        $DOCKER_CMD exec vllm_container /bin/bash -c "$LEADER_CMD"
       else
         echo "[leaderexec] Not leader or no LEADER_CMD => do nothing."
       fi
