@@ -159,7 +159,7 @@ mount_gcs() {
     sudo chmod 777 /dev/shm/gcs_cache
     sudo chown -R $USER:$USER /dev/shm/gcs_cache
     sudo umount -l /mnt/gcs_bucket
-    sleep 1
+    sleep 5
     gcsfuse \
             --implicit-dirs \
             --file-cache-enable-parallel-downloads \
@@ -282,6 +282,7 @@ if [ "$1" = "launch" ]; then
   # If dataset mode: wait for the 'dataset' container to finish, then tear down
   if [ "$MODE" = "dataset" ]; then
     $COMPOSE_CMD up -d 
+    $COMPOSE_CMD logs -f &
     echo "[HOST] dataset mode => waiting for dataset_container to finish..."
     echo "[HOST] To view logs from all containers in real-time, run:"
     echo "    $COMPOSE_CMD logs -f"
