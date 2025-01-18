@@ -287,18 +287,19 @@ elif [ "$1" = "entrypoint" ]; then
       git pull
       bash gcs_fuse_install.sh
       
-      
+      echo "[vllm]  CURRENT_IP=$CURRENT_IP"
+      echo "[vllm] HEAD_NODE_ADDRESS=$HEAD_NODE_ADDRESS"
       # Build the Ray command (head vs. worker)
-      RAY_CMD="ray start --block --num-cpus=220 --resources='{\"TPU\":4}'"
+      RAY_START_CMD="ray start --block --num-cpus=220 --resources='{\"TPU\": 4}'"
       if [ "$CURRENT_IP" = "$HEAD_NODE_ADDRESS" ]; then
-        RAY_CMD+=" --head --port=6379"
+        RAY_START_CMD+=" --head --port=6379"
       else
-        RAY_CMD+=" --address=${HEAD_NODE_ADDRESS}:6379"
+        RAY_START_CMD+=" --address=${HEAD_NODE_ADDRESS}:6379"
       fi
-      echo "[vllm] $RAY_CMD"
+      echo "[vllm] $RAY_START_CMD"
       
       # Run Ray (blocks)
-      exec $RAY_CMD
+      exec $RAY_START_CMD
       ;;
 
     ###########################################################################
