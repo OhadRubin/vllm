@@ -48,7 +48,7 @@ RUN apt-get update && apt-get install -y docker.io \
  && rm -rf /var/lib/apt/lists/*
 
 RUN pip3 install --no-cache-dir \
-    openai == 1.45.0 \
+    openai==1.45.0 \
     huggingface-hub
 
 
