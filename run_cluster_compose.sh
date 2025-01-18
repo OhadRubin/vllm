@@ -391,7 +391,6 @@ elif [ "$1" = "entrypoint" ]; then
         echo "[dataset] Not dataset mode => sleep."
         while true; do sleep 3600; done
       fi
-      check_zmq_tools
       start_barrier "$HEAD_NODE_ADDRESS" "$CURRENT_IP"
 
       if [ "$CURRENT_IP" == "$HEAD_NODE_ADDRESS" ]; then
