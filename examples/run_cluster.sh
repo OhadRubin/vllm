@@ -48,6 +48,15 @@ else
     RAY_START_CMD+=" --address=${HEAD_NODE_ADDRESS}:6379"
 fi
 
+# Check if gcs_cache size exceeds 150GB (150*1024*1024 KB)
+if [ -d "/dev/shm/gcs_cache" ] && [ $(du -s /dev/shm/gcs_cache | cut -f1) -gt 137957972 ]; then
+    sudo rm -rf /dev/shm/gcs_cache
+    sudo mkdir -p /dev/shm/gcs_cache
+    sudo chmod 777 /dev/shm/gcs_cache
+    sudo chown -R $USER:$USER /dev/shm/gcs_cache
+fi
+
+
 sudo docker run  \
     -d \
     -v /home/$USER/vllm:/workspace/vllm \

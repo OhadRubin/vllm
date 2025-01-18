@@ -1,5 +1,11 @@
 #!/bin/bash
 # bash examples/run_cluster_forever.sh "vllm serve /mnt/gcs_bucket/models/Llama-3.1-70B/  --max-model-len 16384 --tensor-parallel-size 8 --pipeline_parallel_size 1 --distributed-executor-backend ray --max-num-seqs 16 --served-model-name meta-llama/Llama-3.1-70B --chat-template examples/base.jinja"
+
+# stsTrue!!
+# bash examples/run_cluster_forever.sh "vllm serve /mnt/gcs_bucket/AI2_EasyLM/v46_remat_blockTrue_seq_length4096_stsTrue_size70b  --max-model-len 16384 --tensor-parallel-size 8 --pipeline_parallel_size 1 --distributed-executor-backend ray --max-num-seqs 16 --served-model-name meta-llama/Llama-3.1-70B-Instruct"
+# False!!
+# bash examples/run_cluster_forever.sh "vllm serve /mnt/gcs_bucket/AI2_EasyLM/v48_remat_blockTrue_seq_length4096_stsFalse_size70b  --max-model-len 16384 --tensor-parallel-size 8 --pipeline_parallel_size 1 --distributed-executor-backend ray --max-num-seqs 16 --served-model-name meta-llama/Llama-3.1-70B-Instruct"
+
 # bash examples/run_cluster_forever.sh "vllm serve /mnt/gcs_bucket/models/Llama-3.1-8B-Instruct/  --max-model-len 16384 --tensor-parallel-size 8 --pipeline_parallel_size 1 --distributed-executor-backend ray --max-num-seqs 16 --served-model-name meta-llama/Llama-3.1-8B-Instruct"
 # bash examples/run_cluster_forever.sh "vllm serve /mnt/gcs_bucket/AI2_EasyLM/v6_use_cachingTrue_seq_length4096_num_epochs1_size8b/huggingface_params  --max-model-len 16384 --tensor-parallel-size 8 --pipeline_parallel_size 1 --distributed-executor-backend ray --max-num-seqs 16 --served-model-name meta-llama/Llama-3.1-8B-Instruct"
 
@@ -22,10 +28,45 @@ DOCKER_IMAGE=tpu-vm-base
 HEAD_NODE_ADDRESS=$(python3.10 examples/leader_election.py)
 PATH_TO_HF_HOME=~/.cache/huggingface
 
-if ! sudo docker images | grep -q tpu-vm-base; then
-    echo "tpu-vm-base image not found, building..."
-    (cd ~/vllm && sudo docker build -t tpu-vm-base -f Dockerfile.tpu .)
-fi
+
+sync_devices() {
+  # Sync devices if needed
+  python3.10 -c "
+import jax
+from jax.experimental.multihost_utils import sync_global_devices
+sync_global_devices('bla')
+print('Process index:', jax.process_index())
+"
+}
+
+build_docker_image() {
+  local image="$1"
+  if ! sudo docker images | grep -q "$image"; then
+    echo "Building image: $image"
+    (cd ~/vllm && sudo docker build -t "$image" -f Dockerfile.tpu .)
+  fi
+}
+
+
+maybe_install_packages() {
+  if [ "$MODE" = "dataset" ]; then
+    python3.10 -m pip install openai==1.17.0 huggingface-hub
+  fi
+}
+
+maybe_clear_cache() {
+  # If gcs_cache is bigger than 150GB
+  if [ -d "/dev/shm/gcs_cache" ] && [ "$(du -s /dev/shm/gcs_cache | cut -f1)" -gt 137957972 ]; then
+    sudo rm -rf /dev/shm/gcs_cache
+    sudo mkdir -p /dev/shm/gcs_cache
+    sudo chmod 777 /dev/shm/gcs_cache
+    sudo chown -R "$USER":"$USER" /dev/shm/gcs_cache
+  fi
+}
+
+
+build_docker_image "$DOCKER_IMAGE"
+
 
 # Additional arguments are passed directly to the Docker command
 ADDITIONAL_ARGS=("$@")
@@ -53,7 +94,9 @@ else
     RAY_START_CMD+=" --address=${HEAD_NODE_ADDRESS}:6379"
 fi
 
-python3.10 -c "import jax; from jax.experimental.multihost_utils import sync_global_devices; sync_global_devices('bla'); print(jax.process_index())"
+sync_devices
+maybe_clear_cache
+
 
 sudo docker run  \
     -d \
