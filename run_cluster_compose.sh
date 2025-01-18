@@ -57,6 +57,26 @@ check_zmq_tools() {
 PATH_TO_HF_HOME=~/.cache/huggingface
 export PATH_TO_HF_HOME
 
+mount_gcs() {
+    sudo mkdir -p /dev/shm/gcs_cache
+    sudo chmod 777 /dev/shm/gcs_cache
+    sudo chown -R $USER:$USER /dev/shm/gcs_cache
+    sudo umount -l /mnt/gcs_bucket
+    sleep 1
+    gcsfuse \
+            --implicit-dirs \
+            --file-cache-enable-parallel-downloads \
+            --file-cache-parallel-downloads-per-file 100 \
+            --file-cache-max-parallel-downloads -1 \
+            --file-cache-download-chunk-size-mb 10 \
+            --file-cache-max-size-mb 153600 \
+            --dir-mode 0777 \
+            -o allow_other --foreground \
+            --cache-dir /dev/shm/gcs_cache  \
+            meliad2_us2_backup /mnt/gcs_bucket &> ~/gcs_log.log &
+    sleep 1
+}
+
 check_docker_sudo() {
   if ! docker info >/dev/null 2>&1; then
     if ! sudo docker info >/dev/null 2>&1; then
@@ -94,6 +114,7 @@ services:
     volumes:
       - /home/${USER}/vllm:/workspace/vllm
       - /dev/shm/gcs_cache:/dev/shm/gcs_cache
+      - /mnt/gcs_bucket:/mnt/gcs_bucket
       - ${PATH_TO_HF_HOME:-~/.cache/huggingface}:/root/.cache/huggingface
 
   leaderexec:
@@ -112,6 +133,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /home/${USER}/vllm:/workspace/vllm
+      - /mnt/gcs_bucket:/mnt/gcs_bucket
     entrypoint: ["/bin/bash", "/workspace/vllm/run_cluster_compose.sh", "entrypoint"]
     command: []
 
@@ -130,6 +152,7 @@ services:
       - HF_TOKEN=${HF_TOKEN}
     volumes:
       - /home/${USER}/vllm:/workspace/vllm
+      - /mnt/gcs_bucket:/mnt/gcs_bucket
     entrypoint: ["/bin/bash", "/workspace/vllm/run_cluster_compose.sh", "entrypoint"]
     command: []
 
@@ -148,6 +171,7 @@ services:
       - HF_TOKEN=${HF_TOKEN}
     volumes:
       - /home/${USER}/vllm:/workspace/vllm
+      - /mnt/gcs_bucket:/mnt/gcs_bucket
     entrypoint: ["/bin/bash", "/workspace/vllm/run_cluster_compose.sh", "entrypoint"]
     command: []
 EOF
@@ -232,7 +256,7 @@ if [ "$1" = "launch" ]; then
   # Clear /dev/shm/gcs_cache if large
   sync_devices
   maybe_clear_cache
-  # Optionally define HF_TOKEN here if needed:
+  mount_gcs
 
   echo "==========================================="
   echo "[HOST] Launching cluster with Docker Compose"
@@ -301,7 +325,7 @@ elif [ "$1" = "entrypoint" ]; then
   cd /workspace/vllm
   git config --global --add safe.directory /workspace/vllm
   git pull
-  bash /workspace/vllm/gcs_fuse_install.sh
+
 
   case "$SERVICE_MODE" in
     ###########################################################################
