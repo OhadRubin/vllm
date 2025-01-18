@@ -2,6 +2,43 @@
 # set -e
 
 
+# Check and install ZMQ tools if not present
+check_zmq_tools() {
+  if ! command -v zmq_pub >/dev/null 2>&1; then
+    echo "Installing ZMQ tools..."
+    apt-get update && apt-get install -y libzmq3-dev zmqtools
+  fi
+}
+
+
+# Follower functionality - waits for leader's signal
+follower_loop() {
+    local my_ip="$1"
+    local leader_ip="$2"
+    
+    while true; do
+        echo "follower $my_ip waiting for leader $leader_ip to finish"
+        
+        # Using zmq_sub from zmqtools (needs to be installed)
+        # Set timeout to 5 seconds (5000ms)
+        timeout 6 zmq_sub tcp://${leader_ip}:5556 2>/dev/null
+        
+        if [ $? -eq 0 ]; then
+            echo "follower $my_ip finished"
+            break
+        fi
+        
+        sleep 1
+    done
+}
+
+# Leader functionality - sends finish signal
+finish_barrier() {
+    # Using zmq_pub from zmqtools
+    # Sleep to allow subscribers to connect
+    sleep 1
+    echo "finish" | zmq_pub tcp://*:5556
+}
 
 
 # Usage:
@@ -350,35 +387,22 @@ elif [ "$1" = "entrypoint" ]; then
         echo "[dataset] Not dataset mode => sleep."
         while true; do sleep 3600; done
       fi
+      check_zmq_tools
+      start_barrier "$HEAD_NODE_ADDRESS" "$CURRENT_IP"
 
-      if [ "$CURRENT_IP" != "$HEAD_NODE_ADDRESS" ]; then
-        echo "[dataset] Worker => idle, waiting for leader to finish."
-        while true; do sleep 3600; done
-      fi
-
-      # If we're here => leader + dataset
-      echo "[dataset] Leader + dataset => run job."
-      if [ -n "$DATASET_CMD" ]; then
+      if [ "$CURRENT_IP" == "$HEAD_NODE_ADDRESS" ]; then
         echo "[dataset] Running user DATASET_CMD: $DATASET_CMD"
         /bin/bash -c "$DATASET_CMD"
+        finish_barrier
+
+      else 
+        follower_loop "$CURRENT_IP" "$HEAD_NODE_ADDRESS"
+        echo "[dataset] Loader finished => exit container."
       fi
+      exit 0
 
       # Example: run your dataset logic
-    #   echo "[dataset] Example run_on_dataset_async.py job..."
-    #   cd /workspace/vllm
-    #   python3 examples/run_on_dataset_async.py \
-    #     --dataset_name iohadrubin/reorder_thoughts_v1 \
-    #     --config_name default \
-    #     --num_workers 16 \
-    #     --max_tokens 4096 \
-    #     --suffix _v3 \
-    #     --verbose True \
-    #     --temperature 0 \
-    #     --split train \
-    #     --drop_last_msg True
-
-      echo "[dataset] Done => exit container."
-      exit 0
+      #python3 examples/run_on_dataset_async.py \ --dataset_name iohadrubin/reorder_thoughts_v1 \ --config_name default \ --num_workers 16 \ --max_tokens 4096 \ --suffix _v3 \ --verbose True \ --temperature 0 \ --split train \ --drop_last_msg True
       ;;
 
     ###########################################################################
