@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # set -e
 
-# python3.10 examples/run_on_dataset.py --dataset_name iohadrubin/reorder_thoughts_v1 --config_name default  --num_workers 16 --max_tokens 4096 --suffix _v3  --verbose True --temperature 0 --split train --base_url http://localhost:8000/v1 --drop_last_msg True --output_dir /vllm
+# python3.10 examples/run_on_dataset.py --dataset_name iohadrubin/reorder_thoughts_v1 --config_name default  --num_workers 16 --max_tokens 4096 --suffix _v3  --verbose True --temperature 0 --split train --base_url http://localhost:8000/v1 --drop_last_msg True --output_dir /workspace/vllm/blabla
 
 # Check and install ZMQ tools if not present
 check_zmq_tools() {
@@ -276,17 +276,20 @@ if [ "$1" = "launch" ]; then
 
   # Start all services in the background
   build_docker_image tpu-vm-base
-  $COMPOSE_CMD up
 
   # If dataset mode: wait for the 'dataset' container to finish, then tear down
   if [ "$MODE" = "dataset" ]; then
+    $COMPOSE_CMD up -d 
     echo "[HOST] dataset mode => waiting for dataset_container to finish..."
     echo "[HOST] To view logs from all containers in real-time, run:"
     echo "    $COMPOSE_CMD logs -f"
+
     $DOCKER_CMD wait dataset_container
+    
     echo "[HOST] dataset_container finished => shutting down entire cluster..."
     $COMPOSE_CMD down
   else
+    $COMPOSE_CMD up
     echo "[HOST] forever mode => containers keep running."
     echo "To view logs from all containers in real-time, run:"
     echo "    $COMPOSE_CMD logs -f"
@@ -418,7 +421,8 @@ elif [ "$1" = "entrypoint" ]; then
   esac
 
 else
-  # bash run_cluster_compose.sh launch forever "vllm serve /mnt/gcs_bucket/models/Llama-3.1-8B-Instruct/  --max-model-len 16384 --tensor-parallel-size 8 --pipeline_parallel_size 1 --distributed-executor-backend ray --max-num-seqs 16 --served-model-name meta-llama/Llama-3.1-8B-Instruct" ""
+  # bash run_cluster_compose.sh launch dataset "vllm serve /mnt/gcs_bucket/models/Llama-3.1-8B-Instruct/  --max-model-len 16384 --tensor-parallel-size 8 --pipeline_parallel_size 1 --distributed-executor-backend ray --max-num-seqs 16 --served-model-name meta-llama/Llama-3.1-8B-Instruct" "python3.10 examples/run_on_dataset.py --dataset_name iohadrubin/reorder_thoughts_v1 --config_name default  --num_workers 16 --max_tokens 4096 --suffix _v3  --verbose True --temperature 0 --split train --base_url http://localhost:8000/v1 --drop_last_msg True --output_dir /workspace/vllm/blabla --max_examples 100"
+  
   # bash run_cluster_compose.sh launch forever "vllm serve /mnt/gcs_bucket/AI2_EasyLM/v48_remat_blockTrue_seq_length4096_stsFalse_size70b  --max-model-len 16384 --tensor-parallel-size 8 --pipeline_parallel_size 1 --distributed-executor-backend ray --max-num-seqs 16 --served-model-name meta-llama/Llama-3.1-70B-Instruct" ""
   #############################################################################
   # If we get here => We didn't call 'launch' or 'entrypoint'
