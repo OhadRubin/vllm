@@ -143,6 +143,7 @@ from typing import Optional
 def main(format_str:str = '{s}',
          nodes: Optional[list[int]]  = None,
          node_range: str = None,
+         queue: bool = False,
          ):
     if node_range is not None:
         node_range = range(node_range[0], node_range[1])
@@ -180,9 +181,11 @@ def main(format_str:str = '{s}',
         list_of_cmds.append(cmd)
         with mlxu.open_file(file_path, 'w') as fin:
             fin.write(script)
+        if queue:
+            run_on_queue(tpu_dict)
 
 
 
 if __name__ == "__main__":
     fire.Fire(main)
-# run_on_queue(tpu_dict)
+
