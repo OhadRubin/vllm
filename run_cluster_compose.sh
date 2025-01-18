@@ -301,7 +301,7 @@ elif [ "$1" = "entrypoint" ]; then
   cd /workspace/vllm
   git config --global --add safe.directory /workspace/vllm
   git pull
-  bash gcs_fuse_install.sh
+  bash /workspace/vllm/gcs_fuse_install.sh
   check_zmq_tools
 
   case "$SERVICE_MODE" in
