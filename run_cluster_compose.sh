@@ -228,7 +228,7 @@ if [ "$1" = "launch" ]; then
 
   # Start all services in the background
   build_docker_image tpu-vm-base
-  $COMPOSE_CMD up -d
+  $COMPOSE_CMD up
 
   # If dataset mode: wait for the 'dataset' container to finish, then tear down
   if [ "$MODE" = "dataset" ]; then
