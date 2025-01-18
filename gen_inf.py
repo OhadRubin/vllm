@@ -11,7 +11,10 @@ import os
 sys.path.append(os.path.expanduser("~/redis_queue"))
 from src.redis_queue import RedisQueue
 
-
+preramble=r"""
+cd ~/vllm
+git pull
+"""
 
 def one_liner(path):
     return f"gsutil cat {path} > /tmp/script.sh; bash /tmp/script.sh"
@@ -47,7 +50,7 @@ SUFFIX, suffix, _v3
 
 
 with dag.DAG() as experiment:
-    model("8b_instruct") >> suffix("_v1")
+    model("70b_reorder") >> suffix("_v1")
   
     
 task_dict, odict = dag.get_all_experiments(experiment, config, EXP_COUNTi)
@@ -55,9 +58,11 @@ task_dict, odict = dag.get_all_experiments(experiment, config, EXP_COUNTi)
 
 def construct_command(bash_args_dict):
     if bash_args_dict["MODEL"] == "8b_instruct":
-        
         bash_args_dict.update(MODEL_PATH="/mnt/gcs_bucket/models/Llama-3.1-8B-Instruct/",
-                              MODEL_NAME="meta-llama/Llama-3.1-8B-Instruct")
+                            MODEL_NAME="meta-llama/Llama-3.1-8B-Instruct")
+    elif bash_args_dict["MODEL"] == "70b_reorder":
+        bash_args_dict.update(MODEL_PATH="/mnt/gcs_bucket/AI2_EasyLM/v48_remat_blockTrue_seq_length4096_stsFalse_size70b",
+                            MODEL_NAME="meta-llama/Llama-3.3-70B-Instruct")
     else:
         raise ValueError(f"Invalid model: {bash_args_dict['MODEL']}")
     
@@ -123,7 +128,7 @@ def main(format_str:str = '{s}', nodes: Optional[list[int]]  = None):
         tpu_dict[bash_args_dict["TPU"]].append(file_path)
         
         bash_args_dict = construct_command(bash_args_dict)
-        cmds = [bash_args_str, final_cmd, suffix]
+        cmds = [preramble, bash_args_str, final_cmd, suffix]
         
         
             
