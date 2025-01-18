@@ -88,6 +88,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - /home/${USER}/vllm:/workspace/vllm
       - /mnt/gcs_bucket:/mnt/gcs_bucket
+      - /dev/shm/gcs_cache:/dev/shm/gcs_cache
     entrypoint: ["/bin/bash", "/workspace/vllm/run_cluster_compose.sh", "entrypoint"]
     command: []
 
@@ -107,6 +108,7 @@ services:
     volumes:
       - /home/${USER}/vllm:/workspace/vllm
       - /mnt/gcs_bucket:/mnt/gcs_bucket
+      - /dev/shm/gcs_cache:/dev/shm/gcs_cache
     entrypoint: ["/bin/bash", "/workspace/vllm/run_cluster_compose.sh", "entrypoint"]
     command: []
 
@@ -126,6 +128,7 @@ services:
     volumes:
       - /home/${USER}/vllm:/workspace/vllm
       - /mnt/gcs_bucket:/mnt/gcs_bucket
+      - /dev/shm/gcs_cache:/dev/shm/gcs_cache
     entrypoint: ["/bin/bash", "/workspace/vllm/run_cluster_compose.sh", "entrypoint"]
     command: []
 EOF
@@ -323,8 +326,6 @@ elif [ "$1" = "entrypoint" ]; then
     exit 1
   fi
 
-  # Common environment logic here, e.g., updating / installing in container
-
   cd /workspace/vllm
   git config --global --add safe.directory /workspace/vllm
   git pull
@@ -410,8 +411,6 @@ elif [ "$1" = "entrypoint" ]; then
       fi
       exit 0
 
-      # Example: run your dataset logic
-      #python3 examples/run_on_dataset_async.py \ --dataset_name iohadrubin/reorder_thoughts_v1 \ --config_name default \ --num_workers 16 \ --max_tokens 4096 \ --suffix _v3 \ --verbose True \ --temperature 0 \ --split train \ --drop_last_msg True
       ;;
 
     ###########################################################################
