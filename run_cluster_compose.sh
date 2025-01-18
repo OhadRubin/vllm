@@ -3,15 +3,6 @@
 
 # python3.10 examples/run_on_dataset.py --dataset_name iohadrubin/reorder_thoughts_v1 --config_name default  --num_workers 16 --max_tokens 4096 --suffix _v3  --verbose True --temperature 0 --split train --base_url http://localhost:8000/v1 --drop_last_msg True --output_dir /workspace/vllm/blabla
 
-# Check and install ZMQ tools if not present
-check_zmq_tools() {
-  if ! command -v zmq_pub >/dev/null 2>&1; then
-    echo "Installing ZMQ tools..."
-    apt-get update && apt-get install -y libzmq3-dev
-    pip3 install fire ml_collections zmq
-  fi
-}
-
 
 # Usage:
 #
@@ -54,43 +45,6 @@ check_zmq_tools() {
 # - Script checks SERVICE_MODE and runs appropriate logic
 # - Leader node runs extra commands via docker exec
 
-PATH_TO_HF_HOME=~/.cache/huggingface
-export PATH_TO_HF_HOME
-
-mount_gcs() {
-    sudo mkdir -p /dev/shm/gcs_cache
-    sudo chmod 777 /dev/shm/gcs_cache
-    sudo chown -R $USER:$USER /dev/shm/gcs_cache
-    sudo umount -l /mnt/gcs_bucket
-    sleep 1
-    gcsfuse \
-            --implicit-dirs \
-            --file-cache-enable-parallel-downloads \
-            --file-cache-parallel-downloads-per-file 100 \
-            --file-cache-max-parallel-downloads -1 \
-            --file-cache-download-chunk-size-mb 10 \
-            --file-cache-max-size-mb 153600 \
-            --dir-mode 0777 \
-            -o allow_other --foreground \
-            --cache-dir /dev/shm/gcs_cache  \
-            meliad2_us2_backup /mnt/gcs_bucket &> ~/gcs_log.log &
-    sleep 1
-}
-
-check_docker_sudo() {
-  if ! docker info >/dev/null 2>&1; then
-    if ! sudo docker info >/dev/null 2>&1; then
-      echo "Error: Cannot run docker with or without sudo"
-      exit 1
-    fi
-    echo "Using sudo for docker commands"
-    DOCKER_CMD="sudo docker"
-    COMPOSE_CMD="sudo docker-compose"
-  else
-    DOCKER_CMD="docker"
-    COMPOSE_CMD="docker-compose"
-  fi
-}
 
 cat << "EOF" > docker-compose.yml
 version: '3.7'
@@ -192,6 +146,55 @@ EOF
 # ./run_cluster_compose.sh entrypoint
 #   - Container entrypoint, reads SERVICE_MODE
 ###############################################################################
+
+
+PATH_TO_HF_HOME=~/.cache/huggingface
+export PATH_TO_HF_HOME
+
+mount_gcs() {
+    sudo mkdir -p /dev/shm/gcs_cache
+    sudo chmod 777 /dev/shm/gcs_cache
+    sudo chown -R $USER:$USER /dev/shm/gcs_cache
+    sudo umount -l /mnt/gcs_bucket
+    sleep 1
+    gcsfuse \
+            --implicit-dirs \
+            --file-cache-enable-parallel-downloads \
+            --file-cache-parallel-downloads-per-file 100 \
+            --file-cache-max-parallel-downloads -1 \
+            --file-cache-download-chunk-size-mb 10 \
+            --file-cache-max-size-mb 153600 \
+            --dir-mode 0777 \
+            -o allow_other --foreground \
+            --cache-dir /dev/shm/gcs_cache  \
+            meliad2_us2_backup /mnt/gcs_bucket &> ~/gcs_log.log &
+    sleep 1
+}
+
+check_docker_sudo() {
+  if ! docker info >/dev/null 2>&1; then
+    if ! sudo docker info >/dev/null 2>&1; then
+      echo "Error: Cannot run docker with or without sudo"
+      exit 1
+    fi
+    echo "Using sudo for docker commands"
+    DOCKER_CMD="sudo docker"
+    COMPOSE_CMD="sudo docker-compose"
+  else
+    DOCKER_CMD="docker"
+    COMPOSE_CMD="docker-compose"
+  fi
+}
+
+# Check and install ZMQ tools if not present
+check_zmq_tools() {
+  if ! command -v zmq_pub >/dev/null 2>&1; then
+    echo "Installing ZMQ tools..."
+    apt-get update && apt-get install -y libzmq3-dev
+    pip3 install fire ml_collections zmq
+  fi
+}
+
 
 
 sync_devices() {
@@ -422,7 +425,7 @@ elif [ "$1" = "entrypoint" ]; then
 
 else
 
-  # bash run_cluster_compose.sh launch dataset "vllm serve /mnt/gcs_bucket/models/Llama-3.1-8B-Instruct/  --max-model-len 16384 --tensor-parallel-size 8 --pipeline_parallel_size 1 --distributed-executor-backend ray --max-num-seqs 16 --served-model-name meta-llama/Llama-3.1-8B-Instruct" "python3.10 examples/run_on_dataset.py --dataset_name iohadrubin/reorder_thoughts_v1 --config_name default  --num_workers 16 --max_tokens 4096 --suffix _v6  --verbose True --temperature 0 --split train --base_url http://localhost:8000/v1 --drop_last_msg True --output_dir /workspace/vllm/blabla --max_examples 100"
+  # bash run_cluster_compose.sh launch dataset "vllm serve /mnt/gcs_bucket/models/Llama-3.1-8B-Instruct/  --max-model-len 16384 --tensor-parallel-size 8 --pipeline_parallel_size 1 --distributed-executor-backend ray --max-num-seqs 16 --served-model-name meta-llama/Llama-3.1-8B-Instruct" "python3.10 examples/run_on_dataset.py --dataset_name iohadrubin/reorder_thoughts_v1 --config_name default  --num_workers 16 --max_tokens 4096 --suffix _v6  --verbose True --temperature 0 --split train --base_url http://localhost:8000/v1 --drop_last_msg True --output_dir /mnt/gcs_bucket/generated_data/bla --max_examples 100"
   
   
   # bash run_cluster_compose.sh launch forever "vllm serve /mnt/gcs_bucket/models/Llama-3.1-8B-Instruct/  --max-model-len 16384 --tensor-parallel-size 8 --pipeline_parallel_size 1 --distributed-executor-backend ray --max-num-seqs 16 --served-model-name meta-llama/Llama-3.1-8B-Instruct" ""
