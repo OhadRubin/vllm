@@ -56,10 +56,10 @@ check_docker_sudo() {
     fi
     echo "Using sudo for docker commands"
     DOCKER_CMD="sudo docker"
-    COMPOSE_CMD="sudo docker compose"
+    COMPOSE_CMD="sudo docker-compose"
   else
     DOCKER_CMD="docker"
-    COMPOSE_CMD="docker compose"
+    COMPOSE_CMD="docker-compose"
   fi
 }
 
@@ -162,7 +162,7 @@ print('Process index:', jax.process_index())
 
 maybe_clear_cache() {
   # If gcs_cache is bigger than 150GB
-  if [ -d "/dev/shm/gcs_cache" ] && [ "$(du -s /dev/shm/gcs_cache | cut -f1)" -gt 137957972 ]; then
+  if [ -d "/dev/shm/gcs_cache" ] && [ "$(sudo du -s /dev/shm/gcs_cache | cut -f1)" -gt 137957972 ]; then
     echo "[vllm] Clearing /dev/shm/gcs_cache ($SIZE kb)"
     sudo rm -rf /dev/shm/gcs_cache
     sudo mkdir -p /dev/shm/gcs_cache
@@ -228,20 +228,20 @@ if [ "$1" = "launch" ]; then
 
   # Start all services in the background
   build_docker_image tpu-vm-base
-  $COMPOSE_CMD up --detach
+  $COMPOSE_CMD up -d
 
   # If dataset mode: wait for the 'dataset' container to finish, then tear down
   if [ "$MODE" = "dataset" ]; then
     echo "[HOST] dataset mode => waiting for dataset_container to finish..."
     echo "[HOST] To view logs from all containers in real-time, run:"
-    echo "    $COMPOSE_CMD logs --follow"
+    echo "    $COMPOSE_CMD logs -f"
     $DOCKER_CMD wait dataset_container
     echo "[HOST] dataset_container finished => shutting down entire cluster..."
     $COMPOSE_CMD down
   else
     echo "[HOST] forever mode => containers keep running."
     echo "To view logs from all containers in real-time, run:"
-    echo "    $COMPOSE_CMD logs --follow"
+    echo "    $COMPOSE_CMD logs -f"
     echo "To stop all containers, run:"
     echo "    $COMPOSE_CMD down"
   fi
