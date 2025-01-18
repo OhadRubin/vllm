@@ -380,10 +380,6 @@ elif [ "$1" = "entrypoint" ]; then
         echo "[dataset] Running user DATASET_CMD: $DATASET_CMD"
         /bin/bash -c "$DATASET_CMD"
         python3 examples/barrier.py finish
-
-      else 
-        follower_loop "$CURRENT_IP" "$HEAD_NODE_ADDRESS"
-        echo "[dataset] Loader finished => exit container."
       fi
       exit 0
 
