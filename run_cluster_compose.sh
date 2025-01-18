@@ -138,6 +138,7 @@ services:
       - MODE=${MODE}
       - HEAD_NODE_ADDRESS=${HEAD_NODE_ADDRESS}
       - CURRENT_IP=${CURRENT_IP}
+      - HF_TOKEN=${HF_TOKEN}
       - LEADER_CMD=${LEADER_CMD}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
@@ -157,6 +158,7 @@ services:
       - HEAD_NODE_ADDRESS=${HEAD_NODE_ADDRESS}
       - CURRENT_IP=${CURRENT_IP}
       - PORTR_KEY=${PORTR_KEY}
+      - HF_TOKEN=${HF_TOKEN}
     volumes:
       - /home/${USER}/vllm:/workspace/vllm
     entrypoint: ["/bin/bash", "/workspace/vllm/run_cluster_compose.sh", "entrypoint"]
@@ -174,6 +176,7 @@ services:
       - HEAD_NODE_ADDRESS=${HEAD_NODE_ADDRESS}
       - CURRENT_IP=${CURRENT_IP}
       - DATASET_CMD=${DATASET_CMD}
+      - HF_TOKEN=${HF_TOKEN}
     volumes:
       - /home/${USER}/vllm:/workspace/vllm
     entrypoint: ["/bin/bash", "/workspace/vllm/run_cluster_compose.sh", "entrypoint"]
