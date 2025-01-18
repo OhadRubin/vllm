@@ -4,7 +4,7 @@ import subprocess
 import json
 import fire
 import time
-
+from typing import Optional
 def ip_addr(zone: str):
     hostname = os.uname().nodename
     DESCRIBE = "gcloud alpha compute tpus tpu-vm describe {hostname}  --zone {zone} --format json"
@@ -43,7 +43,7 @@ def follower_loop(my_ip: str, leader_ip: str):
             time.sleep(1)
 
 
-# python3.10 -m src.barrier finish
+# python3.10 examples/barrier.py finish
 def finish():
     context = zmq.Context()
     socket = context.socket(zmq.PUB)
@@ -53,10 +53,16 @@ def finish():
     socket.send_string("finish")
     socket.close()
     
-# python3.10 -m src.barrier start
+# python3.10 examples/barrier.py start
 # only the leader passes the barrier, the rest wait for the leader to finish
-def start(zone: str="us-central2-b"):
-    _, leader_ip, my_ip = ip_addr(zone)
+def start(my_ip:Optional[str]=None, leader_ip:Optional[str]=None, zone: str="us-central2-b"):
+    
+    if my_ip is None and leader_ip is None:
+        _, leader_ip, my_ip = ip_addr(zone)
+    else:
+        assert my_ip is not None
+        assert leader_ip is not None
+
     if my_ip != leader_ip:
         follower_loop(my_ip, leader_ip)
         print(f"follower {my_ip} finished")

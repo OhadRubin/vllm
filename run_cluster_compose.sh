@@ -8,39 +8,8 @@ check_zmq_tools() {
   if ! command -v zmq_pub >/dev/null 2>&1; then
     echo "Installing ZMQ tools..."
     apt-get update && apt-get install -y libzmq3-dev
-    pip3 install git+https://github.com/OhadRubin/zmcat
-    pip3 install fire ml_collections
+    pip3 install fire ml_collections zmq
   fi
-}
-
-
-# Follower functionality - waits for leader's signal
-follower_loop() {
-    local my_ip="$1"
-    local leader_ip="$2"
-    
-    while true; do
-        echo "follower $my_ip waiting for leader $leader_ip to finish"
-        
-        # Using zmq_sub from zmqtools (needs to be installed)
-        # Set timeout to 5 seconds (5000ms)
-        timeout 5 zmcat sub "tcp://${leader_ip}:5556"
-        
-        if [ $? -eq 0 ]; then
-            echo "follower $my_ip finished"
-            break
-        fi
-        
-        sleep 1
-    done
-}
-
-# Leader functionality - sends finish signal
-finish_barrier() {
-    # Using zmq_pub from zmqtools
-    # Sleep to allow subscribers to connect
-    sleep 1
-    echo "finish" | zmcat pub "tcp://*:5556"
 }
 
 
@@ -405,12 +374,12 @@ elif [ "$1" = "entrypoint" ]; then
         echo "[dataset] Not dataset mode => sleep."
         while true; do sleep 3600; done
       fi
-      start_barrier "$HEAD_NODE_ADDRESS" "$CURRENT_IP"
+      python3 examples/barrier.py start --my_ip "$CURRENT_IP" --leader_ip "$HEAD_NODE_ADDRESS"
 
       if [ "$CURRENT_IP" == "$HEAD_NODE_ADDRESS" ]; then
         echo "[dataset] Running user DATASET_CMD: $DATASET_CMD"
         /bin/bash -c "$DATASET_CMD"
-        finish_barrier
+        python3 examples/barrier.py finish
 
       else 
         follower_loop "$CURRENT_IP" "$HEAD_NODE_ADDRESS"
@@ -432,7 +401,7 @@ elif [ "$1" = "entrypoint" ]; then
   esac
 
 else
-  # bash run_cluster_compose.sh launch dataset "vllm serve /mnt/gcs_bucket/models/Llama-3.1-8B-Instruct/  --max-model-len 16384 --tensor-parallel-size 8 --pipeline_parallel_size 1 --distributed-executor-backend ray --max-num-seqs 16 --served-model-name meta-llama/Llama-3.1-8B-Instruct" "python3.10 examples/run_on_dataset.py --dataset_name iohadrubin/reorder_thoughts_v1 --config_name default  --num_workers 16 --max_tokens 4096 --suffix _v3  --verbose True --temperature 0 --split train --base_url http://localhost:8000/v1 --drop_last_msg True --output_dir /workspace/vllm/blabla --max_examples 100"
+  # bash run_cluster_compose.sh launch dataset "vllm serve /mnt/gcs_bucket/models/Llama-3.1-8B-Instruct/  --max-model-len 16384 --tensor-parallel-size 8 --pipeline_parallel_size 1 --distributed-executor-backend ray --max-num-seqs 16 --served-model-name meta-llama/Llama-3.1-8B-Instruct" "python3.10 examples/run_on_dataset.py --dataset_name iohadrubin/reorder_thoughts_v1 --config_name default  --num_workers 16 --max_tokens 4096 --suffix _v4  --verbose True --temperature 0 --split train --base_url http://localhost:8000/v1 --drop_last_msg True --output_dir /workspace/vllm/blabla --max_examples 100"
   
   # bash run_cluster_compose.sh launch forever "vllm serve /mnt/gcs_bucket/AI2_EasyLM/v48_remat_blockTrue_seq_length4096_stsFalse_size70b  --max-model-len 16384 --tensor-parallel-size 8 --pipeline_parallel_size 1 --distributed-executor-backend ray --max-num-seqs 16 --served-model-name meta-llama/Llama-3.1-70B-Instruct" ""
   #############################################################################
