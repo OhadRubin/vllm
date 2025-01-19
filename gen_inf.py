@@ -141,6 +141,14 @@ from typing import Optional
 # python3.10 gen_inf.py "int_start {node_idx} 16 '{s}' &" --node_range "14,31"
 # python3.10 gen_inf.py "int_start {node_idx} 16 '{s}' &" --node_range "14,31" --queue True
 
+# gcloud alpha compute tpus tpu-vm ssh v4-16-node-17 \
+#   --project=tpu-project-2-379909 \
+#   --batch-size 2 \
+#   --zone=us-central2-b \
+#   --worker=all \
+#   --command='tmux new-session -d -s test_session "echo hi && sleep 10"'
+
+
 def main(format_str:str = '{s}',
          nodes: Optional[list[int]]  = None,
          node_range: str = None,

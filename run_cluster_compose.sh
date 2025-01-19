@@ -172,7 +172,7 @@ mount_gcs() {
             -o allow_other --foreground \
             --cache-dir /dev/shm/gcs_cache  \
             meliad2_us2_backup /mnt/gcs_bucket &> ~/gcs_log.log &
-    sleep 1
+    sleep 5
 }
 
 check_docker_sudo() {
@@ -270,12 +270,11 @@ if [ "$1" = "launch" ]; then
   export PORTR_KEY="$(bash -ic 'source ~/.bashrc; echo $PORTR_KEY')"
   export HF_TOKEN="$(bash -ic 'source ~/.bashrc; echo $HF_TOKEN')"
   # Clear /dev/shm/gcs_cache if large
-  sudo rm -rf /tmp/libtpu_lockfile /tmp/tpu_logs
+  # sudo rm -rf /tmp/libtpu_lockfile /tmp/tpu_logs
   sleep 5
   sync_devices
   maybe_clear_cache
   mount_gcs
-  sleep 5
 
   echo "==========================================="
   echo "[HOST] Launching cluster with Docker Compose"
