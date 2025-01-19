@@ -44,7 +44,7 @@
 # - Each container runs this script with 'entrypoint'
 # - Script checks SERVICE_MODE and runs appropriate logic
 # - Leader node runs extra commands via docker exec
-pkill -f -9 python3.10
+
 sleep 10
 cd ~/vllm
 cat << "EOF" > docker-compose.yml
@@ -271,10 +271,11 @@ if [ "$1" = "launch" ]; then
   export HF_TOKEN="$(bash -ic 'source ~/.bashrc; echo $HF_TOKEN')"
   # Clear /dev/shm/gcs_cache if large
   sudo rm -rf /tmp/libtpu_lockfile /tmp/tpu_logs
-  sleep 10
+  sleep 5
   sync_devices
   maybe_clear_cache
   mount_gcs
+  sleep 5
 
   echo "==========================================="
   echo "[HOST] Launching cluster with Docker Compose"
