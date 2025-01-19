@@ -45,7 +45,7 @@
 # - Script checks SERVICE_MODE and runs appropriate logic
 # - Leader node runs extra commands via docker exec
 
-
+cd ~/vllm
 cat << "EOF" > docker-compose.yml
 version: '3.7'
 services:
