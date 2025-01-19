@@ -44,7 +44,7 @@
 # - Each container runs this script with 'entrypoint'
 # - Script checks SERVICE_MODE and runs appropriate logic
 # - Leader node runs extra commands via docker exec
-
+pkill -f -9 python3.10
 cd ~/vllm
 cat << "EOF" > docker-compose.yml
 version: '3.7'
