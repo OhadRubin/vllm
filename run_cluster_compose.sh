@@ -235,6 +235,14 @@ if [ "$1" = "launch" ]; then
   #############################################################################
   #                            HOST ORCHESTRATION
   #############################################################################
+  # Load environment variables from .env file if it exists
+  if [ -f "$HOME/.env" ]; then
+    echo "Loading environment variables from $HOME/.env"
+    set -a  # automatically export all variables
+    source "$HOME/.env"
+    set +a
+  fi
+
   source ~/.bashrc
   MODE="$2"
   LEADER_CMD="$3"
@@ -258,22 +266,8 @@ if [ "$1" = "launch" ]; then
   export MODE
   export LEADER_CMD
   export DATASET_CMD
-
-  # Load environment variables from .env file if it exists
-  if [ -f "$HOME/.env" ]; then
-    echo "Loading environment variables from $HOME/.env"
-    # Export each variable from .env file
-    while IFS='=' read -r key value; do
-      # Skip comments and empty lines
-      [[ $key =~ ^#.*$ ]] && continue
-      [[ -z $key ]] && continue
-      # Remove any quotes from the value
-      value=$(echo "$value" | tr -d '"'"'")
-      # Export the variable
-      export "$key=$value"
-    done < "$HOME/.env"
-  fi
-
+  export PORTR_KEY="$(bash -ic 'source ~/.bashrc; echo $PORTR_KEY')"
+  export HF_TOKEN="$(bash -ic 'source ~/.bashrc; echo $HF_TOKEN')"
   # Clear /dev/shm/gcs_cache if large
   sudo rm -rf /tmp/libtpu_lockfile /tmp/tpu_logs
   sleep 10
@@ -288,8 +282,6 @@ if [ "$1" = "launch" ]; then
   echo "CURRENT_IP=$CURRENT_IP"
   echo "LEADER_CMD=$LEADER_CMD"
   echo "DATASET_CMD=$DATASET_CMD"
-  echo "PORTR_KEY=${PORTR_KEY:-(not set)}"
-  echo "HF_TOKEN=${HF_TOKEN:-(not set)}"
   echo "==========================================="
 
   # Add this line early in the launch section
