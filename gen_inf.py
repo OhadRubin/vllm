@@ -139,6 +139,7 @@ from typing import Optional
 # python3.10 gen_inf.py "int_start {node_idx} 16 '{s}' &" --nodes [14,16,17,21]
 # Example usage:
 # python3.10 gen_inf.py "int_start {node_idx} 16 '{s}' &" --node_range "14,31"
+# python3.10 gen_inf.py "int_start {node_idx} 16 '{s}' &" --node_range "14,31" --queue True
 
 def main(format_str:str = '{s}',
          nodes: Optional[list[int]]  = None,
