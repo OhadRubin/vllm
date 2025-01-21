@@ -61,6 +61,9 @@ get_node_info() {
 execute_command() {
     local cmd="$1"
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] Executing: $cmd"
+    if [[ -z "$cmd" ]] || [[ "$cmd" == "cmd_queue" ]]; then
+        return 1
+    fi
     if ! eval "$cmd"; then
         echo "[ERROR] Command error: $cmd" >&2
         return 1
@@ -99,7 +102,10 @@ lead_worker() {
     echo "Starting leader for group $GROUP_CHANNEL"
     trap 'echo "Leader exiting"; exit 0' INT TERM
     while true; do
-        command=$(redis_cmd --raw BRPOP "$QUEUE_NAME" 0)
+        # Get both key and value from BRPOP
+        command=$(redis_cmd --raw BRPOP "$QUEUE_NAME" 0 | tail -n 1)
+        [[ -z "$command" ]] && continue
+        
         echo "Broadcasting: $command"
         python3.10 -c "
 import os
@@ -107,8 +113,8 @@ import zmq
 import time
 context = zmq.Context()
 socket = context.socket(zmq.PUB)
-socket.bind('tcp://' + os.getenv('CURRENT_IP') + ':5556')
-cmd = os.getenv('command')
+socket.bind('tcp://*:5556')  # Bind to all interfaces
+cmd = '$command'  # Use proper quoting
 time.sleep(1)  # Allow subscribers to connect
 print('Broadcasting:', cmd)
 socket.send_string(cmd)
