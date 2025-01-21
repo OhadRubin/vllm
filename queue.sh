@@ -39,10 +39,23 @@ check_redis() {
 
 # Get node info with validation
 get_node_info() {
+    echo "Running leader election..."
     export CURRENT_IP=$(curl -s --connect-timeout 3 https://checkip.amazonaws.com || echo "127.0.0.1")
-    export HEAD_NODE_ADDRESS=$(python3.10 ~/vllm/examples/leader_election.py 2>/dev/null || echo "$CURRENT_IP")
-    [[ -z "$HEAD_NODE_ADDRESS" ]] && HEAD_NODE_ADDRESS="$CURRENT_IP"
+    echo "Current IP: $CURRENT_IP"
+    
+    export HEAD_NODE_ADDRESS=$(
+        python3.10 ~/vllm/examples/leader_election.py 2> >(grep -v "ERROR" >&2) || echo "$CURRENT_IP"
+    )
+    echo "Elected leader IP: $HEAD_NODE_ADDRESS"
+    
+    # Validate IP format
+    if [[ ! "$HEAD_NODE_ADDRESS" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        echo "Invalid leader IP: $HEAD_NODE_ADDRESS" >&2
+        HEAD_NODE_ADDRESS="$CURRENT_IP"
+    fi
+    
     GROUP_CHANNEL="group_commands:${HEAD_NODE_ADDRESS//./_}"
+    echo "Final group channel: $GROUP_CHANNEL"
 }
 
 # Rest of the functions remain the same as previous version but use redis_cmd
