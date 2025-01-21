@@ -69,12 +69,28 @@ execute_command() {
 
 # Dequeue with backoff
 dequeue() {
+    local retry_count=0
     while true; do
-        result=$(redis_cmd --raw BRPOP "$QUEUE_NAME" 0)
-        [[ -n "$result" ]] && break
+        if ! check_redis; then
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] Redis connection lost. Attempting reconnect..." >&2
+            sleep $RETRY_DELAY
+            continue
+        }
+        
+        result=$(redis_cmd --raw BRPOP "$QUEUE_NAME" 5 2>/dev/null || echo "")
+        if [[ -n "$result" ]]; then
+            echo "$result" | tail -n1
+            return 0
+        fi
+        
+        retry_count=$((retry_count + 1))
+        if ((retry_count >= MAX_RETRIES)); then
+            retry_count=0
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] Max retries reached, resetting connection..." >&2
+        fi
+        
         sleep $RETRY_DELAY
     done
-    echo "$result" | tail -n1
 }
 
 # Follower
