@@ -2,12 +2,13 @@
 # Distributed Redis Queue Manager with Group Execution
 
 # Configuration
-REDIS_HOST="redis.ohadrubin.com"
-REDIS_PORT=6379
+REDIS_HOST="ohadrubin.com"
+REDIS_PORT=31600
 QUEUE_NAME="cmd_queue"
 REDISCLI_AUTH=${REDIS_PASSWORD:-""}  # Set via environment variable
 MAX_CONN_RETRIES=5
 CONN_RETRY_DELAY=2
+
 
 # Secure Redis connection wrapper
 redis_connect() {
