@@ -142,7 +142,6 @@ socket = context.socket(zmq.PUB)
 socket.bind('tcp://*:5556')
 cmd = '$command'
 time.sleep(1)
-print('Broadcasting:', cmd)
 socket.send_string(cmd)
 "
             pkill -f -9 python3.10
