@@ -75,7 +75,7 @@ dequeue() {
             echo "[$(date '+%Y-%m-%d %H:%M:%S')] Redis connection lost. Attempting reconnect..." >&2
             sleep $RETRY_DELAY
             continue
-        }
+        fi
         
         result=$(redis_cmd --raw BRPOP "$QUEUE_NAME" 5 2>/dev/null || echo "")
         if [[ -n "$result" ]]; then
