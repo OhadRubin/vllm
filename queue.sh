@@ -67,20 +67,6 @@ execute_command() {
     fi
 }
 
-# Dequeue with backoff
-dequeue() {
-    
-    while true; do
-        result=$(redis_cmd --raw BRPOP "$QUEUE_NAME")
-        if [[ -n "$result" ]]; then
-            echo "$result" | tail -n1
-            return 0
-        fi
-
-        
-        sleep $RETRY_DELAY
-    done
-}
 
 # Follower
 follow_leader() {
@@ -113,7 +99,7 @@ lead_worker() {
     echo "Starting leader for group $GROUP_CHANNEL"
     trap 'echo "Leader exiting"; exit 0' INT TERM
     while true; do
-        command=$(dequeue)
+        command=$(redis_cmd --raw BRPOP "$QUEUE_NAME" 0)
         echo "Broadcasting: $command"
         python3.10 -c "
 import os
