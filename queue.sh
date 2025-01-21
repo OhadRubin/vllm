@@ -102,7 +102,6 @@ except zmq.error.Again:
         fi
         sleep 1
     done
-    done
 }
 
 # Leader
