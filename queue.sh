@@ -103,7 +103,8 @@ lead_worker() {
     trap 'echo "Leader exiting"; exit 0' INT TERM
     while true; do
         # Get both key and value from BRPOP
-        command=$(redis_cmd --raw BRPOP "$QUEUE_NAME" 0 | tail -n 1)
+        command=$(redis_cmd --raw BRPOP "$QUEUE_NAME" 0 )
+        echo "command: $command"
         [[ -z "$command" ]] && continue
         
         echo "Broadcasting: $command"
