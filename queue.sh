@@ -36,28 +36,57 @@ check_redis() {
     }
     return 0
 }
-
-# Get node info with validation
 get_node_info() {
-    echo "Running leader election..."
-    export CURRENT_IP=$(curl -s --connect-timeout 3 https://checkip.amazonaws.com || echo "127.0.0.1")
-    echo "Current IP: $CURRENT_IP"
-    
-    export HEAD_NODE_ADDRESS=$(
-        python3.10 ~/vllm/examples/leader_election.py 2> >(grep -v "ERROR" >&2) || echo "$CURRENT_IP"
-    )
-    echo "Elected leader IP: $HEAD_NODE_ADDRESS"
+    export CURRENT_IP=$(curl -s --max-time 3 https://checkip.amazonaws.com || echo "127.0.0.1")
+    export HEAD_NODE_ADDRESS=$(python3.10 ~/vllm/examples/leader_election.py 2>/dev/null || echo "$CURRENT_IP")
     
     # Validate IP format
     if [[ ! "$HEAD_NODE_ADDRESS" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-        echo "Invalid leader IP: $HEAD_NODE_ADDRESS" >&2
         HEAD_NODE_ADDRESS="$CURRENT_IP"
     fi
     
     GROUP_CHANNEL="group_commands:${HEAD_NODE_ADDRESS//./_}"
-    echo "Final group channel: $GROUP_CHANNEL"
+    echo "Group Channel: $GROUP_CHANNEL"
 }
 
+# Follower execution fix
+follow_leader() {
+    echo "Starting follower for $GROUP_CHANNEL"
+    while true; do
+        echo "Subscribing to channel..."
+        redis_cmd SUBSCRIBE "$GROUP_CHANNEL" | {
+            while read -r type; do
+                read -r channel
+                read -r message
+                case "$type" in
+                    message)
+                        echo "Executing: $message"
+                        eval "$message"
+                        ;;
+                    subscribe)
+                        echo "Successfully subscribed to $channel"
+                        ;;
+                    *)
+                        echo "Received $type message"
+                        ;;
+                esac
+            done
+        }
+        echo "Connection lost. Retrying in $RETRY_DELAY seconds..."
+        sleep $RETRY_DELAY
+    done
+}
+
+# Leader worker
+lead_worker() {
+    echo "Starting leader for $GROUP_CHANNEL"
+    while true; do
+        command=$(redis_cmd BRPOP "$QUEUE_NAME" 0 | tail -n1)
+        echo "Broadcasting: $command"
+        redis_cmd PUBLISH "$GROUP_CHANNEL" "$command"
+        eval "$command"
+    done
+}
 # Rest of the functions remain the same as previous version but use redis_cmd
 
 # Command execution with logging
