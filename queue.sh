@@ -91,13 +91,12 @@ socket.setsockopt_string(zmq.SUBSCRIBE, '')
 socket.setsockopt(zmq.RCVTIMEO, 5000)
 try:
     msg = socket.recv_string()
-    print('Received command:', msg)
     print(msg)
 except zmq.error.Again:
-    print('Timeout waiting for command')
+    print('')  # Print empty string instead of error message
     pass
 ")
-        if [ -n "$msg" ]; then
+        if [ -n "$msg" ] && [ "$msg" != "Timeout waiting for command" ]; then
             eval "$msg"
         fi
         sleep 1
