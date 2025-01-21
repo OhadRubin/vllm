@@ -68,43 +68,83 @@ dequeue() {
 }
 
 # Follower listener
+check_redis() {
+    if ! ping_output=$(redis_cmd PING 2>&1); then
+        echo "Redis connection failed. Verify:" >&2
+        echo "1. Server running at ${REDIS_HOST}:${REDIS_PORT}"
+        echo "2. Authentication credentials"
+        echo "3. Network connectivity"
+        return 1
+    fi
+    
+    # Verify Pub/Sub capabilities
+    local test_channel="connection_test_$RANDOM"
+    if ! redis_cmd PUBLISH "$test_channel" "test" >/dev/null; then
+        echo "Redis Pub/Sub test failed. Check server configuration."
+        return 1
+    fi
+    return 0
+}
+
+# Improved channel subscription with tracing
 follow_leader() {
     echo "Starting follower for group $GROUP_CHANNEL"
-    local retry_count=0
+    echo "Testing channel subscription..."
     
-    while true; do
-        echo "Attempting to subscribe to $GROUP_CHANNEL..."
-        redis_cmd SUBSCRIBE "$GROUP_CHANNEL" | {
-            while read -r type; do
-                retry_count=0  # Reset retry counter on successful message
-                read -r channel
-                read -r message
-                
-                case "$type" in
-                    message)
-                        echo "Received command: $message"
-                        execute_command "$message"
-                        ;;
-                    subscribe)
-                        echo "Successfully subscribed to $channel"
-                        ;;
-                    *)
-                        echo "Unexpected message type: $type" >&2
-                        ;;
-                esac
-            done
-        }
-        
-        # Handle subscription failures
-        ((retry_count++))
-        echo "Subscription lost. Retry $retry_count/$MAX_RETRIES in $RETRY_DELAY seconds..."
-        [[ $retry_count -ge $MAX_RETRIES ]] && break
-        sleep $RETRY_DELAY
-    done
+    # Verify channel format
+    if [[ ! "$GROUP_CHANNEL" =~ ^group_commands:[0-9_]+$ ]]; then
+        echo "Invalid group channel format: $GROUP_CHANNEL" >&2
+        return 1
+    fi
+
+    # Diagnostic: Test publish/subscribe
+    echo "Performing channel test..."
+    local test_channel="test_$RANDOM"
+    (
+        sleep 1
+        redis_cmd PUBLISH "$test_channel" "test_message" >/dev/null
+    ) &
     
-    echo "Fatal: Failed to maintain subscription to $GROUP_CHANNEL" >&2
-    return 1
+    redis_cmd SUBSCRIBE "$test_channel" | {
+        while read -r type; do
+            read -r channel
+            read -r message
+            if [[ "$message" == "test_message" ]]; then
+                echo "Channel test successful"
+                break
+            fi
+        done
+    }
+
+    # Main subscription loop
+    echo "Initiating main subscription to $GROUP_CHANNEL"
+    redis_cmd SUBSCRIBE "$GROUP_CHANNEL" | {
+        while true; do
+            read -r type || break
+            read -r channel || break
+            read -r message || break
+            
+            echo "Received [$type] on [$channel]: $message"
+            case "$type" in
+                message)
+                    echo "Executing: $message"
+                    eval "$message"
+                    ;;
+                subscribe)
+                    echo "Successfully subscribed to $channel"
+                    ;;
+                *)
+                    echo "Unknown message type: $type"
+                    ;;
+            esac
+        done
+    }
+    
+    echo "Subscription to $GROUP_CHANNEL lost. Reconnecting..."
+    sleep $RETRY_DELAY
+    follow_leader
 }
+
 
 # Leader worker
 lead_worker() {
