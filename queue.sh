@@ -80,55 +80,29 @@ dequeue() {
 # Follower
 follow_leader() {
     echo "Starting follower for group $GROUP_CHANNEL"
-    echo "Checking channel subscription"
-    if [[ ! "$GROUP_CHANNEL" =~ ^group_commands:[0-9_]+$ ]]; then
-        echo "Group channel format error: $GROUP_CHANNEL" >&2
-        return 1
-    fi
-
-    # Subscription test
-    local test_channel="test_$RANDOM"
-    (
+    while true; do
+        msg=$(python3.10 -c "
+import os
+import zmq
+context = zmq.Context()
+socket = context.socket(zmq.SUB)
+socket.connect('tcp://' + os.getenv('HEAD_NODE_ADDRESS','127.0.0.1') + ':5556')
+socket.setsockopt_string(zmq.SUBSCRIBE','')
+socket.setsockopt(zmq.RCVTIMEO, 5000)
+try:
+    msg = socket.recv_string()
+    print('Received command:', msg)
+    print(msg)
+except zmq.error.Again:
+    print('Timeout waiting for command')
+    pass
+")
+        if [ -n "$msg" ]; then
+            eval "$msg"
+        fi
         sleep 1
-        redis_cmd PUBLISH "$test_channel" "test_message" >/dev/null
-    ) &
-
-    redis_cmd SUBSCRIBE "$test_channel" | {
-        while read -r type; do
-            read -r channel
-            read -r message
-            if [[ "$message" == "test_message" ]]; then
-                echo "Channel test passed"
-                break
-            fi
-        done
-    }
-
-    echo "Subscribing to $GROUP_CHANNEL"
-    redis_cmd SUBSCRIBE "$GROUP_CHANNEL" | {
-        while true; do
-            read -r type || break
-            read -r channel || break
-            read -r message || break
-            echo "Received [$type] on [$channel]: $message"
-            case "$type" in
-                message)
-                    echo "Executing: $message"
-                    eval "$message"
-                    ;;
-                subscribe)
-                    echo "Subscribed to $channel"
-                    ;;
-                *)
-                    echo "Unknown message type: $type"
-                    ;;
-            esac
-        done
-    }
-    
-    echo "Subscription lost. Reconnecting..."
-    sleep $RETRY_DELAY
-    follow_leader
+    done
+    done
 }
 
 # Leader
@@ -138,7 +112,18 @@ lead_worker() {
     while true; do
         command=$(dequeue)
         echo "Broadcasting: $command"
-        redis_cmd PUBLISH "$GROUP_CHANNEL" "$command"
+        python3.10 -c "
+import os
+import zmq
+import time
+context = zmq.Context()
+socket = context.socket(zmq.PUB)
+socket.bind('tcp://' + os.getenv('CURRENT_IP') + ':5556')
+cmd = os.getenv('command')
+time.sleep(1)  # Allow subscribers to connect
+print('Broadcasting:', cmd)
+socket.send_string(cmd)
+"
         execute_command "$command"
     done
 }
