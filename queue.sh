@@ -1,4 +1,7 @@
 #!/bin/bash
+
+
+
 # Distributed Redis Queue Manager - Authenticated Version
 
 # Configuration
@@ -67,17 +70,40 @@ dequeue() {
 # Follower listener
 follow_leader() {
     echo "Starting follower for group $GROUP_CHANNEL"
-    redis_cmd SUBSCRIBE "$GROUP_CHANNEL" | {
-        while read -r type; do
-            read -r channel
-            read -r message
-            case "$type" in
-                message) execute_command "$message" ;;
-                subscribe) echo "Subscribed to $channel" ;;
-                *) echo "Unknown message type: $type" >&2 ;;
-            esac
-        done
-    }
+    local retry_count=0
+    
+    while true; do
+        echo "Attempting to subscribe to $GROUP_CHANNEL..."
+        redis_cmd SUBSCRIBE "$GROUP_CHANNEL" | {
+            while read -r type; do
+                retry_count=0  # Reset retry counter on successful message
+                read -r channel
+                read -r message
+                
+                case "$type" in
+                    message)
+                        echo "Received command: $message"
+                        execute_command "$message"
+                        ;;
+                    subscribe)
+                        echo "Successfully subscribed to $channel"
+                        ;;
+                    *)
+                        echo "Unexpected message type: $type" >&2
+                        ;;
+                esac
+            done
+        }
+        
+        # Handle subscription failures
+        ((retry_count++))
+        echo "Subscription lost. Retry $retry_count/$MAX_RETRIES in $RETRY_DELAY seconds..."
+        [[ $retry_count -ge $MAX_RETRIES ]] && break
+        sleep $RETRY_DELAY
+    done
+    
+    echo "Fatal: Failed to maintain subscription to $GROUP_CHANNEL" >&2
+    return 1
 }
 
 # Leader worker
