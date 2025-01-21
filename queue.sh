@@ -121,9 +121,11 @@ lead_worker() {
     register_worker
     trap 'echo "Leader exiting"; redis_cmd SREM "$WORKERS_SET" "$WORKER_ID"; exit 0' INT TERM
     while true; do
-        # Get both key and value from BRPOP
         echo "WAITING FOR COMMAND"
-        command=$(redis_cmd --raw BLPOP "$QUEUE_NAME" 0 )
+        command=$(redis_cmd --raw BLPOP "$QUEUE_NAME" 5)  # Reduced timeout to 5 seconds
+        if [[ $? -ne 0 ]]; then
+            continue
+        }
         echo "command: $command"
         command=$(echo "$command" | awk 'NR==2')
 
@@ -151,7 +153,6 @@ socket.send_string(cmd)
 # Main
 main() {
     check_redis || exit 1
-    get_node_info
     
     case "$1" in
         enqueue)
@@ -166,6 +167,7 @@ main() {
             echo "Enqueued: $2"
             ;;
         worker)
+            get_node_info
             if [[ "$CURRENT_IP" == "$HEAD_NODE_ADDRESS" ]]; then
                 lead_worker
             else
