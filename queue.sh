@@ -122,31 +122,33 @@ lead_worker() {
     trap 'echo "Leader exiting"; redis_cmd SREM "$WORKERS_SET" "$WORKER_ID"; exit 0' INT TERM
     while true; do
         echo "WAITING FOR COMMAND"
-        command=$(redis_cmd --raw BLPOP "$QUEUE_NAME" 5)  # Reduced timeout to 5 seconds
+        command=$(redis_cmd --raw BLPOP "$QUEUE_NAME" 5)  # 5 second timeout
         if [[ $? -ne 0 ]]; then
             continue
-        }
-        echo "command: $command"
-        command=$(echo "$command" | awk 'NR==2')
-
-        [[ -z "$command" ]] && continue
+        fi
         
-        echo "Broadcasting: $command"
-        python3.10 -c "
+        # Only process if we got a real command
+        if [[ -n "$command" ]] && [[ "$command" != "$QUEUE_NAME" ]]; then
+            echo "command: $command"
+            command=$(echo "$command" | awk 'NR==2')
+            
+            echo "Broadcasting: $command"
+            python3.10 -c "
 import os
 import zmq
 import time
 context = zmq.Context()
 socket = context.socket(zmq.PUB)
-socket.bind('tcp://*:5556')  # Bind to all interfaces
-cmd = '$command'  # Use proper quoting
-time.sleep(1)  # Allow subscribers to connect
+socket.bind('tcp://*:5556')
+cmd = '$command'
+time.sleep(1)
 print('Broadcasting:', cmd)
 socket.send_string(cmd)
 "
-        pkill -f -9 python3.10
-        sleep 5
-        execute_command "$command"
+            pkill -f -9 python3.10
+            sleep 5
+            execute_command "$command"
+        fi
     done
 }
 
