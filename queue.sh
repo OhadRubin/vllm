@@ -109,7 +109,7 @@ lead_worker() {
     while true; do
         # Get both key and value from BRPOP
         echo "WAITING FOR COMMAND"
-        command=$(redis_cmd --raw BRPOP "$QUEUE_NAME" 0 )
+        command=$(redis_cmd --raw BLPOP "$QUEUE_NAME" 0 )
         echo "command: $command"
         command=$(echo "$command" | awk 'NR==2')
 
@@ -145,7 +145,7 @@ main() {
                 echo "Usage: $0 enqueue \"<command>\""
                 exit 1
             }
-            if ! redis_cmd LPUSH "$QUEUE_NAME" "$2"; then
+            if ! redis_cmd RPUSH "$QUEUE_NAME" "$2"; then
                 echo "Failed to enqueue command to Redis"
                 exit 1
             fi
