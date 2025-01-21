@@ -150,7 +150,7 @@ from typing import Optional
 #   --command='tmux new-session -d -s test_session "echo hi && sleep 10"'
 
 # python3.10 gen_inf.py --exclude_nodes 15 --node_range "14,31" --format_str "gcloud alpha compute tpus tpu-vm ssh v4-16-node-{node_idx} --project=tpu-project-2-379909 --zone=us-central2-b --worker=all --command='tmux kill-server 2>/dev/null || true; sleep 5; tmux new-session -d -s test_session \"{s}\"' &"
-# python3.10 gen_inf.py --nodes 14,15,16,21,26,28,29,30 --format_str "gcloud alpha compute tpus tpu-vm ssh v4-16-node-{node_idx} --project=tpu-project-2-379909 --zone=us-central2-b --worker=all --command='tmux kill-server 2>/dev/null || true; sleep 5; tmux new-session -d -s test_session \"{s}\"' &"
+# python3.10 gen_inf.py --nodes 14,15,16,21,26,28,29,30 --format_str "./queue.sh enqueue \"{s}\" &"
 
 
 # 14,15,16,21,26,28,29,30

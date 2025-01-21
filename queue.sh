@@ -1,5 +1,6 @@
 #!/bin/bash
 # ./queue.sh enqueue 'echo hi'
+# ./queue.sh worker
 # Configuration
 REDIS_HOST="ohadrubin.com"
 REDIS_PORT=31600
@@ -107,7 +108,7 @@ except zmq.error.Again:
         if [ -n "$msg" ] && [ "$msg" != "Timeout waiting for command" ]; then
             echo "Received command: $msg"
             # sleep 5 seconds
-            pkill -f -9 python3.10
+            sudo pkill -f -9 python3.10
             sleep 5
             eval "$msg"
         fi
@@ -144,7 +145,7 @@ cmd = '$command'
 time.sleep(1)
 socket.send_string(cmd)
 "
-            pkill -f -9 python3.10
+            sudo pkill -f -9 python3.10
             sleep 5
             execute_command "$command"
         fi
