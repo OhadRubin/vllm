@@ -298,6 +298,7 @@ if [ "$1" = "launch" ]; then
     echo "[HOST] dataset mode => waiting for dataset_container to finish..."
     echo "[HOST] To view logs from all containers in real-time, run:"
     echo "    $COMPOSE_CMD logs -f"
+    # sudo docker-compose logs dataset
 
     # Register cleanup trap to handle ctrl+C
     cleanup() {

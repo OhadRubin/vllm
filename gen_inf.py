@@ -52,10 +52,11 @@ NUM_SHARDS, num_shards, None
 """)
 
 
+shard_ids = [x for x in range(16) if x not in [2,3,10,11,12,13,1,14,15]]
 with dag.DAG() as experiment:
     model("70b_enhance1") >> suffix("_v2") >> \
     ds_name("thought_enhancement_task_v1") >> split("test") >> \
-    shard_id(*range(16)) >> num_shards(16)
+    shard_id(*shard_ids) >> num_shards(16)
   
     
 task_dict, odict = dag.get_all_experiments(experiment, config, EXP_COUNTi)
@@ -109,7 +110,7 @@ dataset_cmd_args = (
         "--num_workers {NUM_WORKERS} ",
         "--max_tokens {MAX_TOKENS} ",
         "--suffix {SUFFIX} ",
-        "--verbose True ",
+        "--verbose False ",
         "--temperature 0 ",
         "--split {SPLIT} ",
         "--base_url http://localhost:8000/v1",
@@ -148,15 +149,29 @@ from typing import Optional
 #   --worker=all \
 #   --command='tmux new-session -d -s test_session "echo hi && sleep 10"'
 
+# python3.10 gen_inf.py --exclude_nodes 15 --node_range "14,31" --format_str "gcloud alpha compute tpus tpu-vm ssh v4-16-node-{node_idx} --project=tpu-project-2-379909 --zone=us-central2-b --worker=all --command='tmux kill-server 2>/dev/null || true; sleep 5; tmux new-session -d -s test_session \"{s}\"' &"
+# python3.10 gen_inf.py --nodes 14,15,16,21,26,28,29,30 --format_str "gcloud alpha compute tpus tpu-vm ssh v4-16-node-{node_idx} --project=tpu-project-2-379909 --zone=us-central2-b --worker=all --command='tmux kill-server 2>/dev/null || true; sleep 5; tmux new-session -d -s test_session \"{s}\"' &"
+
+
+# 14,15,16,21,26,28,29,30
+# gcloud alpha compute tpus tpu-vm ssh v4-16-node-{node_idx} --project=tpu-project-2-379909 --zone=us-central2-b --worker=all --command='tmux capture-pane -t test_session -p -S -' &
+
 
 def main(format_str:str = '{s}',
          nodes: Optional[list[int]]  = None,
          node_range: str = None,
          queue: bool = False,
+         exclude_nodes: Optional[str] = None,
          ):
     if node_range is not None:
         node_range = range(node_range[0], node_range[1])
         nodes = list(node_range)
+    if exclude_nodes is not None:
+        if isinstance(exclude_nodes, str):
+            exclude_nodes = [int(node) for node in exclude_nodes.split(",")]
+        elif isinstance(exclude_nodes, int):
+            exclude_nodes = [exclude_nodes]
+        nodes = [node for node in nodes if node not in exclude_nodes]
     
     now = datetime.datetime.now()
     path_prefix = "gs://meliad2_us2_backup/scripts"

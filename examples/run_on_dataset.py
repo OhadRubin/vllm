@@ -65,46 +65,86 @@ def init_worker(config):
     worker = Worker(config)
 
 
-def process_example(example_id):
+def process_example(tup):
     global worker
-    return worker(example_id)
+    index, example = tup
+    processed_example = {
+        'index': index,
+        'content': worker(tup)  # Replace with actual processed content
+    }
+    return processed_example
 
 
-
-def run_files(config):
-
-    ds = datasets.load_dataset(config.dataset_name,
-                               config.config_name
-                               )[config.split]
+def start_pool(config, processed_indices):
+    # Load dataset
+    if config.from_disk:
+        ds = datasets.load_from_disk(config.dataset_name)[config.split]
+    else:
+        ds = datasets.load_dataset(
+            config.dataset_name,
+            config.config_name
+        )[config.split]
+    
+    # Handle sharding
     if config.shard_id is not None:
         assert config.num_shards is not None, "num_shards must be provided if shard_id is provided"
         ds = ds.shard(config.num_shards, config.shard_id)
-        
-    if config.max_examples != -1:
-        max_examples = min(config.max_examples, len(ds))
-    else:
-        max_examples = len(ds)
     
-
-    tups = range(max_examples)
-
-    print(tups)
-    tups = ((i, ds[i]) for i in tups)
-
+    # Calculate max examples
+    max_examples = min(config.max_examples, len(ds)) if config.max_examples != -1 else len(ds)
+    
+    # Generate remaining indices to process
+    remaining_indices = [i for i in range(max_examples) if i not in processed_indices]
+    
+    # Create generator for examples
+    tups = ((i, ds[i]) for i in remaining_indices)
+    
+    # Process examples
     with Pool(
         config.num_workers,
         initializer=init_worker,
         initargs=(config,),
     ) as pool:
-        outputs = []
-        with tqdm(total=max_examples) as pbar:
+        with tqdm(total=len(remaining_indices)) as pbar:
             for example in pool.imap_unordered(process_example, tups):
-                outputs.append(example)
+                yield example
                 pbar.update(1)
-    with open(config.output_file, "w") as f:
-        for example in outputs:
-            f.write(json.dumps(example) + "\n")
-            
+
+from more_itertools import chunked
+def run_files(config):
+    processed_indices = set()
+    
+    # Check for existing progress if not overwriting
+    if not config.force_overwrite and os.path.exists(config.output_file):
+        try:
+            with open(config.output_file, 'r') as f:
+                for line in f:
+                    try:
+                        example = json.loads(line)
+                        processed_indices.add(example['index'])
+                    except json.JSONDecodeError:
+                        continue  # Skip invalid/corrupted lines
+        except FileNotFoundError:
+            pass
+    
+    # Get processed examples
+    outputs = start_pool(config, processed_indices)
+    
+    # Write results
+    mode = "w" if config.force_overwrite else "a"
+    try:
+        with open(config.output_file, mode) as f:
+            count = 0
+            for chunk in chunked(outputs, 10):
+                for example in chunk:
+                    f.write(json.dumps(example) + "\n")
+                    count += 1
+                f.flush()  # Flush after each chunk of 10
+            print(f"Wrote {count} examples to {config.output_file}")
+    except Exception as e:
+        print(f"Error writing to file: {e}")
+        raise
+
 
 
 
@@ -112,24 +152,14 @@ import time
 import pathlib
 
 
-# python3.10 gen_examples.py --model_name meta-llama/Llama-3.1-70B --base_url https://v4-32-node-11.ohadrubin.com/v1  --prompt_folder prompts/v5 --num_workers 16 --max_tokens 2048 --suffix _v8 --max_steps 1 --verbose True --temperature 0.8 --shard_id 1
-# python3.10 examples/run_on_dataset.py --dataset_name iohadrubin/gpqa --config_name gold_sft_0  --num_workers 16 --max_tokens 2048 --suffix _v0  --verbose True --temperature 0.8
-# python3.10 examples/run_on_dataset.py --dataset_name iohadrubin/example_to_realign_v1 --config_name default  --num_workers 16 --max_tokens 4096 --suffix _v0  --verbose True --temperature 0.6 --split train --base_url https://api.openai.com/v1 --model_name gpt-4o-mini  --api_key $OPENAI_API_KEY 
-
-# python3.10 examples/run_on_dataset.py --dataset_name iohadrubin/reorder_thoughts_v1 --config_name default  --num_workers 16 --max_tokens 4096 --suffix _v2  --verbose True --temperature 0.1 --split test --base_url https://v4-16-node-20.ohadrubin.com/v1 --max_examples 100 --drop_last_msg True
-
-# python3.10 examples/run_on_dataset_async.py --dataset_name iohadrubin/reorder_thoughts_v1 --config_name default  --num_workers 16 --max_tokens 4096 --suffix _v3  --verbose True --temperature 0 --split train --base_url https://v4-16-node-20.ohadrubin.com/v1 --drop_last_msg True
-# python3.10 examples/run_on_dataset.py --dataset_name iohadrubin/reorder_thoughts_v1 --config_name default  --num_workers 16 --max_tokens 4096 --suffix _v3  --verbose True --temperature 0 --split train --base_url http://localhost:8000/v1 --drop_last_msg True
-
-
-
 import requests
 
 from typing import Optional
 
-def main(dataset_name: str="iohadrubin/gpqa",
-         config_name: str="gold_sft_0",
-         split: str = "validation",
+def main(dataset_name: Optional[str]=None,
+         config_name: Optional[str]="default",
+         split: Optional[str] = None,
+         from_disk: bool = False,
          base_url: str = "http://localhost:8000/v1",
          suffix: str = "",
          num_workers: int = 1,
@@ -141,8 +171,12 @@ def main(dataset_name: str="iohadrubin/gpqa",
          api_key: str = "bla",
          drop_last_msg:bool = False,
          output_dir: str = "outputs",
+         output_file: Optional[str] = None,
          shard_id: Optional[int] = None,
          num_shards: Optional[int] = None,
+         max_seq_length: int = 16384,
+         save_online: bool = False,
+         force_overwrite: bool = False,
          ):
     # model_name: str
     if model_name is None:
@@ -163,9 +197,10 @@ def main(dataset_name: str="iohadrubin/gpqa",
                 time.sleep(1)
 
     pathlib.Path(output_dir).mkdir(exist_ok=True)
-    output_file = f"{output_dir}/{dataset_name.replace('/', '_')}_{config_name}_{model_name.replace('/', '_')}{suffix}.jsonl"
-    if shard_id is not None:
-        output_file = f"{output_file}.{shard_id}"
+    if output_file is None:
+        output_file = f"{output_dir}/{dataset_name.replace('/', '_')}_{config_name}_{model_name.replace('/', '_')}{suffix}.jsonl"
+        if shard_id is not None:
+            output_file = f"{output_file}.{shard_id}"
 
     
 
@@ -185,13 +220,41 @@ def main(dataset_name: str="iohadrubin/gpqa",
             temperature=temperature,
             api_key=api_key,
             drop_last_msg=drop_last_msg,
-            max_seq_length=16384,
+            max_seq_length=max_seq_length,
             output_dir=output_dir,
             shard_id=shard_id,
             num_shards=num_shards,
+            save_online=save_online,
+            force_overwrite=force_overwrite,
+            from_disk=from_disk,
         )
     )
     run_files(config)
+
+
+
+
+# python3.10 gen_examples.py --model_name meta-llama/Llama-3.1-70B --base_url https://v4-32-node-11.ohadrubin.com/v1  --prompt_folder prompts/v5 --num_workers 16 --max_tokens 2048 --suffix _v8 --max_steps 1 --verbose True --temperature 0.8 --shard_id 1
+# python3.10 examples/run_on_dataset.py --dataset_name iohadrubin/gpqa --config_name gold_sft_0  --num_workers 16 --max_tokens 2048 --suffix _v0  --verbose True --temperature 0.8
+# python3.10 examples/run_on_dataset.py --dataset_name iohadrubin/example_to_realign_v1 --config_name default  --num_workers 16 --max_tokens 4096 --suffix _v0  --verbose True --temperature 0.6 --split train --base_url https://api.openai.com/v1 --model_name gpt-4o-mini  --api_key $OPENAI_API_KEY 
+
+# python3.10 examples/run_on_dataset.py --dataset_name iohadrubin/thought_catagory_tagging --config_name default  --num_workers 16 --max_tokens 4096 --max_seq_length 32768 --suffix _v0  --verbose True --temperature 1 --split test --base_url https://api.openai.com/v1 --model_name gpt-4o-mini  --api_key $OPENAI_API_KEY --drop_last_msg False 
+
+
+# python3.10 examples/run_on_dataset.py --dataset_name iohadrubin/thought_catagory_tagging_all --config_name default  --num_workers 32 --max_tokens 8192 --max_seq_length 32768 --suffix _v0  --verbose True --temperature 1 --split test --base_url https://api.openai.com/v1 --model_name gpt-4o  --api_key $OPENAI_API_KEY --drop_last_msg False 
+
+
+# python3.10 examples/run_on_dataset.py --dataset_name iohadrubin/thought_catagory_tagging_all_v2 --config_name default  --num_workers 32 --max_tokens 8192 --max_seq_length 32768 --suffix _v2  --verbose True --temperature 0 --split test --base_url https://api.openai.com/v1 --model_name gpt-4o  --api_key $OPENAI_API_KEY --drop_last_msg False  --save_online True
+
+# give file path and output_file 
+
+# python3.10 examples/run_on_dataset.py --dataset_name /home/ohadr/general_o1/outputs/tagging_dataset_leftover  --num_workers 32 --max_tokens 8192 --max_seq_length 32768 --suffix _v2  --verbose True --temperature 0 --split test --base_url https://api.openai.com/v1 --model_name gpt-4o  --api_key $OPENAI_API_KEY --drop_last_msg False  --save_online True --output_file leftovers_thought_catagory_tagging_all_v2_gpt-4o.jsonl --from_disk True
+
+# python3.10 examples/run_on_dataset.py --dataset_name iohadrubin/reorder_thoughts_v1 --config_name default  --num_workers 16 --max_tokens 4096 --suffix _v2  --verbose True --temperature 0.1 --split test --base_url https://v4-16-node-20.ohadrubin.com/v1 --max_examples 100 --drop_last_msg True
+
+# python3.10 examples/run_on_dataset_async.py --dataset_name iohadrubin/reorder_thoughts_v1 --config_name default  --num_workers 16 --max_tokens 4096 --suffix _v3  --verbose True --temperature 0 --split train --base_url https://v4-16-node-20.ohadrubin.com/v1 --drop_last_msg True
+# python3.10 examples/run_on_dataset.py --dataset_name iohadrubin/reorder_thoughts_v1 --config_name default  --num_workers 16 --max_tokens 4096 --suffix _v3  --verbose True --temperature 0 --split train --base_url http://localhost:8000/v1 --drop_last_msg True
+
 
 
 if __name__ == "__main__":
