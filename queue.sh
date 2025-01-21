@@ -87,7 +87,7 @@ import zmq
 context = zmq.Context()
 socket = context.socket(zmq.SUB)
 socket.connect('tcp://' + os.getenv('HEAD_NODE_ADDRESS','127.0.0.1') + ':5556')
-socket.setsockopt_string(zmq.SUBSCRIBE','')
+socket.setsockopt_string(zmq.SUBSCRIBE, '')
 socket.setsockopt(zmq.RCVTIMEO, 5000)
 try:
     msg = socket.recv_string()
