@@ -105,6 +105,8 @@ lead_worker() {
         # Get both key and value from BRPOP
         command=$(redis_cmd --raw BRPOP "$QUEUE_NAME" 0 )
         echo "command: $command"
+        command=$(echo "$command" | awk 'NR==2')
+
         [[ -z "$command" ]] && continue
         
         echo "Broadcasting: $command"
