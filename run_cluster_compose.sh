@@ -195,7 +195,7 @@ check_zmq_tools() {
   if ! command -v zmq_pub >/dev/null 2>&1; then
     echo "Installing ZMQ tools..."
     apt-get update && apt-get install -y libzmq3-dev
-    pip3 install fire ml_collections zmq
+    pip3 install fire ml_collections zmq more_itertools
   fi
 }
 

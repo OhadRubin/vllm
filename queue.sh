@@ -1,5 +1,5 @@
 #!/bin/bash
-
+# ./queue.sh enqueue 'echo hi'
 # Configuration
 REDIS_HOST="ohadrubin.com"
 REDIS_PORT=31600
