@@ -8,6 +8,11 @@ QUEUE_NAME="cmd_queue"
 MAX_RETRIES=10
 RETRY_DELAY=3
 
+# Install dependencies if missing
+if ! command -v redis-cli &> /dev/null; then
+    sudo apt-get install -y redis-tools
+fi
+
 # Secure connection wrapper
 redis_cmd() {
     redis-cli -u "redis://:${REDIS_PASSWORD}@${REDIS_HOST}:${REDIS_PORT}" --no-auth-warning "$@"
