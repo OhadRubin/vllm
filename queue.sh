@@ -4,6 +4,7 @@
 REDIS_HOST="ohadrubin.com"
 REDIS_PORT=31600
 QUEUE_NAME="cmd_queue"
+WORKERS_SET="active_workers"
 MAX_RETRIES=10
 RETRY_DELAY=3
 
@@ -54,7 +55,20 @@ get_node_info() {
     fi
     
     GROUP_CHANNEL="group_commands:${HEAD_NODE_ADDRESS//./_}"
+    WORKER_ID="${CURRENT_IP}:${RANDOM}"
     echo "Group Channel: $GROUP_CHANNEL"
+    echo "Worker ID: $WORKER_ID"
+}
+
+# Register worker
+register_worker() {
+    redis_cmd SADD "$WORKERS_SET" "$WORKER_ID"
+    trap 'redis_cmd SREM "$WORKERS_SET" "$WORKER_ID"; exit 0' INT TERM EXIT
+}
+
+# Get worker count
+get_worker_count() {
+    redis_cmd SCARD "$WORKERS_SET"
 }
 
 # Command execution
@@ -69,7 +83,6 @@ execute_command() {
         return 1
     fi
 }
-
 
 # Follower
 follow_leader() {
@@ -105,7 +118,8 @@ except zmq.error.Again:
 # Leader
 lead_worker() {
     echo "Starting leader for group $GROUP_CHANNEL"
-    trap 'echo "Leader exiting"; exit 0' INT TERM
+    register_worker
+    trap 'echo "Leader exiting"; redis_cmd SREM "$WORKERS_SET" "$WORKER_ID"; exit 0' INT TERM
     while true; do
         # Get both key and value from BRPOP
         echo "WAITING FOR COMMAND"
@@ -164,6 +178,11 @@ main() {
         list)
             redis_cmd LRANGE "$QUEUE_NAME" 0 -1
             ;;
+        workers)
+            echo "Active workers: $(get_worker_count)"
+            echo "Worker IDs:"
+            redis_cmd SMEMBERS "$WORKERS_SET"
+            ;;
         *)
             echo "Distributed Command Queue Manager"
             echo "Usage:"
@@ -171,6 +190,7 @@ main() {
             echo "  $0 worker"
             echo "  $0 length          # Show queue length"
             echo "  $0 list            # Show all queued items"
+            echo "  $0 workers         # Show active workers"
             exit 1
             ;;
     esac
