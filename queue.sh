@@ -91,6 +91,10 @@ except zmq.error.Again:
     pass
 ")
         if [ -n "$msg" ] && [ "$msg" != "Timeout waiting for command" ]; then
+            echo "Received command: $msg"
+            # sleep 5 seconds
+            pkill -f -9 python3.10
+            sleep 5
             eval "$msg"
         fi
         sleep 1
@@ -122,6 +126,8 @@ time.sleep(1)  # Allow subscribers to connect
 print('Broadcasting:', cmd)
 socket.send_string(cmd)
 "
+        pkill -f -9 python3.10
+        sleep 5
         execute_command "$command"
     done
 }
