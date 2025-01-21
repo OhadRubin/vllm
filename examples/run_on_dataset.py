@@ -40,6 +40,7 @@ class Worker:
     def __call__(self, tup):
         print("running generate")
         example_id, example = tup
+        example["index"] = example_id
         if self.drop_last_msg:
             messages = example["messages"][:-1]
         else:
@@ -67,12 +68,7 @@ def init_worker(config):
 
 def process_example(tup):
     global worker
-    index, example = tup
-    processed_example = {
-        'index': index,
-        'content': worker(tup)  # Replace with actual processed content
-    }
-    return processed_example
+    return worker(tup)
 
 
 def start_pool(config, processed_indices):
