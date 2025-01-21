@@ -75,6 +75,7 @@ execute_command() {
 follow_leader() {
     echo "Starting follower for group $GROUP_CHANNEL"
     while true; do
+        echo "WAITING FOR COMMAND"
         msg=$(python3.10 -c "
 import os
 import zmq
@@ -107,6 +108,7 @@ lead_worker() {
     trap 'echo "Leader exiting"; exit 0' INT TERM
     while true; do
         # Get both key and value from BRPOP
+        echo "WAITING FOR COMMAND"
         command=$(redis_cmd --raw BRPOP "$QUEUE_NAME" 0 )
         echo "command: $command"
         command=$(echo "$command" | awk 'NR==2')
@@ -143,7 +145,10 @@ main() {
                 echo "Usage: $0 enqueue \"<command>\""
                 exit 1
             }
-            redis_cmd LPUSH "$QUEUE_NAME" "$2" || exit 1
+            if ! redis_cmd LPUSH "$QUEUE_NAME" "$2"; then
+                echo "Failed to enqueue command to Redis"
+                exit 1
+            fi
             echo "Enqueued: $2"
             ;;
         worker)
@@ -153,11 +158,19 @@ main() {
                 follow_leader
             fi
             ;;
+        length)
+            redis_cmd LLEN "$QUEUE_NAME"
+            ;;
+        list)
+            redis_cmd LRANGE "$QUEUE_NAME" 0 -1
+            ;;
         *)
             echo "Distributed Command Queue Manager"
             echo "Usage:"
             echo "  $0 enqueue \"<command>\""
             echo "  $0 worker"
+            echo "  $0 length          # Show queue length"
+            echo "  $0 list            # Show all queued items"
             exit 1
             ;;
     esac
