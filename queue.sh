@@ -74,11 +74,11 @@ get_node_info() {
     echo "Group Channel: $GROUP_CHANNEL"
     echo "Worker ID: $WORKER_ID"
 }
-
+HOSTNAME=$(hostname)
 # Register worker
 register_worker() {
-    redis_cmd SADD "$WORKERS_SET" "$WORKER_ID"
-    trap 'redis_cmd SREM "$WORKERS_SET" "$WORKER_ID"; exit 0' INT TERM EXIT
+    redis_cmd SADD "$WORKERS_SET" "$HOSTNAME"
+    trap 'redis_cmd SREM "$WORKERS_SET" "$HOSTNAME"; exit 0' INT TERM EXIT
 }
 
 # Get worker count
