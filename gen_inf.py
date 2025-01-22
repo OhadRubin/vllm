@@ -1,7 +1,7 @@
 #python3.10 gen_inf.py
 # int_start 20 128 "echo bye && sleep 30"
 # int_start 20 128 gsutil cat gs://meliad2_us2_backup/scripts/15_01_2025/v35_scan_layersTrue_bf16momTrue_seq_length2048_num_epochs2_size405b31_128.sh > /tmp/script.sh; bash /tmp/script.sh
-# gsutil ls gs://meliad2_us2_backup/generated_data/*_01_2025 | grep jsonl | sed -n 's/.*jsonl\.\([0-9]\+\).*/\1/p'
+# gsutil ls gs://meliad2_us2_backup/generated_data/*_01_2025 | grep shard5 | grep jsonl | sed -n 's/.*jsonl\.\([0-9]\+\).*/\1/p'
 import mlxu
 import datetime
 from collections import defaultdict
@@ -53,12 +53,12 @@ NUM_SHARDS, num_shards, None
 """)
 
 
-shard_ids = [x for x in range(16) if x not in [2,3,10,11,12,13,1,14,15]]
+# shard_ids = [x for x in range(16) if x not in [2,3,10,11,12,13,1,14,15]]
     # ds_name("thought_enhancement_task_v1") >> split("test") >> \
 with dag.DAG() as experiment:
     model("70b_enhance1") >> suffix("_v2") >> \
     ds_name("thought_enhancement_task_v1_5shard") >> split("test") >> \
-    shard_id(*shard_ids) >> num_shards(16)
+    shard_id(*range(30)) >> num_shards(30)
   
     
 task_dict, odict = dag.get_all_experiments(experiment, config, EXP_COUNTi)

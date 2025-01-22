@@ -3,7 +3,6 @@
 # ./queue.sh worker
 # Configuration
 # ./queue.sh enqueue "gsutil cat gs://meliad2_us2_backup/scripts/21_01_2025/v48_num_shards16_shard_id5_splittest_suffix_v2_ds_namethought_enhancement_task_v1_model70b_enhance1.sh > /tmp/script.sh; bash /tmp/script.sh"
-REDIS_HOST="ohadrubin.com"
 REDIS_PORT=38979
 QUEUE_NAME="cmd_queue"
 WORKERS_SET="active_workers"
@@ -19,10 +18,24 @@ if ! command -v redis-cli &>/dev/null; then
     }
 fi
 
-# Secure connection
-redis_cmd() {
-    redis-cli -u "redis://:${REDIS_PASSWORD}@ohadrubin.com:${REDIS_PORT}" --no-auth-warning "$@"
+get_redis_url() {
+    local ngrok_url=$(curl -s -H "Authorization: Bearer $NGROK_API_KEY" \
+                         -H "Ngrok-Version: 2" \
+                         https://api.ngrok.com/endpoints | \
+                      jq -r '.endpoints[0].public_url')
+    
+    local addr=$(echo "$ngrok_url" | sed 's|tcp://||' | cut -d':' -f1)
+    local port=$(echo "$ngrok_url" | sed 's|tcp://||' | cut -d':' -f2)
+    
+    echo "redis://:$REDIS_PASSWORD@$addr:$port"
 }
+
+export REDIS_URL=$(get_redis_url)
+redis_cmd() {
+    redis-cli -u "$REDIS_URL" --no-auth-warning "$@"
+}
+
+
 
 # Check connection
 check_redis() {
