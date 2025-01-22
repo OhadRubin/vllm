@@ -37,28 +37,28 @@ redis_cmd() {
 
 
 
-# Check connection
-    if ! ping_output=$(redis_cmd PING 2>&1); then
-        echo "Redis connection error. Verify:" >&2
-    # check_redis() {
-        echo "1. Server at ${REDIS_HOST}:${REDIS_PORT}"
-        echo "2. Credentials"
-        echo "3. Network"
-        return 1
-    fi
-    if [[ "$ping_output" != "PONG" ]]; then
-        echo "PING response mismatch: $ping_output" >&2
-        return 1
-    fi
+# # Check connection
+# check_redis() {
+#     if ! ping_output=$(redis_cmd PING 2>&1); then
+#         echo "Redis connection error. Verify:" >&2
+#         echo "1. Server at ${REDIS_HOST}:${REDIS_PORT}"
+#         echo "2. Credentials"
+#         echo "3. Network"
+#         return 1
+#     fi
+#     if [[ "$ping_output" != "PONG" ]]; then
+#         echo "PING response mismatch: $ping_output" >&2
+#         return 1
+#     fi
 
-    # Pub/Sub check
-    local test_channel="connection_test_$RANDOM"
-    if ! redis_cmd PUBLISH "$test_channel" "test" >/dev/null; then
-        echo "Pub/Sub check error. Check server configuration." >&2
-        return 1
-    fi
-    return 0
-}
+#     # Pub/Sub check
+#     local test_channel="connection_test_$RANDOM"
+#     if ! redis_cmd PUBLISH "$test_channel" "test" >/dev/null; then
+#         echo "Pub/Sub check error. Check server configuration." >&2
+#         return 1
+#     fi
+#     return 0
+# }
 
 # Get node info
 get_node_info() {
@@ -141,7 +141,7 @@ lead_worker() {
         if [[ $? -ne 0 ]]; then
             continue
         fi
-        
+        sleep 10
         # Only process if we got a real command
         if [[ -n "$command" ]] && [[ "$command" != "$QUEUE_NAME" ]]; then
             echo "command: $command"
@@ -170,8 +170,8 @@ socket.send_string(cmd)
 main() {
     
     case "$1" in
-        check_redis || exit 1
         enqueue)
+            check_redis || exit 1
             [[ $# -lt 2 ]] && {
                 echo "Usage: $0 enqueue \"<command>\""
                 exit 1
