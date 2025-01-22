@@ -131,10 +131,13 @@ def run_files(config):
     count = 0
     try:
         for chunk in chunked(outputs, 10):
+            bytes_written = 0
             with open(config.output_file, mode) as f:
                 for example in chunk:
-                    f.write(json.dumps(example) + "\n")
+                    line = json.dumps(example) + "\n"
+                    bytes_written += f.write(line)
                     count += 1
+            print(f"Wrote {bytes_written / (1024 * 1024):.2f} MB into {config.output_file}")
             mode = "a"
     except Exception as e:
         print(f"Error writing to file: {e}")
