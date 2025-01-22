@@ -122,8 +122,11 @@ except zmq.error.Again:
         if [ -n "$msg" ] && [ "$msg" != "Timeout waiting for command" ]; then
             echo "Received command: $msg"
             # sleep 5 seconds
-            sudo pkill -f -9 python3.10
             sleep 5
+            sudo pkill -f -9 python3.10
+            sudo rm -rf /tmp/libtpu_lockfile /tmp/tpu_logs
+            sleep 10
+            python3.10 -c "import jax; from jax.experimental.multihost_utils import sync_global_devices; sync_global_devices('bla'); print(jax.process_index())"
             eval "$msg"
         fi
         sleep 1
@@ -159,8 +162,11 @@ cmd = '$command'
 time.sleep(1)
 socket.send_string(cmd)
 "
-            sudo pkill -f -9 python3.10
             sleep 5
+            sudo pkill -f -9 python3.10
+            sudo rm -rf /tmp/libtpu_lockfile /tmp/tpu_logs
+            sleep 10
+            python3.10 -c "import jax; from jax.experimental.multihost_utils import sync_global_devices; sync_global_devices('bla'); print(jax.process_index())"
             execute_command "$command"
         fi
     done
