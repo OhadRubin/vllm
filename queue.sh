@@ -19,21 +19,22 @@ if ! command -v redis-cli &>/dev/null; then
 fi
 
 get_redis_url() {
-    local ngrok_url=$(curl -s -H "Authorization: Bearer $NGROK_API_KEY" \
-                         -H "Ngrok-Version: 2" \
-                         https://api.ngrok.com/endpoints | \
-                      jq -r '.endpoints[0].public_url')
+    # local ngrok_url=$(curl -s -H "Authorization: Bearer $NGROK_API_KEY" \
+    #                      -H "Ngrok-Version: 2" \
+    #                      https://api.ngrok.com/endpoints | \
+    #                   jq -r '.endpoints[0].public_url')
     
-    local addr=$(echo "$ngrok_url" | sed 's|tcp://||' | cut -d':' -f1)
-    local port=$(echo "$ngrok_url" | sed 's|tcp://||' | cut -d':' -f2)
+    # local addr=$(echo "$ngrok_url" | sed 's|tcp://||' | cut -d':' -f1)
+    # local port=$(echo "$ngrok_url" | sed 's|tcp://||' | cut -d':' -f2)
     
-    echo "redis://:$REDIS_PASSWORD@$addr:$port"
+    echo "redis://:$REDIS_PASSWORD@35.204.103.77:6379"
 }
 
 export REDIS_URL=$(get_redis_url)
 redis_cmd() {
     redis-cli -u "$REDIS_URL" --no-auth-warning "$@"
 }
+
 
 
 

@@ -58,7 +58,7 @@ NUM_SHARDS, num_shards, None
 with dag.DAG() as experiment:
     model("70b_enhance1") >> suffix("_v2") >> \
     ds_name("thought_enhancement_task_v1_5shard") >> split("test") >> \
-    shard_id(*range(30)) >> num_shards(30)
+    shard_id(*range(30)) >> num_shards(20)
   
     
 task_dict, odict = dag.get_all_experiments(experiment, config, EXP_COUNTi)
