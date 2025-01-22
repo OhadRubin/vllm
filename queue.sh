@@ -103,6 +103,7 @@ execute_command() {
 follow_leader() {
     echo "Starting follower for group $GROUP_CHANNEL"
     while true; do
+        sleep 5
         echo "WAITING FOR COMMAND"
         msg=$(python3.10 -c "
 import os
