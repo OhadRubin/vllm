@@ -141,6 +141,7 @@ lead_worker() {
     trap 'echo "Leader exiting"; redis_cmd SREM "$WORKERS_SET" "$WORKER_ID"; exit 0' INT TERM
     while true; do
         echo "WAITING FOR COMMAND"
+        sleep 5
         command=$(redis_cmd --raw BLPOP "$QUEUE_NAME" 5)  # 5 second timeout
         if [[ $? -ne 0 ]]; then
             continue
