@@ -177,7 +177,7 @@ main() {
     
     case "$1" in
         enqueue)
-            check_redis || exit 1
+            redis_cmd PING
             [[ $# -lt 2 ]] && {
                 echo "Usage: $0 enqueue \"<command>\""
                 exit 1
@@ -200,6 +200,7 @@ main() {
             redis_cmd LLEN "$QUEUE_NAME"
             ;;
         list)
+            redis_cmd PING
             redis_cmd LRANGE "$QUEUE_NAME" 0 -1
             ;;
         workers)
