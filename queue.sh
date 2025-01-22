@@ -4,7 +4,7 @@
 # Configuration
 # ./queue.sh enqueue "gsutil cat gs://meliad2_us2_backup/scripts/21_01_2025/v48_num_shards16_shard_id5_splittest_suffix_v2_ds_namethought_enhancement_task_v1_model70b_enhance1.sh > /tmp/script.sh; bash /tmp/script.sh"
 REDIS_HOST="ohadrubin.com"
-REDIS_PORT=31600
+REDIS_PORT=38979
 QUEUE_NAME="cmd_queue"
 WORKERS_SET="active_workers"
 MAX_RETRIES=10
@@ -21,7 +21,7 @@ fi
 
 # Secure connection
 redis_cmd() {
-    redis-cli -u "redis://:${REDIS_PASSWORD}@${REDIS_HOST}:${REDIS_PORT}" --no-auth-warning "$@"
+    redis-cli -u "redis://:${REDIS_PASSWORD}@ohadrubin.com:${REDIS_PORT}" --no-auth-warning "$@"
 }
 
 # Check connection

@@ -54,9 +54,10 @@ NUM_SHARDS, num_shards, None
 
 
 shard_ids = [x for x in range(16) if x not in [2,3,10,11,12,13,1,14,15]]
+    # ds_name("thought_enhancement_task_v1") >> split("test") >> \
 with dag.DAG() as experiment:
     model("70b_enhance1") >> suffix("_v2") >> \
-    ds_name("thought_enhancement_task_v1") >> split("test") >> \
+    ds_name("thought_enhancement_task_v1_5shard") >> split("test") >> \
     shard_id(*shard_ids) >> num_shards(16)
   
     
@@ -152,11 +153,12 @@ from typing import Optional
 
 # python3.10 gen_inf.py --exclude_nodes 15 --node_range "14,31" --format_str "gcloud alpha compute tpus tpu-vm ssh v4-16-node-{node_idx} --project=tpu-project-2-379909 --zone=us-central2-b --worker=all --command='tmux kill-server 2>/dev/null || true; sleep 5; tmux new-session -d -s test_session \"{s}\"' &"
 # python3.10 gen_inf.py --nodes 14,15,16,21,26,28,29,30 --format_str "./queue.sh enqueue \"{s}\" &"
+# python3.10 gen_inf.py --format_str "./queue.sh enqueue \"{s}\" &"
 
 
 # 14,15,16,21,26,28,29,30
 # gcloud alpha compute tpus tpu-vm ssh v4-16-node-{node_idx} --project=tpu-project-2-379909 --zone=us-central2-b --worker=all --command='tmux capture-pane -t test_session -p -S -' &
-
+import tempfile
 
 def main(format_str:str = '{s}',
          nodes: Optional[list[int]]  = None,
@@ -208,7 +210,11 @@ def main(format_str:str = '{s}',
             fin.write(script)
         if queue:
             run_on_queue(tpu_dict)
-
+    # Write commands to temp file
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as tmp:
+        for cmd in list_of_cmds:
+            tmp.write(cmd + '\n')
+        print(f"Commands written to: {tmp.name}")
 
 
 if __name__ == "__main__":
