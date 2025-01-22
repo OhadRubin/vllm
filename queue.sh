@@ -38,9 +38,9 @@ redis_cmd() {
 
 
 # Check connection
-check_redis() {
     if ! ping_output=$(redis_cmd PING 2>&1); then
         echo "Redis connection error. Verify:" >&2
+    # check_redis() {
         echo "1. Server at ${REDIS_HOST}:${REDIS_PORT}"
         echo "2. Credentials"
         echo "3. Network"
@@ -168,9 +168,9 @@ socket.send_string(cmd)
 
 # Main
 main() {
-    check_redis || exit 1
     
     case "$1" in
+        check_redis || exit 1
         enqueue)
             [[ $# -lt 2 ]] && {
                 echo "Usage: $0 enqueue \"<command>\""
