@@ -128,18 +128,18 @@ def run_files(config):
     
     # Write results
     mode = "w" if config.force_overwrite else "a"
+    count = 0
     try:
-        with open(config.output_file, mode) as f:
-            count = 0
-            for chunk in chunked(outputs, 10):
+        for chunk in chunked(outputs, 10):
+            with open(config.output_file, mode) as f:
                 for example in chunk:
                     f.write(json.dumps(example) + "\n")
                     count += 1
-                f.flush()  # Flush after each chunk of 10
-            print(f"Wrote {count} examples to {config.output_file}")
+            mode = "a"
     except Exception as e:
         print(f"Error writing to file: {e}")
         raise
+    print(f"Wrote {count} examples to {config.output_file}")
 
 
 

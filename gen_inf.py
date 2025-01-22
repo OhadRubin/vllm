@@ -1,6 +1,7 @@
 #python3.10 gen_inf.py
 # int_start 20 128 "echo bye && sleep 30"
 # int_start 20 128 gsutil cat gs://meliad2_us2_backup/scripts/15_01_2025/v35_scan_layersTrue_bf16momTrue_seq_length2048_num_epochs2_size405b31_128.sh > /tmp/script.sh; bash /tmp/script.sh
+# gsutil ls gs://meliad2_us2_backup/generated_data/*_01_2025 | grep jsonl | sed -n 's/.*jsonl\.\([0-9]\+\).*/\1/p'
 import mlxu
 import datetime
 from collections import defaultdict

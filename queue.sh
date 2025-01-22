@@ -2,6 +2,7 @@
 # ./queue.sh enqueue 'echo hi'
 # ./queue.sh worker
 # Configuration
+# ./queue.sh enqueue "gsutil cat gs://meliad2_us2_backup/scripts/21_01_2025/v48_num_shards16_shard_id5_splittest_suffix_v2_ds_namethought_enhancement_task_v1_model70b_enhance1.sh > /tmp/script.sh; bash /tmp/script.sh"
 REDIS_HOST="ohadrubin.com"
 REDIS_PORT=31600
 QUEUE_NAME="cmd_queue"
