@@ -216,17 +216,7 @@ cmd = '$data'
 time.sleep(1)
 socket.send_string(cmd)
 "
-        sleep 10
-        sudo kill -9 $(sudo lsof -w /dev/accel0 | awk 'NR>1{print $2}' |uniq)
-        sudo kill -9 $(sudo lsof -w /dev/accel1 | awk 'NR>1{print $2}' |uniq)
-        sudo kill -9 $(sudo lsof -w /dev/accel2 | awk 'NR>1{print $2}' |uniq)
-        sudo kill -9 $(sudo lsof -w /dev/accel3 | awk 'NR>1{print $2}' |uniq)
-        python3.10 -c "import jax; from jax.experimental.multihost_utils import sync_global_devices; sync_global_devices('bla'); print(jax.process_index())"
-        sudo kill -9 $(sudo lsof -w /dev/accel0 | awk 'NR>1{print $2}' |uniq)
-        sudo kill -9 $(sudo lsof -w /dev/accel1 | awk 'NR>1{print $2}' |uniq)
-        sudo kill -9 $(sudo lsof -w /dev/accel2 | awk 'NR>1{print $2}' |uniq)
-        sudo kill -9 $(sudo lsof -w /dev/accel3 | awk 'NR>1{print $2}' |uniq)
-        sleep 10
+        sync_tpu
         update_job_status "$job_id" "processing" "N/A"
         if execute_command "$data"; then
             finalize_job "$job_id"
@@ -249,6 +239,7 @@ main() {
             echo "Enqueued: $2"
             ;;
         worker)
+            python3.10 -c "import jax; from jax.experimental.multihost_utils import sync_global_devices; sync_global_devices('bla'); print(jax.process_index())"
             get_node_info
             if [[ "$CURRENT_IP" == "$HEAD_NODE_ADDRESS" ]]; then
                 lead_worker
