@@ -10,13 +10,38 @@ MAX_RETRIES=10
 RETRY_DELAY=3
 
 # Install dependencies if missing
-if ! command -v redis-cli &>/dev/null; then
-    sudo apt-get update -qq
-    sudo apt-get install -y redis-tools || {
-        echo "Could not install redis-tools" >&2
-        exit 1
-    }
-fi
+while true; do
+    while ! command -v redis-cli &>/dev/null; do
+        echo "Installing redis-tools"
+        sudo apt-get update -qq
+        
+        if ! sudo apt-get install -y redis-tools; then
+            # Kill any existing apt/dpkg processes
+            sudo pkill -f apt-get
+            sudo pkill -f dpkg 
+            sudo pkill -f apt
+            
+            # Remove all lock files
+            sudo rm -f /var/lib/apt/lists/lock
+            sudo rm -f /var/cache/apt/archives/lock
+            sudo rm -f /var/lib/dpkg/lock
+            sudo rm -f /var/lib/dpkg/lock-frontend
+            
+            # Wait a moment for processes to fully terminate
+            sleep 5
+            
+            # Clean and reconfigure dpkg if needed
+            sudo dpkg --configure -a
+        fi
+    done
+    
+    # Break if redis-cli is installed
+    if command -v redis-cli &>/dev/null; then
+        break
+    fi
+    
+    sleep 5
+done
 
 get_redis_url() {
     # local ngrok_url=$(curl -s -H "Authorization: Bearer $NGROK_API_KEY" \
