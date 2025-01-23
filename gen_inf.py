@@ -59,7 +59,7 @@ TEMPERATURE, temperature, 0
 with dag.DAG() as experiment:
     model("70b_enhance1") >> suffix("_v3") >> \
     ds_name("thought_enhancement_task_v1") >> split("test") >> \
-    shard_id(*range(64)) >> num_shards(64) >> temperature(1)
+    shard_id(*range(128)) >> num_shards(128) >> temperature(1)
   
     
 task_dict, odict = dag.get_all_experiments(experiment, config, EXP_COUNTi)
@@ -161,7 +161,9 @@ from typing import Optional
 # gcloud alpha compute tpus tpu-vm ssh v4-16-node-{node_idx} --project=tpu-project-2-379909 --zone=us-central2-b --worker=all --command='tmux capture-pane -t test_session -p -S -' &
 import tempfile
 
-def main(format_str:str = '{s}',
+def main(
+        #  format_str:str = '{s}',
+         format_str:str = './queue.sh enqueue "{s}" &',
          nodes: Optional[list[int]]  = None,
          node_range: str = None,
          queue: bool = False,

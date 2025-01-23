@@ -1,8 +1,8 @@
 #!/bin/bash
 # ./queue.sh enqueue 'echo hi'
 # ./queue.sh worker
+# ./queue.sh list
 # Configuration
-# ./queue.sh enqueue "gsutil cat gs://meliad2_us2_backup/scripts/21_01_2025/v48_num_shards16_shard_id5_splittest_suffix_v2_ds_namethought_enhancement_task_v1_model70b_enhance1.sh > /tmp/script.sh; bash /tmp/script.sh"
 REDIS_PORT=38979
 QUEUE_NAME="cmd_queue"
 WORKERS_SET="active_workers"
@@ -20,31 +20,84 @@ while ! command -v redis-cli &>/dev/null; do
         sudo pkill -f dpkg 
         sudo pkill -f apt
         
-        # Remove all lock files
+        # Remove lock files
         sudo rm -f /var/lib/apt/lists/lock
         sudo rm -f /var/cache/apt/archives/lock
         sudo rm -f /var/lib/dpkg/lock
         sudo rm -f /var/lib/dpkg/lock-frontend
         
-        # Wait a moment for processes to fully terminate
         sleep 5
-        
-        # Clean and reconfigure dpkg if needed
         sudo dpkg --configure -a
     fi
     
     sleep 5
 done
 
+# Bookkeeping functions
+update_job_status() {
+    local job_id="$1"
+    local status="$2"
+    local result="$3"
+    local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+    redis_cmd HSET "job:$job_id" \
+        "status" "$status" \
+        "result" "$result" \
+        "updated_at" "$timestamp" \
+        "worker" "$HOSTNAME"
+}
+
+finalize_job() {
+    local job_id="$1"
+    local timestamp
+    timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+    redis_cmd HSET "job:$job_id" \
+        "status" "completed" \
+        "completed_at" "$timestamp" \
+        "worker" "$HOSTNAME"
+}
+
+set_heartbeat() {
+    local job_id="$1"
+    local timestamp
+    timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+    redis_cmd HSET "job:$job_id" \
+        "last_heartbeat" "$timestamp" \
+        "worker" "$HOSTNAME"
+}
+
+
+# Add job to queue
+enqueue_job() {
+    local data="$1"
+    local queue_name="${2:-default}"
+    local job_id
+    job_id=$(uuidgen)
+    local timestamp
+    timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+    redis_cmd HSET "job:$job_id" \
+        "id" "$job_id" \
+        "data" "$data" \
+        "status" "queued" \
+        "created_at" "$timestamp" \
+        "queue" "$queue_name"
+
+    redis_cmd RPUSH "queue:$queue_name" "$job_id"
+    echo "$job_id"
+}
+    
+# Check if queue is empty
+is_queue_empty() {
+    local queue_name="${1:-default}"
+    local len
+    len=$(redis_cmd LLEN "queue:$queue_name")
+    [[ "$len" -eq 0 ]]
+}
+    
 get_redis_url() {
-    # local ngrok_url=$(curl -s -H "Authorization: Bearer $NGROK_API_KEY" \
-    #                      -H "Ngrok-Version: 2" \
-    #                      https://api.ngrok.com/endpoints | \
-    #                   jq -r '.endpoints[0].public_url')
-    
-    # local addr=$(echo "$ngrok_url" | sed 's|tcp://||' | cut -d':' -f1)
-    # local port=$(echo "$ngrok_url" | sed 's|tcp://||' | cut -d':' -f2)
-    
     echo "redis://:$REDIS_PASSWORD@35.204.103.77:6379"
 }
 
@@ -53,9 +106,7 @@ redis_cmd() {
     redis-cli -u "$REDIS_URL" --no-auth-warning "$@"
 }
 
-
-
-# Get node info
+# Node info
 get_node_info() {
     export CURRENT_IP=$(curl -s --max-time 3 https://checkip.amazonaws.com || echo "127.0.0.1")
     export HEAD_NODE_ADDRESS=$(python3.10 ~/vllm/examples/leader_election.py 2>/dev/null || echo "$CURRENT_IP")
@@ -63,13 +114,12 @@ get_node_info() {
     if [[ ! "$HEAD_NODE_ADDRESS" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
         HEAD_NODE_ADDRESS="$CURRENT_IP"
     fi
-    
     GROUP_CHANNEL="group_commands:${HEAD_NODE_ADDRESS//./_}"
     WORKER_ID="${CURRENT_IP}:${RANDOM}"
     echo "Group Channel: $GROUP_CHANNEL"
     echo "Worker ID: $WORKER_ID"
 }
-HOSTNAME=$(hostname)
+
 # Register worker
 register_worker() {
     redis_cmd SADD "$WORKERS_SET" "$HOSTNAME"
@@ -94,6 +144,21 @@ execute_command() {
     fi
 }
 
+wipe_tpu() {
+    sudo kill -9 $(sudo lsof -w /dev/accel0 | awk 'NR>1{print $2}' |uniq)
+    sudo kill -9 $(sudo lsof -w /dev/accel1 | awk 'NR>1{print $2}' |uniq)
+    sudo kill -9 $(sudo lsof -w /dev/accel2 | awk 'NR>1{print $2}' |uniq)
+    sudo kill -9 $(sudo lsof -w /dev/accel3 | awk 'NR>1{print $2}' |uniq)
+}
+
+
+sync_tpu() {
+    sleep 10
+    wipe_tpu
+    python3.10 -c "import jax; from jax.experimental.multihost_utils import sync_global_devices; sync_global_devices('bla'); print(jax.process_index())"
+    wipe_tpu
+    sleep 10
+}
 # Follower
 follow_leader() {
     echo "Starting follower for group $GROUP_CHANNEL"
@@ -109,20 +174,14 @@ socket.connect('tcp://' + os.getenv('HEAD_NODE_ADDRESS','127.0.0.1') + ':5556')
 socket.setsockopt_string(zmq.SUBSCRIBE, '')
 socket.setsockopt(zmq.RCVTIMEO, 5000)
 try:
-    msg = socket.recv_string()
-    print(msg)
+    m = socket.recv_string()
+    print(m)
 except zmq.error.Again:
-    print('')  # Print empty string instead of error message
-    pass
+    print('')
 ")
         if [ -n "$msg" ] && [ "$msg" != "Timeout waiting for command" ]; then
             echo "Received command: $msg"
-            # sleep 5 seconds
-            sleep 5
-            sudo pkill -f -9 python3.10
-            sudo rm -rf /tmp/libtpu_lockfile /tmp/tpu_logs
-            sleep 10
-            python3.10 -c "import jax; from jax.experimental.multihost_utils import sync_global_devices; sync_global_devices('bla'); print(jax.process_index())"
+            sync_tpu
             eval "$msg"
         fi
         sleep 1
@@ -133,21 +192,19 @@ except zmq.error.Again:
 lead_worker() {
     echo "Starting leader for group $GROUP_CHANNEL"
     register_worker
-    trap 'echo "Leader exiting"; redis_cmd SREM "$WORKERS_SET" "$WORKER_ID"; exit 0' INT TERM
+    trap 'echo "Leader exiting"; redis_cmd SREM "$WORKERS_SET" "$HOSTNAME"; exit 0' INT TERM
     while true; do
-        echo "WAITING FOR COMMAND"
-        sleep 5
-        command=$(redis_cmd --raw BLPOP "$QUEUE_NAME" 5)  # 5 second timeout
-        if [[ $? -ne 0 ]]; then
+        echo "Waiting for next job"
+        local job_id
+        job_id=$(redis_cmd LPOP "queue:$QUEUE_NAME")
+        if [[ -z "$job_id" ]]; then
+            sleep 10
             continue
         fi
-        sleep 10
-        # Only process if we got a real command
-        if [[ -n "$command" ]] && [[ "$command" != "$QUEUE_NAME" ]]; then
-            echo "command: $command"
-            command=$(echo "$command" | awk 'NR==2')
-            
-            echo "Broadcasting: $command"
+
+        local data=$(redis_cmd HGET "job:$job_id" "data")
+
+        echo "Broadcasting job $job_id with command: $data"
             python3.10 -c "
 import os
 import zmq
@@ -155,23 +212,32 @@ import time
 context = zmq.Context()
 socket = context.socket(zmq.PUB)
 socket.bind('tcp://*:5556')
-cmd = '$command'
+cmd = '$data'
 time.sleep(1)
 socket.send_string(cmd)
 "
-            sleep 5
-            sudo pkill -f -9 python3.10
-            sudo rm -rf /tmp/libtpu_lockfile /tmp/tpu_logs
-            sleep 10
-            python3.10 -c "import jax; from jax.experimental.multihost_utils import sync_global_devices; sync_global_devices('bla'); print(jax.process_index())"
-            execute_command "$command"
+        sleep 10
+        sudo kill -9 $(sudo lsof -w /dev/accel0 | awk 'NR>1{print $2}' |uniq)
+        sudo kill -9 $(sudo lsof -w /dev/accel1 | awk 'NR>1{print $2}' |uniq)
+        sudo kill -9 $(sudo lsof -w /dev/accel2 | awk 'NR>1{print $2}' |uniq)
+        sudo kill -9 $(sudo lsof -w /dev/accel3 | awk 'NR>1{print $2}' |uniq)
+        python3.10 -c "import jax; from jax.experimental.multihost_utils import sync_global_devices; sync_global_devices('bla'); print(jax.process_index())"
+        sudo kill -9 $(sudo lsof -w /dev/accel0 | awk 'NR>1{print $2}' |uniq)
+        sudo kill -9 $(sudo lsof -w /dev/accel1 | awk 'NR>1{print $2}' |uniq)
+        sudo kill -9 $(sudo lsof -w /dev/accel2 | awk 'NR>1{print $2}' |uniq)
+        sudo kill -9 $(sudo lsof -w /dev/accel3 | awk 'NR>1{print $2}' |uniq)
+        sleep 10
+        update_job_status "$job_id" "processing" "N/A"
+        if execute_command "$data"; then
+            finalize_job "$job_id"
+        else
+            update_job_status "$job_id" "failed" "command error"
         fi
     done
 }
 
 # Main
 main() {
-    
     case "$1" in
         enqueue)
             redis_cmd PING
@@ -179,10 +245,7 @@ main() {
                 echo "Usage: $0 enqueue \"<command>\""
                 exit 1
             }
-            if ! redis_cmd RPUSH "$QUEUE_NAME" "$2"; then
-                echo "Failed to enqueue command to Redis"
-                exit 1
-            fi
+            enqueue_job "$2" "$QUEUE_NAME" >/dev/null
             echo "Enqueued: $2"
             ;;
         worker)
@@ -194,11 +257,11 @@ main() {
             fi
             ;;
         length)
-            redis_cmd LLEN "$QUEUE_NAME"
+            redis_cmd LLEN "queue:$QUEUE_NAME"
             ;;
         list)
             redis_cmd PING
-            redis_cmd LRANGE "$QUEUE_NAME" 0 -1
+            redis_cmd LRANGE "queue:$QUEUE_NAME" 0 -1
             ;;
         workers)
             echo "Active workers: $(get_worker_count)"
