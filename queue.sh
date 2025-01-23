@@ -10,34 +10,27 @@ MAX_RETRIES=10
 RETRY_DELAY=3
 
 # Install dependencies if missing
-while true; do
-    while ! command -v redis-cli &>/dev/null; do
-        echo "Installing redis-tools"
-        sudo apt-get update -qq
-        
-        if ! sudo apt-get install -y redis-tools; then
-            # Kill any existing apt/dpkg processes
-            sudo pkill -f apt-get
-            sudo pkill -f dpkg 
-            sudo pkill -f apt
-            
-            # Remove all lock files
-            sudo rm -f /var/lib/apt/lists/lock
-            sudo rm -f /var/cache/apt/archives/lock
-            sudo rm -f /var/lib/dpkg/lock
-            sudo rm -f /var/lib/dpkg/lock-frontend
-            
-            # Wait a moment for processes to fully terminate
-            sleep 5
-            
-            # Clean and reconfigure dpkg if needed
-            sudo dpkg --configure -a
-        fi
-    done
+while ! command -v redis-cli &>/dev/null; do
+    echo "Installing redis-tools"
+    sudo apt-get update -qq
     
-    # Break if redis-cli is installed
-    if command -v redis-cli &>/dev/null; then
-        break
+    if ! sudo apt-get install -y redis-tools; then
+        # Kill any existing apt/dpkg processes
+        sudo pkill -f apt-get
+        sudo pkill -f dpkg 
+        sudo pkill -f apt
+        
+        # Remove all lock files
+        sudo rm -f /var/lib/apt/lists/lock
+        sudo rm -f /var/cache/apt/archives/lock
+        sudo rm -f /var/lib/dpkg/lock
+        sudo rm -f /var/lib/dpkg/lock-frontend
+        
+        # Wait a moment for processes to fully terminate
+        sleep 5
+        
+        # Clean and reconfigure dpkg if needed
+        sudo dpkg --configure -a
     fi
     
     sleep 5
