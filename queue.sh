@@ -55,30 +55,6 @@ redis_cmd() {
 
 
 
-
-# # Check connection
-# check_redis() {
-#     if ! ping_output=$(redis_cmd PING 2>&1); then
-#         echo "Redis connection error. Verify:" >&2
-#         echo "1. Server at ${REDIS_HOST}:${REDIS_PORT}"
-#         echo "2. Credentials"
-#         echo "3. Network"
-#         return 1
-#     fi
-#     if [[ "$ping_output" != "PONG" ]]; then
-#         echo "PING response mismatch: $ping_output" >&2
-#         return 1
-#     fi
-
-#     # Pub/Sub check
-#     local test_channel="connection_test_$RANDOM"
-#     if ! redis_cmd PUBLISH "$test_channel" "test" >/dev/null; then
-#         echo "Pub/Sub check error. Check server configuration." >&2
-#         return 1
-#     fi
-#     return 0
-# }
-
 # Get node info
 get_node_info() {
     export CURRENT_IP=$(curl -s --max-time 3 https://checkip.amazonaws.com || echo "127.0.0.1")

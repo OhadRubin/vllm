@@ -50,15 +50,16 @@ SUFFIX, suffix, _v3
 SPLIT, split, train
 SHARD_ID, shard_id, None
 NUM_SHARDS, num_shards, None
+TEMPERATURE, temperature, 0
 """)
 
 
 # shard_ids = [x for x in range(16) if x not in [2,3,10,11,12,13,1,14,15]]
     # ds_name("thought_enhancement_task_v1") >> split("test") >> \
 with dag.DAG() as experiment:
-    model("70b_enhance1") >> suffix("_v2") >> \
-    ds_name("thought_enhancement_task_v1_5shard") >> split("test") >> \
-    shard_id(*range(30)) >> num_shards(20)
+    model("70b_enhance1") >> suffix("_v3") >> \
+    ds_name("thought_enhancement_task_v1") >> split("test") >> \
+    shard_id(*range(64)) >> num_shards(64) >> temperature(1)
   
     
 task_dict, odict = dag.get_all_experiments(experiment, config, EXP_COUNTi)
@@ -113,7 +114,7 @@ dataset_cmd_args = (
         "--max_tokens {MAX_TOKENS} ",
         "--suffix {SUFFIX} ",
         "--verbose False ",
-        "--temperature 0 ",
+        "--temperature {TEMPERATURE} ",
         "--split {SPLIT} ",
         "--base_url http://localhost:8000/v1",
         "--drop_last_msg {DROP_LAST_MSG}",
