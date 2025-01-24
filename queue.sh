@@ -9,6 +9,24 @@ WORKERS_SET="active_workers"
 MAX_RETRIES=10
 RETRY_DELAY=3
 
+
+wipe_tpu() {
+    sudo kill -9 $(sudo lsof -w /dev/accel0 | awk 'NR>1{print $2}' |uniq)
+    sudo kill -9 $(sudo lsof -w /dev/accel1 | awk 'NR>1{print $2}' |uniq)
+    sudo kill -9 $(sudo lsof -w /dev/accel2 | awk 'NR>1{print $2}' |uniq)
+    sudo kill -9 $(sudo lsof -w /dev/accel3 | awk 'NR>1{print $2}' |uniq)
+}
+
+
+sync_tpu() {
+    sleep 10
+    wipe_tpu
+    python3.10 -c "import jax; from jax.experimental.multihost_utils import sync_global_devices; sync_global_devices('bla'); print(jax.process_index())"
+    wipe_tpu
+    sleep 10
+}
+
+
 # Install dependencies if missing
 while ! command -v redis-cli &>/dev/null; do
     echo "Installing redis-tools"
@@ -135,15 +153,16 @@ get_worker_count() {
 wait_until_everyone_ready() {
     # Atomically decrement the counter and then wait until it reaches 0
     local current_counter
-    current_counter=$(redis_cmd HINCRBY "leader_data:$HOSTNAME" "counter" -1)
+    current_counter=$(redis_cmd HINCRBY "leader_data:$HOSTNAME" "worker_counter" -1)
     while [[ "$current_counter" -gt 0 ]]; do
-        sleep 1
-        current_counter=$(redis_cmd HGET "leader_data:$HOSTNAME" "counter")
+        sleep 5
+        current_counter=$(redis_cmd HGET "leader_data:$HOSTNAME" "worker_counter")
     done
 }
 
 set_leader_data() {
     local cmd="$1"
+    local cmd_counter="$2"
     local timestamp
     timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
@@ -152,10 +171,12 @@ set_leader_data() {
         "command" "$cmd" \
         "timestamp" "$timestamp" \
         "leader" "$HOSTNAME" \
-        "counter" "2"
+        "cmd_counter" "$cmd_counter" \
+        "worker_counter" "2"
 }
 
 read_leader_data() {
+    local cmd_counter="$1"
     local cmd
     cmd=$(redis_cmd HGET "leader_data:$HOSTNAME" "command")
     local timestamp
@@ -170,12 +191,8 @@ read_leader_data() {
 
 reset_leader_data() {
     redis_cmd DEL "leader_data:$HOSTNAME"
-    redis_cmd HSET "leader_data:$HOSTNAME" "counter" 0
+    redis_cmd HSET "leader_data:$HOSTNAME" "worker_counter" 0
 }
-# END FIX
-
-
-# END FIX
 
 # Command execution
 execute_command() {
@@ -190,36 +207,23 @@ execute_command() {
     fi
 }
 
-wipe_tpu() {
-    sudo kill -9 $(sudo lsof -w /dev/accel0 | awk 'NR>1{print $2}' |uniq)
-    sudo kill -9 $(sudo lsof -w /dev/accel1 | awk 'NR>1{print $2}' |uniq)
-    sudo kill -9 $(sudo lsof -w /dev/accel2 | awk 'NR>1{print $2}' |uniq)
-    sudo kill -9 $(sudo lsof -w /dev/accel3 | awk 'NR>1{print $2}' |uniq)
-}
-
-
-sync_tpu() {
-    sleep 10
-    wipe_tpu
-    python3.10 -c "import jax; from jax.experimental.multihost_utils import sync_global_devices; sync_global_devices('bla'); print(jax.process_index())"
-    wipe_tpu
-    sleep 10
-}
 
 
 # Follower
 follow_leader() {
     echo "Starting follower for group $GROUP_CHANNEL"
+    local cmd_counter=0
     while true; do
         sleep 10
         echo "WAITING FOR COMMAND"
-        msg=$(read_leader_data)
+        msg=$(read_leader_data $cmd_counter)
         if [ -n "$msg" ] && [ "$msg" != "Timeout waiting for command" ]; then
-            echo "Received command: $msg"
+            echo "Received command #$cmd_counter: $msg"
             wait_until_everyone_ready
             sync_tpu
             eval "$msg"
             reset_leader_data
+            cmd_counter=$((cmd_counter + 1))
         fi
     done
 }
@@ -229,6 +233,7 @@ lead_worker() {
     echo "Starting leader for group $GROUP_CHANNEL"
     register_worker
     trap 'echo "Leader exiting"; redis_cmd SREM "$WORKERS_SET" "$HOSTNAME"; exit 0' INT TERM
+    local cmd_counter=0
     while true; do
         echo "Waiting for next job"
         local job_id
@@ -240,8 +245,8 @@ lead_worker() {
 
         local data=$(redis_cmd HGET "job:$job_id" "data")
 
-        echo "Broadcasting job $job_id with command: $data"
-        set_leader_data "$data"
+        echo "Broadcasting job #$cmd_counter ($job_id) with command: $data"
+        set_leader_data "$data" "$cmd_counter"
         wait_until_everyone_ready
         sync_tpu
         update_job_status "$job_id" "processing" "N/A"
@@ -251,6 +256,7 @@ lead_worker() {
             update_job_status "$job_id" "failed" "command error"
         fi
         reset_leader_data
+        cmd_counter=$((cmd_counter + 1))
     done
 }
 
