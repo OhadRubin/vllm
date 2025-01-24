@@ -1,39 +1,82 @@
+"""
+
+# this creates the server and listens to relay_session
+(cd ~/vllm && git pull)
+
+cleanup() {
+    pkill -f -9 wspipe
+    tmux pipe-pane -t relay_session
+}
+trap cleanup EXIT INT TERM
+
+python3.10 /home/ohadr/vllm/wspipe.py server  &
+tmux pipe-pane -t relay_session -oIO 'cat | python3.10 /home/ohadr/vllm/wspipe.py client'
+while true; do sleep 1; done
+
+"""
+
+
 import asyncio
 import websockets
 import sys
 import signal
+import os
 
 async def stdin_reader(websocket):
-    """Read from stdin and send to websocket."""
+    """Read from stdin and send to websocket with minimal buffering."""
     loop = asyncio.get_event_loop()
     queue = asyncio.Queue()
     
+    # Set stdin to non-blocking mode
+    os.set_blocking(sys.stdin.fileno(), False)
+    
     def stdin_callback():
-        data = sys.stdin.buffer.read1(8192)  # Read up to 8KB of available data
-        if data:
-            decoded = data.decode('utf-8').strip()
-            if decoded:
-                asyncio.create_task(queue.put(decoded))
+        try:
+            # Try to read individual characters
+            char = sys.stdin.buffer.read(1)
+            if char:
+                # Immediately queue the character for sending
+                asyncio.create_task(queue.put(char.decode('utf-8')))
+        except BlockingIOError:
+            pass  # No data available right now
     
     loop.add_reader(sys.stdin.fileno(), stdin_callback)
     
+    # Buffer for accumulating partial UTF-8 sequences
+    buffer = ""
+    
     try:
         while True:
-            line = await queue.get()
+            char = await queue.get()
+            buffer += char
+            
+            # If we have a complete UTF-8 sequence, send it
             try:
-                await websocket.send(line)
-                print(f"Sent: {line}")
-            except websockets.exceptions.ConnectionClosed:
-                print("WebSocket connection closed")
-                break
+                buffer.encode('utf-8')
+                if buffer:
+                    await websocket.send(buffer)
+                    buffer = ""
+            except UnicodeError:
+                # Incomplete UTF-8 sequence, keep accumulating
+                continue
+                
     finally:
         loop.remove_reader(sys.stdin.fileno())
+        os.set_blocking(sys.stdin.fileno(), True)
+
+async def echo(websocket):
+    """WebSocket handler that prints received messages immediately."""
+    try:
+        async for message in websocket:
+            print(message, flush=True, end='')
+            sys.stdout.flush()
+    except websockets.exceptions.ConnectionClosed:
+        print("Client disconnected")
 
 async def client_main():
     uri = "ws://localhost:8765"
     try:
         async with websockets.connect(uri) as websocket:
-            print(f"Connected to {uri}")
             await stdin_reader(websocket)
     except ConnectionRefusedError:
         print(f"Could not connect to WebSocket server at {uri}")
@@ -77,21 +120,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-"""
-Usage examples:
-
-Server mode:
-python3.10 wspipe.py server
-
-Client mode (pipe input):
-
-For tmux:
-# Terminal 1: Start server
-python3.10 /home/ohadr/vllm/wspipe.py server 
-
-# Terminal 2: Pipe tmux pane to client
-tmux pipe-pane -t relay_session -o 'cat >~/mypanelog'
-tail ~/mypanelog -f
-tmux pipe-pane -t relay_session -oIO 'cat | python3.10 /home/ohadr/vllm/wspipe.py client'
-"""
