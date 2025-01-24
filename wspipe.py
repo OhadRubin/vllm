@@ -9,9 +9,11 @@ async def stdin_reader(websocket):
     queue = asyncio.Queue()
     
     def stdin_callback():
-        line = sys.stdin.buffer.readline().decode('utf-8').strip()
-        if line:
-            asyncio.create_task(queue.put(line))
+        data = sys.stdin.buffer.read1(8192)  # Read up to 8KB of available data
+        if data:
+            decoded = data.decode('utf-8').strip()
+            if decoded:
+                asyncio.create_task(queue.put(decoded))
     
     loop.add_reader(sys.stdin.fileno(), stdin_callback)
     
@@ -83,14 +85,13 @@ Server mode:
 python3.10 wspipe.py server
 
 Client mode (pipe input):
-cat /dev/urandom | python3.10 wspipe.py client
 
 For tmux:
 # Terminal 1: Start server
-python3.10 wspipe.py server
+python3.10 /home/ohadr/vllm/wspipe.py server 
 
 # Terminal 2: Pipe tmux pane to client
 tmux pipe-pane -t relay_session -o 'cat >~/mypanelog'
 tail ~/mypanelog -f
-tmux pipe-pane -t relay_session -oIO 'cat | python3.10 wspipe.py client'
+tmux pipe-pane -t relay_session -oIO 'cat | python3.10 /home/ohadr/vllm/wspipe.py client'
 """
