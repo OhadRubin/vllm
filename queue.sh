@@ -131,6 +131,53 @@ get_worker_count() {
     redis_cmd SCARD "$WORKERS_SET"
 }
 
+# BEGIN FIX
+# BEGIN FIX
+wait_until_everyone_ready() {
+    # Atomically decrement the counter and then wait until it reaches 0
+    local current_counter
+    current_counter=$(redis_cmd HINCRBY "leader_data" "counter" -1)
+    while [[ "$current_counter" -gt 0 ]]; do
+        sleep 1
+        current_counter=$(redis_cmd HGET "leader_data" "counter")
+    done
+}
+
+set_leader_data() {
+    local cmd="$1"
+    local timestamp
+    timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+    # Set command, timestamp, leader, and initialize the counter to the number of workers
+    redis_cmd HSET "leader_data" \
+        "command" "$cmd" \
+        "timestamp" "$timestamp" \
+        "leader" "$HOSTNAME" \
+        "counter" "2"
+}
+
+read_leader_data() {
+    local cmd
+    cmd=$(redis_cmd HGET "leader_data" "command")
+    local timestamp
+    timestamp=$(redis_cmd HGET "leader_data" "timestamp")
+
+    if [[ -n "$cmd" && -n "$timestamp" ]]; then
+        echo "$cmd"
+    else
+        echo ""
+    fi
+}
+
+reset_leader_data() {
+    redis_cmd DEL "leader_data"
+    redis_cmd HSET "leader_data" "counter" 0
+}
+# END FIX
+
+
+# END FIX
+
 # Command execution
 execute_command() {
     local cmd="$1"
@@ -167,26 +214,14 @@ follow_leader() {
     while true; do
         sleep 5
         echo "WAITING FOR COMMAND"
-        msg=$(python3.10 -c "
-import os
-import zmq
-context = zmq.Context()
-socket = context.socket(zmq.SUB)
-socket.connect('tcp://' + os.getenv('HEAD_NODE_ADDRESS','127.0.0.1') + ':5556')
-socket.setsockopt_string(zmq.SUBSCRIBE, '')
-socket.setsockopt(zmq.RCVTIMEO, 5000)
-try:
-    m = socket.recv_string()
-    print(m)
-except zmq.error.Again:
-    print('')
-")
+        msg=$(read_leader_data)
         if [ -n "$msg" ] && [ "$msg" != "Timeout waiting for command" ]; then
             echo "Received command: $msg"
+            wait_until_everyone_ready
             sync_tpu
             eval "$msg"
+            reset_leader_data
         fi
-        sleep 1
     done
 }
 
@@ -207,17 +242,8 @@ lead_worker() {
         local data=$(redis_cmd HGET "job:$job_id" "data")
 
         echo "Broadcasting job $job_id with command: $data"
-            python3.10 -c "
-import os
-import zmq
-import time
-context = zmq.Context()
-socket = context.socket(zmq.PUB)
-socket.bind('tcp://*:5556')
-cmd = '$data'
-time.sleep(1)
-socket.send_string(cmd)
-"
+        set_leader_data "$data"
+        wait_until_everyone_ready
         sync_tpu
         update_job_status "$job_id" "processing" "N/A"
         if execute_command "$data"; then
@@ -225,6 +251,7 @@ socket.send_string(cmd)
         else
             update_job_status "$job_id" "failed" "command error"
         fi
+        reset_leader_data
     done
 }
 
