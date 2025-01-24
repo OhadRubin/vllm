@@ -211,6 +211,7 @@ execute_command() {
 
 # Follower
 follow_leader() {
+    reset_leader_data
     echo "Starting follower for group $GROUP_CHANNEL"
     local cmd_counter=0
     while true; do
@@ -230,6 +231,7 @@ follow_leader() {
 
 # Leader
 lead_worker() {
+    reset_leader_data
     echo "Starting leader for group $GROUP_CHANNEL"
     register_worker
     trap 'echo "Leader exiting"; redis_cmd SREM "$WORKERS_SET" "$HOSTNAME"; exit 0' INT TERM
