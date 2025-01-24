@@ -212,7 +212,7 @@ sync_tpu() {
 follow_leader() {
     echo "Starting follower for group $GROUP_CHANNEL"
     while true; do
-        sleep 5
+        sleep 10
         echo "WAITING FOR COMMAND"
         msg=$(read_leader_data)
         if [ -n "$msg" ] && [ "$msg" != "Timeout waiting for command" ]; then
