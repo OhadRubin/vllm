@@ -131,15 +131,14 @@ get_worker_count() {
     redis_cmd SCARD "$WORKERS_SET"
 }
 
-# BEGIN FIX
-# BEGIN FIX
+
 wait_until_everyone_ready() {
     # Atomically decrement the counter and then wait until it reaches 0
     local current_counter
-    current_counter=$(redis_cmd HINCRBY "leader_data" "counter" -1)
+    current_counter=$(redis_cmd HINCRBY "leader_data:$HOSTNAME" "counter" -1)
     while [[ "$current_counter" -gt 0 ]]; do
         sleep 1
-        current_counter=$(redis_cmd HGET "leader_data" "counter")
+        current_counter=$(redis_cmd HGET "leader_data:$HOSTNAME" "counter")
     done
 }
 
@@ -149,7 +148,7 @@ set_leader_data() {
     timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
     # Set command, timestamp, leader, and initialize the counter to the number of workers
-    redis_cmd HSET "leader_data" \
+    redis_cmd HSET "leader_data:$HOSTNAME" \
         "command" "$cmd" \
         "timestamp" "$timestamp" \
         "leader" "$HOSTNAME" \
@@ -158,9 +157,9 @@ set_leader_data() {
 
 read_leader_data() {
     local cmd
-    cmd=$(redis_cmd HGET "leader_data" "command")
+    cmd=$(redis_cmd HGET "leader_data:$HOSTNAME" "command")
     local timestamp
-    timestamp=$(redis_cmd HGET "leader_data" "timestamp")
+    timestamp=$(redis_cmd HGET "leader_data:$HOSTNAME" "timestamp")
 
     if [[ -n "$cmd" && -n "$timestamp" ]]; then
         echo "$cmd"
@@ -170,8 +169,8 @@ read_leader_data() {
 }
 
 reset_leader_data() {
-    redis_cmd DEL "leader_data"
-    redis_cmd HSET "leader_data" "counter" 0
+    redis_cmd DEL "leader_data:$HOSTNAME"
+    redis_cmd HSET "leader_data:$HOSTNAME" "counter" 0
 }
 # END FIX
 
