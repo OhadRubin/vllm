@@ -93,9 +93,13 @@ async def echo(websocket):
         print("Client disconnected")
 
 async def server_main():
-    async with websockets.serve(echo, "localhost", 8765):
-        print("WebSocket server started on ws://localhost:8765")
+    server = await websockets.serve(echo, "localhost", 8765)
+    print("WebSocket server started on ws://localhost:8765")
+    try:
         await asyncio.Future()  # run forever
+    finally:
+        server.close()
+        await server.wait_closed()
 
 def main():
     if len(sys.argv) != 2 or sys.argv[1] not in ['server', 'client']:
@@ -104,9 +108,15 @@ def main():
 
     loop = asyncio.get_event_loop()
     
-    def signal_handler():
+    async def shutdown():
+        tasks = [task for task in asyncio.all_tasks() if task is not asyncio.current_task()]
+        for task in tasks:
+            task.cancel()
+        await asyncio.gather(*tasks, return_exceptions=True)
         loop.stop()
-        sys.exit(0)
+    
+    def signal_handler():
+        asyncio.create_task(shutdown())
     
     loop.add_signal_handler(signal.SIGINT, signal_handler)
     
@@ -116,6 +126,7 @@ def main():
         else:  # client
             loop.run_until_complete(client_main())
     finally:
+        loop.run_until_complete(loop.shutdown_asyncgens())
         loop.close()
 
 if __name__ == "__main__":
