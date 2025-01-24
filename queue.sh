@@ -161,21 +161,12 @@ sync_tpu() {
 }
 
 
-read_msg() {
-    python3.10 -c 'import jax; from jax.experimental.multihost_utils import broadcast_one_to_all; print(broadcast_one_to_all("bla", is_source=False))'
-}
-
-
-send_msg() {
-    python3.10 -c "import jax; from jax.experimental.multihost_utils import broadcast_one_to_all; print(broadcast_one_to_all($1, is_source=True))"
-}
 # Follower
 follow_leader() {
     echo "Starting follower for group $GROUP_CHANNEL"
     while true; do
         sleep 5
         echo "WAITING FOR COMMAND"
-        msg=$
         msg=$(python3.10 -c "
 import os
 import zmq
