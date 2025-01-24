@@ -1,5 +1,14 @@
 import asyncio
 import websockets
+"""
+# if i do this i can pipe changes into a file
+# in terminal 1 
+tmux pipe-pane -t relay_session -o 'cat >~/mypanelog'
+tail ~/mypanelog -f
+# when i writein relay_session is see the results in 
+python3.10 /home/ohadr/vllm/wspipe_server.py &
+tmux pipe-pane -t relay_session -oIO 'cat | python3.10 /home/ohadr/vllm/wspipe_client.py'
+"""
 
 async def echo(websocket):
     """Simple WebSocket handler that prints received messages."""
