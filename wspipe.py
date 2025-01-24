@@ -1,4 +1,4 @@
-"""
+"""start_pipe.sh
 
 # this creates the server and listens to relay_session
 (cd ~/vllm && git pull)
