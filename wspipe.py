@@ -44,7 +44,7 @@ async def echo(websocket):
     """Simple WebSocket handler that prints received messages."""
     try:
         async for message in websocket:
-            print(f"Received message: {message}")
+            print(message, end='')
             await websocket.send(f"Server received: {message}")
     except websockets.exceptions.ConnectionClosed:
         print("Client disconnected")
