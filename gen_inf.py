@@ -57,8 +57,9 @@ TEMPERATURE, temperature, 0
 # shard_ids = [x for x in range(16) if x not in [2,3,10,11,12,13,1,14,15]]
     # ds_name("thought_enhancement_task_v1") >> split("test") >> \
         
-shards_ids = [x for x in range(128) if x not in 
-              [0, 1, 13, 15, 16, 17, 18, 19, 2, 21, 24, 25, 26, 27, 28, 29, 3, 30, 35, 5, 6, 8, 9, 31, 40, 41, 48, 53]]
+# shards_ids = [x for x in range(128) if x not in 
+#               [0, 1, 13, 15, 16, 17, 18, 19, 2, 21, 24, 25, 26, 27, 28, 29, 3, 30, 35, 5, 6, 8, 9, 31, 40, 41, 48, 53]]
+shards_ids = [52, 56, 58, 64, 67, 68, 75, 76, 78, 79, 84, 86, 92, 94, 96, 98, 104, 105, 107, 108, 110, 111, 122, 123, 126, 127]
 with dag.DAG() as experiment:
     model("70b_enhance1") >> suffix("_v3") >> \
     ds_name("thought_enhancement_task_v1") >> split("test") >> \

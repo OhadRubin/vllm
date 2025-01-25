@@ -1,4 +1,5 @@
 # Create output directory
+rm -rf tmux_outputs
 mkdir -p tmux_outputs
 
 # Function to run commands in parallel and wait for completion
@@ -33,7 +34,7 @@ run_parallel_commands() {
 }
 
 # Run commands for all nodes in sequence
-sequence=(18 40 28 25 27 11 33 19 13 9 22 39 24 17 29 32 30 12 8 34 26 38 31 21 14 15 37 10)
+sequence=($(seq 8 40))
 run_parallel_commands "tmux capture-pane -t resume_sh -p" "${sequence[@]}"
 
 # Function to get node IDs with matching string
@@ -54,11 +55,12 @@ get_node_ids() {
 }
 
 # # Get nodes with TPU host message
-node_ids=$(get_node_ids "on all TPU hosts")
-# echo "Nodes with TPU host message: ${node_ids[@]}"
+node_ids=$(get_node_ids "Broadcasting")
+
+echo "Nodes with TPU host message: ${node_ids[@]}"
 
 
-
+# 12 13 15 17 19 20 21 22 23 25 26 27 29 31 32 33 34 36 37 38 39 40 9
 # mkdir -p tmux_outputs_installation
 # run_parallel_commands() {
 #     local command="$1"  # First argument is the command
