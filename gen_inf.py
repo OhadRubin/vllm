@@ -86,7 +86,7 @@ def construct_command(bash_args_dict):
                             MODEL_NAME="meta-llama/Llama-3.1-8B-Instruct")
     else:
         raise ValueError(f"Invalid model: {bash_args_dict['MODEL']}")
-    
+
     bash_args_dict["DATASET_NAME"] = f"{bash_args_dict['ENTITY_NAME']}/{bash_args_dict['DS_NAME']}"
     
 

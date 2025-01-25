@@ -56,7 +56,6 @@ class Worker:
             max_tokens=self.config.max_tokens,
         )
         prediction = response.choices[0].message.content
-        print(prediction)
         example["prediction"] = prediction
         return example
 
@@ -94,17 +93,22 @@ def start_pool(config, processed_indices):
     
     # Create generator for examples
     tups = ((i, ds[i]) for i in remaining_indices)
-    
+    cnt = 0
     # Process examples
     with Pool(
         config.num_workers,
         initializer=init_worker,
         initargs=(config,),
     ) as pool:
-        with tqdm(total=len(remaining_indices)) as pbar:
+        with tqdm(total=len(remaining_indices), desc="Processing examples") as pbar:
             for example in pool.imap_unordered(process_example, tups):
+                if config.verbose or (cnt % config.verbose_every == 0):
+                    print("Prediction:")
+                    print("---")
+                    print(example["prediction"])
                 yield example
                 pbar.update(1)
+                cnt +=1
 
 from more_itertools import chunked
 def run_files(config):
@@ -176,6 +180,7 @@ def main(dataset_name: Optional[str]=None,
          max_seq_length: int = 16384,
          save_online: bool = False,
          force_overwrite: bool = False,
+         verbose_every: int = 100,
          ):
     # model_name: str
     if model_name is None:
@@ -227,6 +232,7 @@ def main(dataset_name: Optional[str]=None,
             save_online=save_online,
             force_overwrite=force_overwrite,
             from_disk=from_disk,
+            verbose_every=verbose_every,
         )
     )
     run_files(config)
