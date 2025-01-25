@@ -66,6 +66,7 @@ services:
       - HF_TOKEN=${HF_TOKEN}
       - GLOO_SOCKET_IFNAME=ens8
       - VLLM_XLA_CACHE_PATH=/mnt/gcs_bucket/xla_cache
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
     volumes:
       - /home/${USER}/vllm:/workspace/vllm
       - /dev/shm/gcs_cache:/dev/shm/gcs_cache
@@ -85,6 +86,7 @@ services:
       - CURRENT_IP=${CURRENT_IP}
       - HF_TOKEN=${HF_TOKEN}
       - LEADER_CMD=${LEADER_CMD}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /home/${USER}/vllm:/workspace/vllm
@@ -106,6 +108,7 @@ services:
       - CURRENT_IP=${CURRENT_IP}
       - PORTR_KEY=${PORTR_KEY}
       - HF_TOKEN=${HF_TOKEN}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
     volumes:
       - /home/${USER}/vllm:/workspace/vllm
       - /mnt/gcs_bucket:/mnt/gcs_bucket
@@ -126,6 +129,7 @@ services:
       - CURRENT_IP=${CURRENT_IP}
       - DATASET_CMD=${DATASET_CMD}
       - HF_TOKEN=${HF_TOKEN}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
     volumes:
       - /home/${USER}/vllm:/workspace/vllm
       - /mnt/gcs_bucket:/mnt/gcs_bucket
