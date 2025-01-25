@@ -55,14 +55,8 @@ def finish():
     
 # python3.10 examples/barrier.py start
 # only the leader passes the barrier, the rest wait for the leader to finish
-def start(my_ip:Optional[str]=None, leader_ip:Optional[str]=None, zone: str="us-central2-b"):
+def start(my_ip:str, leader_ip, zone: str="us-central2-b"):
     
-    if my_ip is None and leader_ip is None:
-        _, leader_ip, my_ip = ip_addr(zone)
-    else:
-        assert my_ip is not None
-        assert leader_ip is not None
-
     if my_ip != leader_ip:
         follower_loop(my_ip, leader_ip)
         print(f"follower {my_ip} finished")

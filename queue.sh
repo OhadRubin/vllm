@@ -3,12 +3,19 @@
 # ./queue.sh worker
 # ./queue.sh list
 # Configuration
-REDIS_PORT=38979
 QUEUE_NAME="cmd_queue"
 WORKERS_SET="active_workers"
 MAX_RETRIES=10
 RETRY_DELAY=3
 
+get_redis_url() {
+    echo "redis://:$REDIS_PASSWORD@35.204.103.77:6379"
+}
+
+export REDIS_URL=$(get_redis_url)
+redis_cmd() {
+    redis-cli -u "$REDIS_URL" --no-auth-warning "$@"
+}
 
 wipe_tpu() {
     sudo kill -9 $(sudo lsof -w /dev/accel0 | awk 'NR>1{print $2}' |uniq)
@@ -115,14 +122,7 @@ is_queue_empty() {
     [[ "$len" -eq 0 ]]
 }
     
-get_redis_url() {
-    echo "redis://:$REDIS_PASSWORD@35.204.103.77:6379"
-}
 
-export REDIS_URL=$(get_redis_url)
-redis_cmd() {
-    redis-cli -u "$REDIS_URL" --no-auth-warning "$@"
-}
 
 # Node info
 get_node_info() {
