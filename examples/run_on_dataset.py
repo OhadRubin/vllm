@@ -183,6 +183,7 @@ def main(dataset_name: Optional[str]=None,
          verbose_every: int = 100,
          ):
     # model_name: str
+    pathlib.Path(output_dir).mkdir(exist_ok=True)
     if model_name is None:
         while True:
             try:
@@ -200,7 +201,7 @@ def main(dataset_name: Optional[str]=None,
                 print(f"Failed to get models from server. Error: {e}")
                 time.sleep(1)
 
-    pathlib.Path(output_dir).mkdir(exist_ok=True)
+    
     if output_file is None:
         output_file = f"{output_dir}/{dataset_name.replace('/', '_')}_{config_name}_{model_name.replace('/', '_')}{suffix}.jsonl"
         if shard_id is not None:
