@@ -82,7 +82,7 @@ def construct_command(bash_args_dict):
         bash_args_dict.update(MODEL_PATH="/mnt/gcs_bucket/AI2_EasyLM/v49_ds_nameenhance_seq_length8192_size70b",
                             MODEL_NAME="meta-llama/Llama-3.3-70B-Instruct_enhance1")
     elif bash_args_dict["MODEL"] == "8b_tagging1":
-        bash_args_dict.update(MODEL_PATH="ls /mnt/gcs_bucket/AI2_EasyLM/v50_ds_nametag_ags8_seq_length16384_num_epochs4_size8b",
+        bash_args_dict.update(MODEL_PATH="/mnt/gcs_bucket/AI2_EasyLM/v50_ds_nametag_ags8_seq_length16384_num_epochs4_size8b",
                             MODEL_NAME="meta-llama/Llama-3.1-8B-Instruct")
     else:
         raise ValueError(f"Invalid model: {bash_args_dict['MODEL']}")
@@ -109,7 +109,7 @@ vllm_cmd_args = (
     "--tensor-parallel-size 8 ",
     "--pipeline_parallel_size 1 ",
     "--distributed-executor-backend ray ",
-    "--max-num-seqs 16 ",
+    "--max-num-seqs {NUM_WORKERS} ",
     "--served-model-name {MODEL_NAME}",
 )
 
