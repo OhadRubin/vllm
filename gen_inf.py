@@ -48,8 +48,8 @@ NUM_WORKERS, num_workers, 16
 MAX_TOKENS, max_tokens, 4096
 SUFFIX, suffix, _v3
 SPLIT, split, train
-SHARD_ID, shard_id, None
-NUM_SHARDS, num_shards, None
+SHARD_ID, shard_id, 0
+NUM_SHARDS, num_shards, 1
 TEMPERATURE, temperature, 0
 CONFIG_NAME, config_name, default
 """)
@@ -93,6 +93,10 @@ def construct_command(bash_args_dict):
     now = datetime.datetime.now()
     formatted_date = now.strftime("%d_%m_%Y")
     bash_args_dict["OUTPUT_DIR"] = f"{bash_args_dict['OUTPUT_DIR']}/{formatted_date}"
+    
+    SHARD_ID = str(bash_args_dict['SHARD_ID'])
+    OUTPUT_FILE = f"{bash_args_dict['WANDB_NAME']}.jsonl".replace(f"_shard_id{SHARD_ID}_", "_")
+    bash_args_dict["OUTPUT_FILE"] = f"{OUTPUT_FILE}.{SHARD_ID}"
     bash_args_dict["DROP_LAST_MSG"] = str(bash_args_dict["SPLIT"]=="train")
 
     # Add shard args construction
@@ -127,6 +131,7 @@ dataset_cmd_args = (
         "--base_url http://localhost:8000/v1",
         "--drop_last_msg {DROP_LAST_MSG}",
         "--output_dir {OUTPUT_DIR} ",
+        "--output_file {OUTPUT_FILE} ",
         "--max_examples {MAX_EXAMPLES}",
         "{SHARD_ARGS}",
     )

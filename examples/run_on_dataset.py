@@ -200,7 +200,8 @@ def main(dataset_name: Optional[str]=None,
         output_file = f"{output_dir}/{dataset_name.replace('/', '_')}_{config_name}_{model_name.replace('/', '_')}{suffix}.jsonl"
         if shard_id is not None:
             output_file = f"{output_file}.{shard_id}"
-
+    else:
+        output_file = f"{output_dir}/{output_file}"
     
 
     
