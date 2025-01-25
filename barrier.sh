@@ -40,13 +40,13 @@ finish() {
 
 barrier_wait() {
     local leader_ip="$1"
-    echo "⏳ Waiting for leader $leader_ip"
+    echo "[$(date +%T)] ⏳ Waiting for leader $leader_ip"
     while :; do
         if redis_cmd EXISTS "barrier:done:$leader_ip" | grep -q 1; then
             break
         fi
         sleep 10
-        echo "⏳ [$(date +%T)] Waiting for leader $leader_ip"
+        echo "[$(date +%T)] ⏳ Waiting for leader $leader_ip"
     done
     redis_cmd DECR "barrier:counter:$leader_ip"
     

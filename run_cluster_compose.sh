@@ -194,7 +194,7 @@ check_docker_sudo() {
 check_zmq_tools() {
   if ! command -v zmq_pub >/dev/null 2>&1; then
     echo "Installing ZMQ tools..."
-    apt-get update && apt-get install -y libzmq3-dev
+    apt-get update && apt-get install -y libzmq3-dev redis-tools
     pip3 install fire ml_collections zmq more_itertools
   fi
 }
@@ -416,12 +416,14 @@ elif [ "$1" = "entrypoint" ]; then
         while true; do sleep 3600; done
       fi
       check_zmq_tools
-      python3 examples/barrier.py start --my_ip "$CURRENT_IP" --leader_ip "$HEAD_NODE_ADDRESS"
+      # python3 examples/barrier.py start --my_ip "$CURRENT_IP" --leader_ip "$HEAD_NODE_ADDRESS"
+      ./barrier.sh start $CURRENT_IP $HEAD_NODE_ADDRESS
 
       if [ "$CURRENT_IP" == "$HEAD_NODE_ADDRESS" ]; then
         echo "[dataset] Running user DATASET_CMD: $DATASET_CMD"
         /bin/bash -c "$DATASET_CMD"
-        python3 examples/barrier.py finish
+        # python3 examples/barrier.py finish
+        ./barrier.sh finish $HEAD_NODE_ADDRESS 1
       fi
       exit 0
 
