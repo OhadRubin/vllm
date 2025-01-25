@@ -51,19 +51,21 @@ SPLIT, split, train
 SHARD_ID, shard_id, None
 NUM_SHARDS, num_shards, None
 TEMPERATURE, temperature, 0
+CONFIG_NAME, config_name, default
 """)
 
 
-# shard_ids = [x for x in range(16) if x not in [2,3,10,11,12,13,1,14,15]]
-    # ds_name("thought_enhancement_task_v1") >> split("test") >> \
-        
-# shards_ids = [x for x in range(128) if x not in 
-#               [0, 1, 13, 15, 16, 17, 18, 19, 2, 21, 24, 25, 26, 27, 28, 29, 3, 30, 35, 5, 6, 8, 9, 31, 40, 41, 48, 53]]
-shards_ids = [52, 56, 58, 64, 67, 68, 75, 76, 78, 79, 84, 86, 92, 94, 96, 98, 104, 105, 107, 108, 110, 111, 122, 123, 126, 127]
+
 with dag.DAG() as experiment:
-    model("70b_enhance1") >> suffix("_v3") >> \
-    ds_name("thought_enhancement_task_v1") >> split("test") >> \
-    shard_id(*shards_ids) >> num_shards(128) >> temperature(1)
+    # shards_ids = [52, 56, 58, 64, 67, 68, 75, 76, 78, 79, 84, 86, 92, 94, 96, 98, 104, 105, 107, 108, 110, 111, 122, 123, 126, 127]
+    # model("70b_enhance1") >> suffix("_v3") >> \
+    # ds_name("thought_enhancement_task_v1") >> split("test") >> \
+    # shard_id(*shards_ids) >> num_shards(128) >> temperature(1)
+
+
+    model("8b_tagging1") >> suffix("_v1") >> \
+    ds_name("thought_catagory_tagging_v1") >> split("test") >> \
+    shard_id(*range(32)) >> num_shards(32) >> temperature(0) >> num_workers(32)
   
     
 task_dict, odict = dag.get_all_experiments(experiment, config, EXP_COUNTi)
@@ -79,7 +81,9 @@ def construct_command(bash_args_dict):
     elif bash_args_dict["MODEL"] == "70b_enhance1":
         bash_args_dict.update(MODEL_PATH="/mnt/gcs_bucket/AI2_EasyLM/v49_ds_nameenhance_seq_length8192_size70b",
                             MODEL_NAME="meta-llama/Llama-3.3-70B-Instruct_enhance1")
-        
+    elif bash_args_dict["MODEL"] == "8b_tagging1":
+        bash_args_dict.update(MODEL_PATH="ls /mnt/gcs_bucket/AI2_EasyLM/v50_ds_nametag_ags8_seq_length16384_num_epochs4_size8b",
+                            MODEL_NAME="meta-llama/Llama-3.1-8B-Instruct")
     else:
         raise ValueError(f"Invalid model: {bash_args_dict['MODEL']}")
     
@@ -113,7 +117,7 @@ vllm_cmd_args = (
 dataset_cmd_args = (
         "python3.10 examples/run_on_dataset.py ",
         "--dataset_name {DATASET_NAME} ",
-        "--config_name default ",
+        "--config_name {CONFIG_NAME} ",
         "--num_workers {NUM_WORKERS} ",
         "--max_tokens {MAX_TOKENS} ",
         "--suffix {SUFFIX} ",
