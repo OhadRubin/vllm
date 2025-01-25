@@ -120,6 +120,7 @@ vllm_cmd_args = (
 
 dataset_cmd_args = (
         "python3.10 examples/run_on_dataset.py ",
+        "--model_name {MODEL_NAME} ",
         "--dataset_name {DATASET_NAME} ",
         "--config_name {CONFIG_NAME} ",
         "--num_workers {NUM_WORKERS} ",
