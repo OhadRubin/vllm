@@ -218,22 +218,23 @@ def main(dataset_name: Optional[str]=None,
          ):
     # model_name: str
     pathlib.Path(output_dir).mkdir(exist_ok=True)
-    if model_name is None:
-        while True:
-            try:
-                response = requests.get(f"{base_url}/models")
-                if response.status_code == 200:
-                    models = response.json()["data"]
-                    if len(models) > 0:
-                        model_name = models[0]["id"]
-                        break
-                    else:
-                        raise ValueError("No models found in the server response")
-                else:
-                    raise ValueError(f"Failed to get models from server. Status code: {response.status_code}")
-            except Exception as e:
-                print(f"Failed to get models from server. Error: {e}")
-                time.sleep(1)
+    assert model_name is not None, "model_name must be provided"
+    # if model_name is None:
+    #     while True:
+    #         try:
+    #             response = requests.get(f"{base_url}/models")
+    #             if response.status_code == 200:
+    #                 models = response.json()["data"]
+    #                 if len(models) > 0:
+    #                     model_name = models[0]["id"]
+    #                     break
+    #                 else:
+    #                     raise ValueError("No models found in the server response")
+    #             else:
+    #                 raise ValueError(f"Failed to get models from server. Status code: {response.status_code}")
+    #         except Exception as e:
+    #             print(f"Failed to get models from server. Error: {e}")
+    #             time.sleep(1)
 
     
     if output_file is None:
@@ -282,7 +283,10 @@ def main(dataset_name: Optional[str]=None,
 # python3.10 examples/run_on_dataset.py --dataset_name iohadrubin/thought_catagory_tagging --config_name default  --num_workers 16 --max_tokens 4096 --max_seq_length 32768 --suffix _v0  --verbose True --temperature 1 --split test --base_url https://api.openai.com/v1 --model_name gpt-4o-mini  --api_key $OPENAI_API_KEY --drop_last_msg False 
 
 
-# python3.10 examples/run_on_dataset.py --dataset_name iohadrubin/thought_catagory_tagging_all --config_name default  --num_workers 32 --max_tokens 8192 --max_seq_length 32768 --suffix _v0  --verbose True --temperature 1 --split test --base_url https://api.openai.com/v1 --model_name gpt-4o  --api_key $OPENAI_API_KEY --drop_last_msg False 
+# python3.10 examples/run_on_dataset.py --dataset_name iohadrubin/thought_catagory_tagging_all --config_name default  --num_workers 32 --max_tokens 8192 --max_seq_length 32768 --suffix _v0  --verbose True --temperature 1 --split test --base_url https://api.openai.com/v1 --model_name gpt-4o  --api_key $OPENAI_API_KEY --drop_last_msg False  --verbose True 
+
+
+# python3.10 examples/run_on_dataset.py --dataset_name iohadrubin/bridging_prompt_input_v1 --config_name default  --num_workers 32 --max_tokens 8192 --max_seq_length 32768 --suffix _v0  --verbose True --temperature 1 --split train --model_name anthropic.claude-3-5-sonnet-20241022-v2:0 --verbose True
 
 
 # python3.10 examples/run_on_dataset.py --dataset_name iohadrubin/thought_catagory_tagging_all_v2 --config_name default  --num_workers 32 --max_tokens 8192 --max_seq_length 32768 --suffix _v2  --verbose True --temperature 0 --split test --base_url https://api.openai.com/v1 --model_name gpt-4o  --api_key $OPENAI_API_KEY --drop_last_msg False  --save_online True

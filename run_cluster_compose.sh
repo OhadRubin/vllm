@@ -427,7 +427,7 @@ elif [ "$1" = "entrypoint" ]; then
         echo "[dataset] Running user DATASET_CMD: $DATASET_CMD"
         /bin/bash -c "$DATASET_CMD"
         # python3 examples/barrier.py finish
-        ./barrier.sh finish $HEAD_NODE_ADDRESS 1
+        ./barrier.sh finish $HEAD_NODE_ADDRESS
       fi
       exit 0
 

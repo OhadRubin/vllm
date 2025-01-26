@@ -3,10 +3,20 @@
 # ./queue.sh worker
 # ./queue.sh list
 # Configuration
-QUEUE_NAME="cmd_queue"
+
 WORKERS_SET="active_workers"
 MAX_RETRIES=10
 RETRY_DELAY=3
+
+
+
+
+HOSTNAME=$(hostname)
+NODE_NUMBER=$(echo "$HOSTNAME" | grep -oP 'v4-\K\d+(?=-node)' || echo "0")
+NUM_WORKERS=$((NODE_NUMBER/8))
+
+
+QUEUE_NAME="cmd_queue_${NUM_WORKERS}"
 
 get_redis_url() {
     echo "redis://:$REDIS_PASSWORD@35.204.103.77:6379"
@@ -172,7 +182,7 @@ set_leader_data() {
         "timestamp" "$timestamp" \
         "leader" "$HOSTNAME" \
         "cmd_counter" "$cmd_counter" \
-        "worker_counter" "2"
+        "worker_counter" "$NUM_WORKERS"
 }
 
 read_leader_data() {
