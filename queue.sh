@@ -201,7 +201,7 @@ read_leader_data() {
 
 reset_leader_data() {
     redis_cmd DEL "leader_data:$HOSTNAME"
-    redis_cmd HSET "leader_data:$HOSTNAME" "worker_counter" 0
+    # redis_cmd HSET "leader_data:$HOSTNAME" "worker_counter" 0
 }
 
 # Command execution
