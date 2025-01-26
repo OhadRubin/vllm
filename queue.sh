@@ -11,12 +11,7 @@ RETRY_DELAY=3
 
 
 
-HOSTNAME=$(hostname)
-NODE_NUMBER=$(echo "$HOSTNAME" | grep -oP 'v4-\K\d+(?=-node)' || echo "0")
-NUM_WORKERS=$((NODE_NUMBER/8))
 
-
-QUEUE_NAME="cmd_queue_${NUM_WORKERS}"
 
 get_redis_url() {
     echo "redis://:$REDIS_PASSWORD@35.204.103.77:6379"
@@ -246,6 +241,15 @@ lead_worker() {
     register_worker
     trap 'echo "Leader exiting"; redis_cmd SREM "$WORKERS_SET" "$HOSTNAME"; exit 0' INT TERM
     local cmd_counter=0
+
+    HOSTNAME=$(hostname)
+    NODE_NUMBER=$(echo "$HOSTNAME" | grep -oP 'v4-\K\d+(?=-node)' || echo "0")
+    NUM_WORKERS=$((NODE_NUMBER/8))
+
+
+    QUEUE_NAME="cmd_queue_${NUM_WORKERS}"
+
+
     while true; do
         echo "Waiting for next job"
         local job_id
@@ -277,10 +281,19 @@ main() {
     case "$1" in
         enqueue)
             redis_cmd PING
+            DEFAULT_NUM_WORKERS=16
             [[ $# -lt 2 ]] && {
-                echo "Usage: $0 enqueue \"<command>\""
+                echo "Usage: $0 enqueue [num_workers] \"<command>\""
                 exit 1
             }
+            if [[ $# -eq 3 ]]; then
+                NUM_WORKERS=$2
+                command=$3
+            else
+                NUM_WORKERS=$DEFAULT_NUM_WORKERS
+                command=$2
+            fi
+            QUEUE_NAME="cmd_queue_${NUM_WORKERS}"
             enqueue_job "$2" "$QUEUE_NAME" >/dev/null
             echo "Enqueued: $2"
             ;;
@@ -293,26 +306,11 @@ main() {
                 follow_leader
             fi
             ;;
-        length)
-            redis_cmd LLEN "queue:$QUEUE_NAME"
-            ;;
-        list)
-            redis_cmd PING
-            redis_cmd LRANGE "queue:$QUEUE_NAME" 0 -1
-            ;;
-        workers)
-            echo "Active workers: $(get_worker_count)"
-            echo "Worker IDs:"
-            redis_cmd SMEMBERS "$WORKERS_SET"
-            ;;
         *)
             echo "Distributed Command Queue Manager"
             echo "Usage:"
             echo "  $0 enqueue \"<command>\""
             echo "  $0 worker"
-            echo "  $0 length          # Show queue length"
-            echo "  $0 list            # Show all queued items"
-            echo "  $0 workers         # Show active workers"
             exit 1
             ;;
     esac
