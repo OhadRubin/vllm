@@ -20,17 +20,57 @@ logger.setLevel(logging.ERROR)
 from transformers import AutoTokenizer
 print("loading tokenizer")
 
+from anthropic import AnthropicBedrock
 
 import pathlib
 from ml_collections import ConfigDict
 
-class Worker:
+
+class OAIClient:
     def __init__(self, config):
         self.config = config
         self.client = OpenAI(
             api_key=config.api_key,
             base_url=config.base_url,
         )
+    def __call__(self, messages):
+        response = self.client.chat.completions.create(
+            model=self.config.model_name,
+            temperature=self.config.temperature,
+            messages=messages,
+            max_tokens=self.config.max_tokens,
+        )
+        prediction = response.choices[0].message.content
+        return prediction
+    
+
+class AnthropicClient:
+    def __init__(self, config):
+        self.config = config
+        self.client = AnthropicBedrock(
+            aws_region="us-west-2",
+        )
+    def __call__(self, messages):
+        try:
+            response = self.client.messages.create(
+                model=self.config.model_name,
+                temperature=self.config.temperature,
+                messages=messages,
+                max_tokens=self.config.max_tokens,
+            )
+            return response.content[0].text
+        except Exception as e:
+            print(f"Error getting prediction: {e}")
+            return ""
+
+
+class Worker:
+    def __init__(self, config):
+        self.config = config
+        if "claude" in config.model_name:
+            self.client = AnthropicClient(config)
+        else:
+            self.client = OAIClient(config)
         self.max_tokens = config.max_tokens
         self.verbose = self.config.verbose
         self.drop_last_msg = config.drop_last_msg
@@ -49,14 +89,8 @@ class Worker:
         if (L+self.max_tokens) > self.max_seq_length:
             example["prediction"] = ""
             return example
-        response = self.client.chat.completions.create(
-            model=self.config.model_name,
-            temperature=self.config.temperature,
-            messages=messages,
-            max_tokens=self.config.max_tokens,
-        )
-        prediction = response.choices[0].message.content
-        example["prediction"] = prediction
+
+        example["prediction"] = self.client(messages)
         return example
 
 
