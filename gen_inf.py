@@ -63,9 +63,9 @@ with dag.DAG() as experiment:
     # shard_id(*shards_ids) >> num_shards(128) >> temperature(1)
 
 
-    model("70b_multi1") >> suffix("_v1") >> \
-    ds_name("bridging_prompt_input_v1") >> split("test") >> \
-    shard_id(*range(16)) >> num_shards(16) >> temperature(1) >> num_workers(32)
+    model("70b_multi1") >> suffix("_v2") >> \
+    ds_name("bridging_prompt_input_v2") >> split("test") >> \
+    shard_id(*range(10)) >> num_shards(10) >> temperature(1) >> num_workers(16)
     # model("8b_tagging1") >> suffix("_v1") >> \
     # ds_name("thought_catagory_tagging_v1") >> split("test") >> \
     # shard_id(*range(32)) >> num_shards(32) >> temperature(0) >> num_workers(32)
