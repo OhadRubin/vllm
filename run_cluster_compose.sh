@@ -199,7 +199,7 @@ check_zmq_tools() {
   if ! command -v zmq_pub >/dev/null 2>&1; then
     echo "Installing ZMQ tools..."
     apt-get update && apt-get install -y libzmq3-dev redis-tools
-    pip3 install fire ml_collections zmq more_itertools
+    pip3 install fire ml_collections zmq more_itertools "anthropic[bedrock]"
   fi
 }
 
