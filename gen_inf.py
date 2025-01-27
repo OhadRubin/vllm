@@ -63,9 +63,12 @@ with dag.DAG() as experiment:
     # shard_id(*shards_ids) >> num_shards(128) >> temperature(1)
 
 
-    model("8b_tagging1") >> suffix("_v1") >> \
-    ds_name("thought_catagory_tagging_v1") >> split("test") >> \
-    shard_id(*range(32)) >> num_shards(32) >> temperature(0) >> num_workers(32)
+    model("70b_multi1") >> suffix("_v1") >> \
+    ds_name("bridging_prompt_input_v1") >> split("test") >> \
+    shard_id(*range(16)) >> num_shards(16) >> temperature(1) >> num_workers(32)
+    # model("8b_tagging1") >> suffix("_v1") >> \
+    # ds_name("thought_catagory_tagging_v1") >> split("test") >> \
+    # shard_id(*range(32)) >> num_shards(32) >> temperature(0) >> num_workers(32)
   
     
 task_dict, odict = dag.get_all_experiments(experiment, config, EXP_COUNTi)
@@ -83,6 +86,9 @@ def construct_command(bash_args_dict):
                             MODEL_NAME="meta-llama/Llama-3.3-70B-Instruct_enhance1")
     elif bash_args_dict["MODEL"] == "8b_tagging1":
         bash_args_dict.update(MODEL_PATH="/mnt/gcs_bucket/AI2_EasyLM/v50_ds_nametag_ags8_seq_length16384_num_epochs4_size8b",
+                            MODEL_NAME="meta-llama/Llama-3.1-8B-Instruct")
+    elif bash_args_dict["MODEL"] == "70b_multi1":
+        bash_args_dict.update(MODEL_PATH="/mnt/gcs_bucket/AI2_EasyLM/v52_ds_namemultitask2_ags4_seq_length8192_num_epochs1_size70b",
                             MODEL_NAME="meta-llama/Llama-3.1-8B-Instruct")
     else:
         raise ValueError(f"Invalid model: {bash_args_dict['MODEL']}")

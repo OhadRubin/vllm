@@ -289,6 +289,8 @@ def main(dataset_name: Optional[str]=None,
 # python3.10 examples/run_on_dataset.py --dataset_name iohadrubin/bridging_prompt_input_v1 --config_name default  --num_workers 32 --max_tokens 8192 --max_seq_length 32768 --suffix _v0  --verbose True --temperature 1 --split train --model_name anthropic.claude-3-5-sonnet-20241022-v2:0 --verbose True
 
 
+#python3.10 examples/run_on_dataset.py --dataset_name iohadrubin/correct_usage_v1 --config_name default  --num_workers 32 --max_tokens 8192 --max_seq_length 32768 --suffix _v0  --verbose True --temperature 1 --split train --model_name anthropic.claude-3-5-sonnet-20241022-v2:0 --verbose True
+
 # python3.10 examples/run_on_dataset.py --dataset_name iohadrubin/thought_catagory_tagging_all_v2 --config_name default  --num_workers 32 --max_tokens 8192 --max_seq_length 32768 --suffix _v2  --verbose True --temperature 0 --split test --base_url https://api.openai.com/v1 --model_name gpt-4o  --api_key $OPENAI_API_KEY --drop_last_msg False  --save_online True
 
 # give file path and output_file 

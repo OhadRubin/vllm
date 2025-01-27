@@ -294,8 +294,8 @@ main() {
                 command=$2
             fi
             QUEUE_NAME="cmd_queue_${NUM_WORKERS}"
-            enqueue_job "$2" "$QUEUE_NAME" >/dev/null
-            echo "Enqueued: $2"
+            enqueue_job "$command" "$QUEUE_NAME" >/dev/null
+            echo "Enqueued: $command"
             ;;
         worker)
             python3.10 -c "import jax; from jax.experimental.multihost_utils import sync_global_devices; sync_global_devices('bla'); print(jax.process_index())"
