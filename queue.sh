@@ -237,17 +237,17 @@ follow_leader() {
 # Leader
 lead_worker() {
     reset_leader_data
-    echo "Starting leader for group $GROUP_CHANNEL"
-    register_worker
-    trap 'echo "Leader exiting"; redis_cmd SREM "$WORKERS_SET" "$HOSTNAME"; exit 0' INT TERM
-    local cmd_counter=0
-
     HOSTNAME=$(hostname)
     NODE_NUMBER=$(echo "$HOSTNAME" | grep -oP 'v4-\K\d+(?=-node)' || echo "0")
     NUM_WORKERS=$((NODE_NUMBER/8))
 
 
     QUEUE_NAME="cmd_queue_${NUM_WORKERS}"
+    echo "Starting leader for group $GROUP_CHANNEL in queue $QUEUE_NAME"
+    register_worker
+    trap 'echo "Leader exiting"; redis_cmd SREM "$WORKERS_SET" "$HOSTNAME"; exit 0' INT TERM
+    local cmd_counter=0
+
 
 
     while true; do
