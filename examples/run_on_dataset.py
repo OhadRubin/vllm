@@ -219,7 +219,7 @@ def main(dataset_name: Optional[str]=None,
     # model_name: str
     pathlib.Path(output_dir).mkdir(exist_ok=True)
     assert model_name is not None, "model_name must be provided"
-    if "claude" not in model_name and base_url not in ["http://localhost:8000/v1"]:
+    if "claude" not in model_name and base_url in ["http://localhost:8000/v1"]:
         while True:
             try:
                 response = requests.get(f"{base_url}/models")
