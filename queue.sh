@@ -281,7 +281,7 @@ main() {
     case "$1" in
         enqueue)
             redis_cmd PING
-            DEFAULT_NUM_WORKERS=16
+            DEFAULT_NUM_WORKERS=2
             [[ $# -lt 2 ]] && {
                 echo "Usage: $0 enqueue [num_workers] \"<command>\""
                 exit 1
