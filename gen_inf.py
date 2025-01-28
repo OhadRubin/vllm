@@ -63,9 +63,9 @@ with dag.DAG() as experiment:
     # shard_id(*shards_ids) >> num_shards(128) >> temperature(1)
 
 
-    model("70b_multi1") >> suffix("_v2") >> \
-    ds_name("bridging_prompt_input_v2") >> split("test") >> \
-    shard_id(*range(10)) >> num_shards(10) >> temperature(1) >> num_workers(16)
+    model("70b_multi2") >> suffix("_v0") >> \
+    ds_name("thought_enhancement_task_v3_test") >> split("test") >> \
+    shard_id(*range(373)) >> num_shards(373) >> temperature(1) >> num_workers(16)
     # model("8b_tagging1") >> suffix("_v1") >> \
     # ds_name("thought_catagory_tagging_v1") >> split("test") >> \
     # shard_id(*range(32)) >> num_shards(32) >> temperature(0) >> num_workers(32)
@@ -88,6 +88,9 @@ def construct_command(bash_args_dict):
         bash_args_dict.update(MODEL_PATH="/mnt/gcs_bucket/AI2_EasyLM/v50_ds_nametag_ags8_seq_length16384_num_epochs4_size8b",
                             MODEL_NAME="meta-llama/Llama-3.1-8B-Instruct")
     elif bash_args_dict["MODEL"] == "70b_multi1":
+        bash_args_dict.update(MODEL_PATH="/mnt/gcs_bucket/AI2_EasyLM/v52_ds_namemultitask2_ags4_seq_length8192_num_epochs1_size70b",
+                            MODEL_NAME="meta-llama/Llama-3.1-8B-Instruct")
+    elif bash_args_dict["MODEL"] == "70b_multi2":
         bash_args_dict.update(MODEL_PATH="/mnt/gcs_bucket/AI2_EasyLM/v52_ds_namemultitask2_ags4_seq_length8192_num_epochs1_size70b",
                             MODEL_NAME="meta-llama/Llama-3.1-8B-Instruct")
     else:
