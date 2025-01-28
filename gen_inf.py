@@ -186,7 +186,7 @@ import tempfile
 
 def main(
         #  format_str:str = '{s}',
-         format_str:str = './queue.sh enqueue "{s}" &',
+         format_str:str = 'queue.sh enqueue "{s}" &',
          nodes: Optional[list[int]]  = None,
          node_range: str = None,
          queue: bool = False,
@@ -235,7 +235,10 @@ def main(
         with mlxu.open_file(file_path, 'w') as fin:
             fin.write(script)
         if queue:
-            run_on_queue(tpu_dict)
+            os.system(cmd)
+            
+        # if queue:
+            # run_on_queue(tpu_dict)
     # Write commands to temp file
     with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as tmp:
         for cmd in list_of_cmds:
