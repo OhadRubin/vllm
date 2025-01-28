@@ -104,7 +104,28 @@ def process_example(tup):
     return worker(tup)
 
 
-def start_pool(config, processed_indices):
+def calc_processed_indices(config):
+    processed_indices = set()
+    
+    # Check for existing progress if not overwriting
+    if not config.force_overwrite and os.path.exists(config.output_file):
+        try:
+            with open(config.output_file, 'r') as f:
+                for line in f:
+                    try:
+                        example = json.loads(line)
+                        processed_indices.add(example['index'])
+                    except json.JSONDecodeError:
+                        continue  # Skip invalid/corrupted lines
+        except FileNotFoundError:
+            pass
+    return processed_indices
+
+
+from more_itertools import chunked
+
+def generate_examples(config):
+    processed_indices = calc_processed_indices(config)
     # Load dataset
     if config.from_disk:
         ds = datasets.load_from_disk(config.dataset_name)[config.split]
@@ -127,6 +148,10 @@ def start_pool(config, processed_indices):
     
     # Create generator for examples
     tups = ((i, ds[i]) for i in remaining_indices)
+    n_examples = len(remaining_indices)
+    return n_examples, tups
+
+def start_pool(config, n_examples, itr):
     cnt = 0
     # Process examples
     with Pool(
@@ -134,8 +159,8 @@ def start_pool(config, processed_indices):
         initializer=init_worker,
         initargs=(config,),
     ) as pool:
-        with tqdm(total=len(remaining_indices), desc="Processing examples") as pbar:
-            for example in pool.imap_unordered(process_example, tups):
+        with tqdm(total=n_examples, desc="Processing examples") as pbar:
+            for example in pool.imap_unordered(process_example, itr):
                 if config.verbose or (cnt % config.verbose_every == 0):
                     print("Prediction:")
                     print("---")
@@ -144,25 +169,15 @@ def start_pool(config, processed_indices):
                 pbar.update(1)
                 cnt +=1
 
-from more_itertools import chunked
-def run_files(config):
-    processed_indices = set()
-    
-    # Check for existing progress if not overwriting
-    if not config.force_overwrite and os.path.exists(config.output_file):
-        try:
-            with open(config.output_file, 'r') as f:
-                for line in f:
-                    try:
-                        example = json.loads(line)
-                        processed_indices.add(example['index'])
-                    except json.JSONDecodeError:
-                        continue  # Skip invalid/corrupted lines
-        except FileNotFoundError:
-            pass
+
+
+
+
+def run_files(config, n_examples, itr):
     
     # Get processed examples
-    outputs = start_pool(config, processed_indices)
+    
+    outputs = start_pool(config, n_examples, itr)
     
     # Write results
     mode = "w" if config.force_overwrite else "a"
@@ -193,6 +208,22 @@ import requests
 
 from typing import Optional
 
+
+def wait_for_model(config):
+    while True:
+        try:
+            response = requests.get(f"{config.base_url}/models")
+            if response.status_code == 200:
+                models = response.json()["data"]
+                if len(models) > 0:
+                    return
+                else:
+                    raise ValueError("No models found in the server response")
+            else:
+                raise ValueError(f"Failed to get models from server. Status code: {response.status_code}")
+        except Exception as e:
+            print(f"Failed to get models from server. Error: {e}")
+            time.sleep(1)
 def main(dataset_name: Optional[str]=None,
          config_name: Optional[str]="default",
          split: Optional[str] = None,
@@ -219,24 +250,6 @@ def main(dataset_name: Optional[str]=None,
     # model_name: str
     pathlib.Path(output_dir).mkdir(exist_ok=True)
     assert model_name is not None, "model_name must be provided"
-    if "claude" not in model_name and base_url in ["http://localhost:8000/v1"]:
-        while True:
-            try:
-                response = requests.get(f"{base_url}/models")
-                if response.status_code == 200:
-                    models = response.json()["data"]
-                    if len(models) > 0:
-                        model_name = models[0]["id"]
-                        break
-                    else:
-                        raise ValueError("No models found in the server response")
-                else:
-                    raise ValueError(f"Failed to get models from server. Status code: {response.status_code}")
-            except Exception as e:
-                print(f"Failed to get models from server. Error: {e}")
-                time.sleep(1)
-
-
     
     if output_file is None:
         output_file = f"{output_dir}/{dataset_name.replace('/', '_')}_{config_name}_{model_name.replace('/', '_')}{suffix}.jsonl"
@@ -244,9 +257,7 @@ def main(dataset_name: Optional[str]=None,
             output_file = f"{output_file}.{shard_id}"
     else:
         output_file = f"{output_dir}/{output_file}"
-    
-
-    
+        
     config = ConfigDict(
         dict(
             dataset_name=dataset_name,
@@ -272,7 +283,10 @@ def main(dataset_name: Optional[str]=None,
             verbose_every=verbose_every,
         )
     )
-    run_files(config)
+    n_examples, itr = generate_examples(config)
+    if "claude" not in model_name and base_url in ["http://localhost:8000/v1"]:
+        wait_for_model(config)
+    run_files(config, n_examples, itr)
 
 
 

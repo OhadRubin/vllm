@@ -1,4 +1,4 @@
-#python3.10 gen_inf.py
+#python3.10 gen_inf.py --queue True
 # int_start 20 128 "echo bye && sleep 30"
 # int_start 20 128 gsutil cat gs://meliad2_us2_backup/scripts/15_01_2025/v35_scan_layersTrue_bf16momTrue_seq_length2048_num_epochs2_size405b31_128.sh > /tmp/script.sh; bash /tmp/script.sh
 # gsutil ls gs://meliad2_us2_backup/generated_data/*_01_2025 | grep shard5 | grep jsonl | sed -n 's/.*jsonl\.\([0-9]\+\).*/\1/p'
@@ -65,7 +65,7 @@ with dag.DAG() as experiment:
 
     model("70b_multi2") >> suffix("_v0") >> \
     ds_name("thought_enhancement_task_v3_test") >> split("test") >> \
-    shard_id(*range(373)) >> num_shards(373) >> temperature(1) >> num_workers(16)
+    shard_id(*range(373)) >> num_shards(373) >> temperature(1) >> num_workers(16) >> max_tokens(8192)
     # model("8b_tagging1") >> suffix("_v1") >> \
     # ds_name("thought_catagory_tagging_v1") >> split("test") >> \
     # shard_id(*range(32)) >> num_shards(32) >> temperature(0) >> num_workers(32)
