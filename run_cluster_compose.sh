@@ -277,7 +277,7 @@ if [ "$1" = "launch" ]; then
   # sudo rm -rf /tmp/libtpu_lockfile /tmp/tpu_logs
   sleep 5
   sync_devices
-  maybe_clear_cache
+  # maybe_clear_cache
   mount_gcs
 
   echo "==========================================="
