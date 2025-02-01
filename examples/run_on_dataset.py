@@ -33,14 +33,12 @@ class OAIClient:
             api_key=config.api_key,
             base_url=config.base_url,
         )
-    def __call__(self, messages, max_tokens=None):
-        if max_tokens is None:
-            max_tokens = self.config.max_tokens
+    def __call__(self, messages):
         response = self.client.chat.completions.create(
             model=self.config.model_name,
             temperature=self.config.temperature,
             messages=messages,
-            max_tokens=max_tokens,
+            max_tokens=self.config.max_tokens,
         )
         prediction = response.choices[0].message.content
         return prediction
@@ -52,15 +50,13 @@ class AnthropicClient:
         self.client = AnthropicBedrock(
             aws_region="us-west-2",
         )
-    def __call__(self, messages, max_tokens=None):
-        if max_tokens is None:
-            max_tokens = self.config.max_tokens
+    def __call__(self, messages):
         try:
             response = self.client.messages.create(
                 model=self.config.model_name,
                 temperature=self.config.temperature,
                 messages=messages,
-                max_tokens=max_tokens,
+                max_tokens=self.config.max_tokens,
             )
             return response.content[0].text
         except Exception as e:
@@ -90,23 +86,22 @@ class Worker:
         else:
             messages = example["messages"]
         L = len(self.tokenizer.apply_chat_template(messages))
-        if L>= self.max_seq_length -1:
-            print(f"Skipping example {example_id} because it's too long")
+        if (L+self.max_tokens) > self.max_seq_length:
             example["prediction"] = ""
             return example
+
+        # L = len(self.tokenizer.apply_chat_template(messages))
+        # if L>= self.max_seq_length -1:
+        #     print(f"Skipping example {example_id} because it's too long")
+        #     example["prediction"] = ""
+        #     return example
         
-        margin = 10
-        # available_tokens = self.max_seq_length - L - margin
-        # max_tokens = min(available_tokens, self.max_tokens)
-        max_tokens = self.max_seq_length - L - margin
-        
-            
-        if max_tokens < 1000:
-            print(f"Skipping example {example_id} because max_tokens is too small")
-            example["prediction"] = ""
-            return example
-            
-        example["prediction"] = self.client(messages, max_tokens=max_tokens)
+        # margin = 10
+        # # available_tokens = self.max_seq_length - L - margin
+        # # max_tokens = min(available_tokens, self.max_tokens)
+        # max_tokens = self.max_seq_length - L - margin
+
+        example["prediction"] = self.client(messages)
         return example
 
 
@@ -240,8 +235,6 @@ def wait_for_model(config):
         except Exception as e:
             print(f"Failed to get models from server. Error: {e}")
             time.sleep(1)
-
-
 def main(dataset_name: Optional[str]=None,
          config_name: Optional[str]="default",
          split: Optional[str] = None,
@@ -264,7 +257,6 @@ def main(dataset_name: Optional[str]=None,
          save_online: bool = False,
          force_overwrite: bool = False,
          verbose_every: int = 100,
-         min_tokens: int = 1000,
          ):
     # model_name: str
     pathlib.Path(output_dir).mkdir(exist_ok=True)
@@ -300,7 +292,6 @@ def main(dataset_name: Optional[str]=None,
             force_overwrite=force_overwrite,
             from_disk=from_disk,
             verbose_every=verbose_every,
-            min_tokens=min_tokens,
         )
     )
     n_examples, itr = generate_examples(config)
@@ -325,7 +316,6 @@ def main(dataset_name: Optional[str]=None,
 
 
 #python3.10 examples/run_on_dataset.py --dataset_name iohadrubin/correct_usage_v1 --config_name default  --num_workers 32 --max_tokens 8192 --max_seq_length 32768 --suffix _v0  --verbose True --temperature 1 --split train --model_name anthropic.claude-3-5-sonnet-20241022-v2:0 --verbose True
-#python3.10 examples/run_on_dataset.py --dataset_name iohadrubin/diverse_thinking_out_loud_v1 --config_name default  --num_workers 32 --max_tokens 8192 --max_seq_length 32768 --suffix _v0  --verbose True --temperature 1 --split train --model_name anthropic.claude-3-5-sonnet-20241022-v2:0 --verbose True
 
 
 #python3.10 examples/run_on_dataset.py --dataset_name iohadrubin/improve_rubric_v1 --config_name default  --num_workers 32 --max_tokens 8192 --max_seq_length 32768 --suffix _v0  --verbose True --temperature 1 --split train --model_name anthropic.claude-3-5-sonnet-20241022-v2:0 --verbose True
