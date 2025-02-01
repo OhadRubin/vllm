@@ -33,12 +33,14 @@ class OAIClient:
             api_key=config.api_key,
             base_url=config.base_url,
         )
-    def __call__(self, messages):
+    def __call__(self, messages, max_tokens=None):
+        if max_tokens is  None:
+            max_tokens = self.config.max_tokens
         response = self.client.chat.completions.create(
             model=self.config.model_name,
             temperature=self.config.temperature,
             messages=messages,
-            max_tokens=self.config.max_tokens,
+            max_tokens=max_tokens,
         )
         prediction = response.choices[0].message.content
         return prediction
@@ -50,13 +52,16 @@ class AnthropicClient:
         self.client = AnthropicBedrock(
             aws_region="us-west-2",
         )
-    def __call__(self, messages):
+    def __call__(self, messages, max_tokens=None):
+        if max_tokens is None:
+            max_tokens = self.config.max_tokens
+        
         try:
             response = self.client.messages.create(
                 model=self.config.model_name,
                 temperature=self.config.temperature,
                 messages=messages,
-                max_tokens=self.config.max_tokens,
+                max_tokens=max_tokens,
             )
             return response.content[0].text
         except Exception as e:
@@ -76,33 +81,37 @@ class Worker:
         self.drop_last_msg = config.drop_last_msg
         self.tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-3.1-70B-Instruct")
         self.max_seq_length = config.max_seq_length
-
+        self.margin = 10
     def __call__(self, tup):
         print("running generate")
         example_id, example = tup
         example["index"] = example_id
-        if self.drop_last_msg:
+        if self.drop_last_msg and len(example["messages"]) > 1:
             messages = example["messages"][:-1]
         else:
             messages = example["messages"]
+        # if max_seq_length-1000 <= L
+        # we bail
+        # if L < max_seq_length- 1000
+        # we continue with max_tokens = max_seq_length-L - margin
+        # 
+
+
+        
         L = len(self.tokenizer.apply_chat_template(messages))
-        if (L+self.max_tokens) > self.max_seq_length:
+        if  self.max_seq_length - 1000 <= L:
+            print(f"Skipping example {example_id} because it's too long")
             example["prediction"] = ""
             return example
+        else:
+            max_tokens = self.max_seq_length - L - self.margin
 
-        # L = len(self.tokenizer.apply_chat_template(messages))
-        # if L>= self.max_seq_length -1:
-        #     print(f"Skipping example {example_id} because it's too long")
-        #     example["prediction"] = ""
-        #     return example
+            example["prediction"] = self.client(messages, max_tokens=max_tokens)
+            return example
         
-        # margin = 10
-        # # available_tokens = self.max_seq_length - L - margin
-        # # max_tokens = min(available_tokens, self.max_tokens)
-        # max_tokens = self.max_seq_length - L - margin
-
-        example["prediction"] = self.client(messages)
-        return example
+        
+        # available_tokens = self.max_seq_length - L - margin
+        # max_tokens = min(available_tokens, self.max_tokens)
 
 
 def init_worker(config):
