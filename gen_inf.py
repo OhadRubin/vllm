@@ -63,9 +63,9 @@ with dag.DAG() as experiment:
     # shard_id(*shards_ids) >> num_shards(128) >> temperature(1)
 
 
-    model("70b_multi2") >> suffix("_v0") >> \
-    ds_name("thought_enhancement_task_v3_test") >> split("test") >> \
-    shard_id(*range(373)) >> num_shards(373) >> temperature(1) >> num_workers(16) >> max_tokens(8192)
+    model("70b_cond1.1") >> suffix("_v0") >> \
+    ds_name("diverse_thinking_out_loud_v2.0_test") >> split("train") >> \
+    shard_id(*list(range(373))[::-1]) >> num_shards(373) >> temperature(1) >> num_workers(16) >> max_tokens(8192)
     # model("8b_tagging1") >> suffix("_v1") >> \
     # ds_name("thought_catagory_tagging_v1") >> split("test") >> \
     # shard_id(*range(32)) >> num_shards(32) >> temperature(0) >> num_workers(32)
@@ -92,6 +92,12 @@ def construct_command(bash_args_dict):
                             MODEL_NAME="meta-llama/Llama-3.1-8B-Instruct")
     elif bash_args_dict["MODEL"] == "70b_multi2":
         bash_args_dict.update(MODEL_PATH="/mnt/gcs_bucket/AI2_EasyLM/v52_ds_namemultitask2_ags4_seq_length8192_num_epochs1_size70b",
+                            MODEL_NAME="meta-llama/Llama-3.1-8B-Instruct")
+    elif bash_args_dict["MODEL"] == "70b_enhance4":
+        bash_args_dict.update(MODEL_PATH="/mnt/gcs_bucket/AI2_EasyLM/v52_ds_nameenhance4_ags4_seq_length8192_num_epochs1_size70b",
+                            MODEL_NAME="meta-llama/Llama-3.1-8B-Instruct")
+    elif bash_args_dict["MODEL"] == "70b_cond1.1":
+        bash_args_dict.update(MODEL_PATH="/mnt/gcs_bucket/saved_models/01_02_2025/v60_ds_namecond1.1_ags8_seq_length8192_num_epochs1_size70b",
                             MODEL_NAME="meta-llama/Llama-3.1-8B-Instruct")
     else:
         raise ValueError(f"Invalid model: {bash_args_dict['MODEL']}")
@@ -236,9 +242,7 @@ def main(
             fin.write(script)
         if queue:
             os.system(cmd)
-            
-        # if queue:
-            # run_on_queue(tpu_dict)
+
     # Write commands to temp file
     with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as tmp:
         for cmd in list_of_cmds:
