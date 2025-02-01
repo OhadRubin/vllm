@@ -56,7 +56,7 @@ with dag.DAG() as experiment:
 
 
     model("70b_cond1.1") >> suffix("_v0") >> \
-    ds_name("diverse_thinking_out_loud_v2.0_test") >> split("train") >> \
+    ds_name("diverse_thinking_out_loud_v2.2_test") >> split("train") >> \
     shard_id(*shards_ids) >> num_shards(373) >> temperature(1) >> num_workers(16) >> max_tokens(8192)
     # model("8b_tagging1") >> suffix("_v1") >> \
     # ds_name("thought_catagory_tagging_v1") >> split("test") >> \

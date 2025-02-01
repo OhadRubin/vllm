@@ -255,7 +255,7 @@ lead_worker() {
         local job_id
         job_id=$(redis_cmd LPOP "queue:$QUEUE_NAME")
         if [[ -z "$job_id" ]]; then
-            sleep 10
+            sleep 20
             continue
         fi
 
