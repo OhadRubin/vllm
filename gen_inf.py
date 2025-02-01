@@ -9,8 +9,6 @@ import sys
 import re
 import fire
 import os
-sys.path.append(os.path.expanduser("~/redis_queue"))
-from src.redis_queue import RedisQueue
 
 preramble=r"""
 cd ~/vllm
@@ -20,14 +18,6 @@ git pull
 def one_liner(path):
     return f"gsutil cat {path} > /tmp/script.sh; bash /tmp/script.sh"
 
-def run_on_queue(tpu_dict):
-    for k in tpu_dict.keys():
-        q_name = f"v4-{k}"
-        queue = RedisQueue(name=q_name)
-        for v in tpu_dict[k]:
-            cmd = one_liner(v)
-            print(f"adding {cmd} to {q_name}")
-            queue.put(cmd)
 
 
 import dag
@@ -51,6 +41,7 @@ SPLIT, split, train
 SHARD_ID, shard_id, 0
 NUM_SHARDS, num_shards, 1
 TEMPERATURE, temperature, 0
+DROP_LAST_MSG, drop_last_msg, False
 CONFIG_NAME, config_name, default
 """)
 
@@ -66,7 +57,7 @@ with dag.DAG() as experiment:
 
     model("70b_cond1.1") >> suffix("_v0") >> \
     ds_name("diverse_thinking_out_loud_v2.0_test") >> split("train") >> \
-    shard_id(*shards_ids) >> num_shards(373) >> temperature(1) >> num_workers(16) >> max_tokens(8192)
+    shard_id(*shards_ids) >> num_shards(373) >> temperature(1) >> num_workers(16) >> max_tokens(4096)
     # model("8b_tagging1") >> suffix("_v1") >> \
     # ds_name("thought_catagory_tagging_v1") >> split("test") >> \
     # shard_id(*range(32)) >> num_shards(32) >> temperature(0) >> num_workers(32)
@@ -113,7 +104,7 @@ def construct_command(bash_args_dict):
     SHARD_ID = str(bash_args_dict['SHARD_ID'])
     OUTPUT_FILE = f"{bash_args_dict['WANDB_NAME']}.jsonl".replace(f"_shard_id{SHARD_ID}_", "_")
     bash_args_dict["OUTPUT_FILE"] = f"{OUTPUT_FILE}.{SHARD_ID}"
-    bash_args_dict["DROP_LAST_MSG"] = str(bash_args_dict["SPLIT"]=="train")
+    bash_args_dict["DROP_LAST_MSG"] = str(bash_args_dict["DROP_LAST_MSG"])
 
     # Add shard args construction
     shard_args = ""
