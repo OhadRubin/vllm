@@ -57,7 +57,8 @@ CONFIG_NAME, config_name, default
 
 
 with dag.DAG() as experiment:
-    # shards_ids = [52, 56, 58, 64, 67, 68, 75, 76, 78, 79, 84, 86, 92, 94, 96, 98, 104, 105, 107, 108, 110, 111, 122, 123, 126, 127]
+    # shards_ids = list(range(373))[::-1]
+    shards_ids = list(range(373))
     # model("70b_enhance1") >> suffix("_v3") >> \
     # ds_name("thought_enhancement_task_v1") >> split("test") >> \
     # shard_id(*shards_ids) >> num_shards(128) >> temperature(1)
@@ -65,7 +66,7 @@ with dag.DAG() as experiment:
 
     model("70b_cond1.1") >> suffix("_v0") >> \
     ds_name("diverse_thinking_out_loud_v2.0_test") >> split("train") >> \
-    shard_id(*list(range(373))[::-1]) >> num_shards(373) >> temperature(1) >> num_workers(16) >> max_tokens(8192)
+    shard_id(*shards_ids) >> num_shards(373) >> temperature(1) >> num_workers(16) >> max_tokens(8192)
     # model("8b_tagging1") >> suffix("_v1") >> \
     # ds_name("thought_catagory_tagging_v1") >> split("test") >> \
     # shard_id(*range(32)) >> num_shards(32) >> temperature(0) >> num_workers(32)
