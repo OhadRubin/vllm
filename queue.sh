@@ -40,28 +40,28 @@ sync_tpu() {
 
 
 # Install dependencies if missing
-while ! command -v redis-cli &>/dev/null; do
-    echo "Installing redis-tools"
-    sudo apt-get update -qq
+# while ! command -v redis-cli &>/dev/null; do
+#     echo "Installing redis-tools"
+#     sudo apt-get update -qq
     
-    if ! sudo apt-get install -y redis-tools; then
-        # Kill any existing apt/dpkg processes
-        sudo pkill -f apt-get
-        sudo pkill -f dpkg 
-        sudo pkill -f apt
+#     if ! sudo apt-get install -y redis-tools; then
+#         # Kill any existing apt/dpkg processes
+#         sudo pkill -f apt-get
+#         sudo pkill -f dpkg 
+#         sudo pkill -f apt
         
-        # Remove lock files
-        sudo rm -f /var/lib/apt/lists/lock
-        sudo rm -f /var/cache/apt/archives/lock
-        sudo rm -f /var/lib/dpkg/lock
-        sudo rm -f /var/lib/dpkg/lock-frontend
+#         # Remove lock files
+#         sudo rm -f /var/lib/apt/lists/lock
+#         sudo rm -f /var/cache/apt/archives/lock
+#         sudo rm -f /var/lib/dpkg/lock
+#         sudo rm -f /var/lib/dpkg/lock-frontend
         
-        sleep 5
-        sudo dpkg --configure -a
-    fi
+#         sleep 5
+#         sudo dpkg --configure -a
+#     fi
     
-    sleep 5
-done
+#     sleep 5
+# done
 
 # Bookkeeping functions
 update_job_status() {
