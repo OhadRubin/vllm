@@ -82,6 +82,7 @@ class Worker:
         self.tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-3.1-70B-Instruct")
         self.max_seq_length = config.max_seq_length
         self.margin = 10
+        self.min_tokens = 1000
     def __call__(self, tup):
         print("running generate")
         example_id, example = tup
@@ -99,7 +100,7 @@ class Worker:
 
         
         L = len(self.tokenizer.apply_chat_template(messages))
-        if  self.max_seq_length - 1000 <= L:
+        if  self.max_seq_length - self.min_tokens <= L:
             print(f"Skipping example {example_id} because it's too long")
             example["prediction"] = ""
             return example
@@ -109,9 +110,7 @@ class Worker:
             example["prediction"] = self.client(messages, max_tokens=max_tokens)
             return example
         
-        
-        # available_tokens = self.max_seq_length - L - margin
-        # max_tokens = min(available_tokens, self.max_tokens)
+
 
 
 def init_worker(config):

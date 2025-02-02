@@ -34,7 +34,7 @@ run_parallel_commands() {
 }
 
 # Run commands for all nodes in sequence
-sequence=($(seq 8 40))
+sequence=($(seq 10 120))
 run_parallel_commands "tmux capture-pane -t resume_sh -p" "${sequence[@]}"
 
 # Function to get node IDs with matching string
