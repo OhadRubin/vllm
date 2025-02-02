@@ -11,8 +11,6 @@ RETRY_DELAY=3
 
 
 
-
-
 get_redis_url() {
     echo "redis://:$REDIS_PASSWORD@35.204.103.77:6379"
 }
@@ -132,6 +130,7 @@ is_queue_empty() {
 # Node info
 get_node_info() {
     export CURRENT_IP=$(curl -s --max-time 3 https://checkip.amazonaws.com || echo "127.0.0.1")
+    echo "Current IP: $CURRENT_IP"
     export HEAD_NODE_ADDRESS=$(python3.10 ~/vllm/examples/leader_election.py 2>/dev/null || echo "$CURRENT_IP")
     
     if [[ ! "$HEAD_NODE_ADDRESS" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
