@@ -49,15 +49,15 @@ CONFIG_NAME, config_name, default
 
 with dag.DAG() as experiment:
     # shards_ids = list(range(373))[::-1]
-    shards_ids = list(range(373))
+    shards_ids = list(range(350))
     # model("70b_enhance1") >> suffix("_v3") >> \
     # ds_name("thought_enhancement_task_v1") >> split("test") >> \
     # shard_id(*shards_ids) >> num_shards(128) >> temperature(1)
 
 
-    model("70b_cond1.1") >> suffix("_v0") >> \
-    ds_name("diverse_thinking_out_loud_v2.2_test") >> split("train") >> \
-    shard_id(*shards_ids) >> num_shards(373) >> temperature(1) >> num_workers(16) >> max_tokens(8192)
+    model("70b_cond3") >> suffix("_v0") >> \
+    ds_name("diverse_thinking_out_loud_v3_test") >> split("train") >> \
+    shard_id(*shards_ids) >> num_shards(350) >> temperature(1) >> num_workers(16) >> max_tokens(8192)
     # model("8b_tagging1") >> suffix("_v1") >> \
     # ds_name("thought_catagory_tagging_v1") >> split("test") >> \
     # shard_id(*range(32)) >> num_shards(32) >> temperature(0) >> num_workers(32)
@@ -91,7 +91,7 @@ def construct_command(bash_args_dict):
     elif bash_args_dict["MODEL"] == "70b_cond1.1":
         bash_args_dict.update(MODEL_PATH="/mnt/gcs_bucket/saved_models/01_02_2025/v60_ds_namecond1.1_ags8_seq_length8192_num_epochs1_size70b",
                             MODEL_NAME="meta-llama/Llama-3.1-8B-Instruct")
-    elif bash_args_dict["MODEL"] == "70b_cond1.1":
+    elif bash_args_dict["MODEL"] == "70b_cond3":
         bash_args_dict.update(MODEL_PATH="/mnt/gcs_bucket/saved_models/02_02_2025/v60_ds_namecond3_ags1_seq_length8192_num_epochs1_size70b_tpu512",
                             MODEL_NAME="meta-llama/Llama-3.1-8B-Instruct")
     else:
