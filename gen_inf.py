@@ -91,6 +91,9 @@ def construct_command(bash_args_dict):
     elif bash_args_dict["MODEL"] == "70b_cond1.1":
         bash_args_dict.update(MODEL_PATH="/mnt/gcs_bucket/saved_models/01_02_2025/v60_ds_namecond1.1_ags8_seq_length8192_num_epochs1_size70b",
                             MODEL_NAME="meta-llama/Llama-3.1-8B-Instruct")
+    elif bash_args_dict["MODEL"] == "70b_cond1.1":
+        bash_args_dict.update(MODEL_PATH="/mnt/gcs_bucket/saved_models/02_02_2025/v60_ds_namecond3_ags1_seq_length8192_num_epochs1_size70b_tpu512",
+                            MODEL_NAME="meta-llama/Llama-3.1-8B-Instruct")
     else:
         raise ValueError(f"Invalid model: {bash_args_dict['MODEL']}")
 
