@@ -120,7 +120,11 @@ def init_worker(config):
 
 def process_example(tup):
     global worker
-    return worker(tup)
+    try:
+        return worker(tup)
+    except Exception as e:
+        print(f"Error processing example: {e}")
+        return None
 
 
 def calc_processed_indices(config):
@@ -180,6 +184,8 @@ def start_pool(config, n_examples, itr):
     ) as pool:
         with tqdm(total=n_examples, desc="Processing examples") as pbar:
             for example in pool.imap_unordered(process_example, itr):
+                if example is None:
+                    continue
                 if config.verbose or (cnt % config.verbose_every == 0):
                     print("Prediction:")
                     print("---")
