@@ -176,7 +176,7 @@ wait_until_everyone_ready() {
         n_are_done=$(redis_cmd HGET "leader_data:$HOSTNAME" "n_are_done")
     done
     not_seen_by=$(redis_cmd HINCRBY "leader_data:$HOSTNAME" "not_seen_by" -1)
-    while [[ "$not_seen_by" -ne 0 ]]; do
+    while [[ "$not_seen_by" -gt 0 ]]; do
         sleep 5
         echo "Waiting for everyone to be seen"
         not_seen_by=$(redis_cmd HGET "leader_data:$HOSTNAME" "not_seen_by")
