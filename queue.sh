@@ -28,13 +28,13 @@ wipe_tpu() {
 }
 
 
-sync_tpu() {
-    sleep 10
-    wipe_tpu
-    python3.10 -c "import jax; from jax.experimental.multihost_utils import sync_global_devices; sync_global_devices('bla'); print(jax.process_index())"
-    wipe_tpu
-    sleep 10
-}
+# sync_tpu() {
+#     sleep 10
+#     wipe_tpu
+#     python3.10 -c "import jax; from jax.experimental.multihost_utils import sync_global_devices; sync_global_devices('bla'); print(jax.process_index())"
+#     wipe_tpu
+#     sleep 10
+# }
 
 
 # Install dependencies if missing
@@ -154,14 +154,34 @@ get_worker_count() {
 }
 
 
+# wait_until_everyone_ready() {
+#     local num_workers="$1"
+#     # Atomically decrement the counter and then wait until it reaches 0
+#     local current_counter
+#     current_counter=$(redis_cmd HINCRBY "leader_data:$HOSTNAME" "worker_counter" -1)
+#     while [[ "$current_counter" -gt 0 ]]; do
+#         sleep 5
+#         current_counter=$(redis_cmd HGET "leader_data:$HOSTNAME" "worker_counter")
+#     done
+# }
+
+
 wait_until_everyone_ready() {
-    # Atomically decrement the counter and then wait until it reaches 0
-    local current_counter
-    current_counter=$(redis_cmd HINCRBY "leader_data:$HOSTNAME" "worker_counter" -1)
-    while [[ "$current_counter" -gt 0 ]]; do
+    local num_workers="$1"
+    n_are_done=$(redis_cmd HINCRBY "leader_data:$HOSTNAME" "n_are_done" 1)
+    while [[ "$n_are_done" -ne "$num_workers" ]]; do
         sleep 5
-        current_counter=$(redis_cmd HGET "leader_data:$HOSTNAME" "worker_counter")
+        echo "Waiting for everyone to be done"
+        n_are_done=$(redis_cmd HGET "leader_data:$HOSTNAME" "n_are_done")
     done
+    seen_by=$(redis_cmd HINCRBY "leader_data:$HOSTNAME" "seen_by" 1)
+    while [[ "$seen_by" -ne "$num_workers" ]]; do
+        sleep 5
+        echo "Waiting for everyone to be seen"
+        seen_by=$(redis_cmd HGET "leader_data:$HOSTNAME" "seen_by")
+    done
+    redis_cmd HSET "leader_data:$HOSTNAME" "seen_by" 0 "n_are_done" 0
+
 }
 
 set_leader_data() {
@@ -176,7 +196,8 @@ set_leader_data() {
         "timestamp" "$timestamp" \
         "leader" "$HOSTNAME" \
         "cmd_counter" "$cmd_counter" \
-        "worker_counter" "$NUM_WORKERS"
+        "seen_by" 0 \
+        "n_are_done" 0
 }
 
 read_leader_data() {
@@ -218,14 +239,17 @@ follow_leader() {
     reset_leader_data
     echo "Starting follower for group $GROUP_CHANNEL"
     local cmd_counter=0
+    NUM_WORKERS=$(num_workers)
     while true; do
         sleep 10
         echo "WAITING FOR COMMAND"
         msg=$(read_leader_data $cmd_counter)
         if [ -n "$msg" ] && [ "$msg" != "Timeout waiting for command" ]; then
             echo "Received command #$cmd_counter: $msg"
-            wait_until_everyone_ready
-            sync_tpu
+            wait_until_everyone_ready $NUM_WORKERS
+            # sync_tpu
+            sleep 10
+            wipe_tpu
             eval "$msg"
             reset_leader_data
             cmd_counter=$((cmd_counter + 1))
@@ -233,13 +257,16 @@ follow_leader() {
     done
 }
 
-# Leader
-lead_worker() {
-    reset_leader_data
+num_workers() {
     HOSTNAME=$(hostname)
     NODE_NUMBER=$(echo "$HOSTNAME" | grep -oP 'v4-\K\d+(?=-node)' || echo "0")
     NUM_WORKERS=$((NODE_NUMBER/8))
-
+    echo $NUM_WORKERS
+}
+# Leader
+lead_worker() {
+    reset_leader_data
+    NUM_WORKERS=$(num_workers)
 
     QUEUE_NAME="cmd_queue_${NUM_WORKERS}"
     echo "Starting leader for group $GROUP_CHANNEL in queue $QUEUE_NAME"
@@ -262,8 +289,10 @@ lead_worker() {
 
         echo "Broadcasting job #$cmd_counter ($job_id) with command: $data"
         set_leader_data "$data" "$cmd_counter"
-        wait_until_everyone_ready
-        sync_tpu
+        wait_until_everyone_ready $NUM_WORKERS
+        # sync_tpu
+        sleep 10
+        wipe_tpu
         update_job_status "$job_id" "processing" "N/A"
         if execute_command "$data"; then
             finalize_job "$job_id"
