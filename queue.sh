@@ -168,19 +168,20 @@ get_worker_count() {
 
 wait_until_everyone_ready() {
     local num_workers="$1"
+    redis_cmd HSET "leader_data:$HOSTNAME" "not_seen_by" $num_workers
     n_are_done=$(redis_cmd HINCRBY "leader_data:$HOSTNAME" "n_are_done" 1)
     while [[ "$n_are_done" -ne "$num_workers" ]]; do
         sleep 5
         echo "Waiting for everyone to be done"
         n_are_done=$(redis_cmd HGET "leader_data:$HOSTNAME" "n_are_done")
     done
-    seen_by=$(redis_cmd HINCRBY "leader_data:$HOSTNAME" "seen_by" 1)
-    while [[ "$seen_by" -ne "$num_workers" ]]; do
+    not_seen_by=$(redis_cmd HINCRBY "leader_data:$HOSTNAME" "not_seen_by" -1)
+    while [[ "$not_seen_by" -ne 0 ]]; do
         sleep 5
         echo "Waiting for everyone to be seen"
-        seen_by=$(redis_cmd HGET "leader_data:$HOSTNAME" "seen_by")
+        not_seen_by=$(redis_cmd HGET "leader_data:$HOSTNAME" "not_seen_by")
     done
-    redis_cmd HSET "leader_data:$HOSTNAME" "seen_by" 0 "n_are_done" 0
+    redis_cmd HSET "leader_data:$HOSTNAME" "n_are_done" 0
 
 }
 
