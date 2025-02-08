@@ -224,7 +224,7 @@ barrier_sync() {
 
 wait_until_everyone_ready() {
     local num_workers="$1"
-    barrier_sync "leader_data:$HOSTNAME" $num_workers
+    barrier_sync "barrier_data:$HOSTNAME" $num_workers
     # redis_cmd HSET "leader_data:$HOSTNAME" "not_seen_by" $num_workers
     # n_are_done=$(redis_cmd HINCRBY "leader_data:$HOSTNAME" "n_are_done" 1)
     # while [[ "$n_are_done" -lt "$num_workers" ]]; do
@@ -311,8 +311,8 @@ follow_leader() {
             wipe_tpu
             eval "$msg"
             wipe_tpu
-            reset_leader_data
             wait_until_everyone_ready $NUM_WORKERS
+            reset_leader_data
             cmd_counter=$((cmd_counter + 1))
         fi
     done
