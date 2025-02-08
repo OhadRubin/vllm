@@ -166,22 +166,79 @@ get_worker_count() {
 # }
 
 
+
+barrier_sync() {
+    local barrier_name="$1"
+    local worker_count="$2"
+
+    local arrive_key="${barrier_name}:arrive"
+    local depart_key="${barrier_name}:depart"
+
+    # Each arrival increments a global counter
+    local arrive_count
+    arrive_count="$(redis_cmd INCR "$arrive_key")"
+
+    # Determine which round (0-based) this arrival belongs to
+    # If arrive_count=1..N, that indicates round=0 for the first N arrivals, etc.
+    local round=$(( (arrive_count - 1) / worker_count ))
+    # The arrival threshold for this round
+    local arrive_target=$(( (round + 1) * worker_count ))
+
+    # Poll until the arrive counter reaches the target
+    
+    while :; do
+        local current_arrive
+        current_arrive="$(redis_cmd GET "$arrive_key")"
+        [ -z "$current_arrive" ] || [ "$current_arrive" = "(nil)" ] && current_arrive=0
+
+        if [ "$current_arrive" -ge "$arrive_target" ]; then
+            break
+        fi
+
+        sleep 5
+    done
+
+    # Increment global departure counter
+    local depart_count
+    depart_count="$(redis_cmd INCR "$depart_key")"
+
+    # Poll until the departure counter reaches the same threshold
+    local depart_target=$(( (round + 1) * worker_count ))
+    while :; do
+        local current_depart
+        current_depart="$(redis_cmd GET "$depart_key")"
+        [ -z "$current_depart" ] || [ "$current_depart" = "(nil)" ] && current_depart=0
+
+        if [ "$current_depart" -ge "$depart_target" ]; then
+            break
+        fi
+
+        sleep 5
+    done
+}
+
+# Example usage:
+# barrier_sync "my_barrier" 3 15
+# echo "Passed barrier"
+
+
 wait_until_everyone_ready() {
     local num_workers="$1"
-    redis_cmd HSET "leader_data:$HOSTNAME" "not_seen_by" $num_workers
-    n_are_done=$(redis_cmd HINCRBY "leader_data:$HOSTNAME" "n_are_done" 1)
-    while [[ "$n_are_done" -lt "$num_workers" ]]; do
-        sleep 5
-        echo "Waiting for everyone to be done"
-        n_are_done=$(redis_cmd HGET "leader_data:$HOSTNAME" "n_are_done")
-    done
-    not_seen_by=$(redis_cmd HINCRBY "leader_data:$HOSTNAME" "not_seen_by" -1)
-    while [[ "$not_seen_by" -gt 0 ]]; do
-        sleep 5
-        echo "Waiting for everyone to be seen"
-        not_seen_by=$(redis_cmd HGET "leader_data:$HOSTNAME" "not_seen_by")
-    done
-    redis_cmd HSET "leader_data:$HOSTNAME" "n_are_done" 0
+    barrier_sync "leader_data:$HOSTNAME" $num_workers
+    # redis_cmd HSET "leader_data:$HOSTNAME" "not_seen_by" $num_workers
+    # n_are_done=$(redis_cmd HINCRBY "leader_data:$HOSTNAME" "n_are_done" 1)
+    # while [[ "$n_are_done" -lt "$num_workers" ]]; do
+    #     sleep 5
+    #     echo "Waiting for everyone to be done"
+    #     n_are_done=$(redis_cmd HGET "leader_data:$HOSTNAME" "n_are_done")
+    # done
+    # not_seen_by=$(redis_cmd HINCRBY "leader_data:$HOSTNAME" "not_seen_by" -1)
+    # while [[ "$not_seen_by" -gt 0 ]]; do
+    #     sleep 5
+    #     echo "Waiting for everyone to be seen"
+    #     not_seen_by=$(redis_cmd HGET "leader_data:$HOSTNAME" "not_seen_by")
+    # done
+    # redis_cmd HSET "leader_data:$HOSTNAME" "n_are_done" 0
 
 }
 
