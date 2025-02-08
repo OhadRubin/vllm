@@ -241,6 +241,7 @@ follow_leader() {
     echo "Starting follower for group $GROUP_CHANNEL"
     local cmd_counter=0
     NUM_WORKERS=$(num_workers)
+    wait_until_everyone_ready $NUM_WORKERS
     while true; do
         sleep 10
         echo "WAITING FOR COMMAND"
@@ -276,6 +277,7 @@ lead_worker() {
     local cmd_counter=0
 
 
+    wait_until_everyone_ready $NUM_WORKERS
 
     while true; do
         echo "Waiting for next job"
@@ -327,7 +329,7 @@ main() {
             echo "Enqueued: $command"
             ;;
         worker)
-            python3.10 -c "import jax; from jax.experimental.multihost_utils import sync_global_devices; sync_global_devices('bla'); print(jax.process_index())"
+            # python3.10 -c "import jax; from jax.experimental.multihost_utils import sync_global_devices; sync_global_devices('bla'); print(jax.process_index())"
             get_node_info
             if [[ "$CURRENT_IP" == "$HEAD_NODE_ADDRESS" ]]; then
                 lead_worker
