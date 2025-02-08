@@ -361,6 +361,8 @@ lead_worker() {
         else
             update_job_status "$job_id" "failed" "command error"
         fi
+        wipe_tpu
+        wait_until_everyone_ready $NUM_WORKERS
         reset_leader_data
         cmd_counter=$((cmd_counter + 1))
     done
