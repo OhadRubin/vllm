@@ -194,7 +194,7 @@ barrier_sync() {
         if [ "$current_arrive" -ge "$arrive_target" ]; then
             break
         fi
-
+        echo "Waiting for everyone to arrive at round $round, current arrive: $current_arrive, arrive_target: $arrive_target"
         sleep 5
     done
 
@@ -212,7 +212,7 @@ barrier_sync() {
         if [ "$current_depart" -ge "$depart_target" ]; then
             break
         fi
-
+        echo "Waiting for everyone to depart at round $round, current depart: $current_depart, depart_target: $depart_target"
         sleep 5
     done
 }
