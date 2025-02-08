@@ -170,7 +170,7 @@ wait_until_everyone_ready() {
     local num_workers="$1"
     redis_cmd HSET "leader_data:$HOSTNAME" "not_seen_by" $num_workers
     n_are_done=$(redis_cmd HINCRBY "leader_data:$HOSTNAME" "n_are_done" 1)
-    while [[ "$n_are_done" -ne "$num_workers" ]]; do
+    while [[ "$n_are_done" -lt "$num_workers" ]]; do
         sleep 5
         echo "Waiting for everyone to be done"
         n_are_done=$(redis_cmd HGET "leader_data:$HOSTNAME" "n_are_done")
