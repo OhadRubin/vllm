@@ -310,6 +310,7 @@ follow_leader() {
             sleep 10
             wipe_tpu
             eval "$msg"
+            wipe_tpu
             reset_leader_data
             wait_until_everyone_ready $NUM_WORKERS
             cmd_counter=$((cmd_counter + 1))
