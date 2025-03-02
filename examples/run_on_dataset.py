@@ -150,8 +150,10 @@ from more_itertools import chunked
 def generate_examples(config):
     processed_indices = calc_processed_indices(config)
     # Load dataset
-    if config.from_disk:
-        ds = datasets.load_from_disk(config.dataset_name)[config.split]
+    if config.dataset_name.endswith(".jsonl"):
+        with open(config.dataset_name, "r") as f:
+            ds = [json.loads(line) for line in f]
+            ds = datasets.Dataset.from_list(ds)
     else:
         ds = datasets.load_dataset(
             config.dataset_name,
@@ -333,6 +335,9 @@ def main(dataset_name: Optional[str]=None,
 
 
 #python3.10 examples/run_on_dataset.py --dataset_name iohadrubin/improve_rubric_v1 --config_name default  --num_workers 32 --max_tokens 8192 --max_seq_length 32768 --suffix _v0  --verbose True --temperature 1 --split train --model_name anthropic.claude-3-5-sonnet-20241022-v2:0 --verbose True
+
+#python3.10 examples/run_on_dataset.py --dataset_name iohadrubin/identify_thinking_points_v2 --config_name default  --num_workers 32 --max_tokens 8192 --max_seq_length 32768 --suffix _v0  --verbose True --temperature 1 --split train --model_name anthropic.claude-3-5-sonnet-20241022-v2:0 --verbose True
+#python3.10 examples/run_on_dataset.py --dataset_name /tmp/dataset.jsonl --config_name default  --num_workers 32 --max_tokens 8192 --max_seq_length 32768 --suffix _v0  --verbose True --temperature 1 --split train --model_name anthropic.claude-3-5-sonnet-20241022-v2:0 --verbose True
 
 # python3.10 examples/run_on_dataset.py --dataset_name iohadrubin/thought_catagory_tagging_all_v2 --config_name default  --num_workers 32 --max_tokens 8192 --max_seq_length 32768 --suffix _v2  --verbose True --temperature 0 --split test --base_url https://api.openai.com/v1 --model_name gpt-4o  --api_key $OPENAI_API_KEY --drop_last_msg False  --save_online True
 

@@ -12,7 +12,7 @@ RETRY_DELAY=3
 
 
 get_redis_url() {
-    echo "redis://:$REDIS_PASSWORD@35.204.103.77:6379"
+    echo "redis://:$REDIS_PASSWORD@34.13.196.60:6379"
 }
 
 export REDIS_URL=$(get_redis_url)
@@ -215,30 +215,15 @@ barrier_sync() {
         echo "Waiting for everyone to depart at round $round, current depart: $current_depart, depart_target: $depart_target"
         sleep 5
     done
+    echo "Everyone has departed at round $round"
 }
 
-# Example usage:
-# barrier_sync "my_barrier" 3 15
-# echo "Passed barrier"
+
 
 
 wait_until_everyone_ready() {
     local num_workers="$1"
     barrier_sync "barrier_data:$HOSTNAME" $num_workers
-    # redis_cmd HSET "leader_data:$HOSTNAME" "not_seen_by" $num_workers
-    # n_are_done=$(redis_cmd HINCRBY "leader_data:$HOSTNAME" "n_are_done" 1)
-    # while [[ "$n_are_done" -lt "$num_workers" ]]; do
-    #     sleep 5
-    #     echo "Waiting for everyone to be done"
-    #     n_are_done=$(redis_cmd HGET "leader_data:$HOSTNAME" "n_are_done")
-    # done
-    # not_seen_by=$(redis_cmd HINCRBY "leader_data:$HOSTNAME" "not_seen_by" -1)
-    # while [[ "$not_seen_by" -gt 0 ]]; do
-    #     sleep 5
-    #     echo "Waiting for everyone to be seen"
-    #     not_seen_by=$(redis_cmd HGET "leader_data:$HOSTNAME" "not_seen_by")
-    # done
-    # redis_cmd HSET "leader_data:$HOSTNAME" "n_are_done" 0
 
 }
 
@@ -306,7 +291,6 @@ follow_leader() {
         if [ -n "$msg" ] && [ "$msg" != "Timeout waiting for command" ]; then
             echo "Received command #$cmd_counter: $msg"
             wait_until_everyone_ready $NUM_WORKERS
-            # sync_tpu
             sleep 10
             wipe_tpu
             eval "$msg"
