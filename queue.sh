@@ -116,7 +116,7 @@ enqueue_job() {
     redis_cmd RPUSH "queue:$queue_name" "$job_id"
     echo "$job_id"
 }
-    
+
 # Check if queue is empty
 is_queue_empty() {
     local queue_name="${1:-default}"
@@ -124,18 +124,25 @@ is_queue_empty() {
     len=$(redis_cmd LLEN "queue:$queue_name")
     [[ "$len" -eq 0 ]]
 }
+
+# Purge queue
+purge_queue() {
+    local queue_name="${1:-default}"
+    redis_cmd DEL "queue:$queue_name"
+    echo "Purged queue: $queue_name"
+}
     
 
 
 # Node info
 get_node_info() {
-    export CURRENT_IP=$(curl -s --max-time 3 https://checkip.amazonaws.com || echo "127.0.0.1")
+    export CURRENT_IP=$(hostname -I | awk '{print $1}')
     echo "Current IP: $CURRENT_IP"
-    export HEAD_NODE_ADDRESS=$(python3.10 ~/vllm/examples/leader_election.py 2>/dev/null || echo "$CURRENT_IP")
     
-    if [[ ! "$HEAD_NODE_ADDRESS" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-        HEAD_NODE_ADDRESS="$CURRENT_IP"
-    fi
+    # export HEAD_NODE_ADDRESS=$(python3.10 ~/vllm/examples/leader_election.py 2>/dev/null || echo "$CURRENT_IP")
+    HOSTNAME=$(hostname)
+    export HEAD_NODE_ADDRESS=$(gcloud alpha compute tpus tpu-vm describe $HOSTNAME --zone us-central2-b --format json | jq -r '.networkEndpoints[].ipAddress' | sort | head -1)
+    
     GROUP_CHANNEL="group_commands:${HEAD_NODE_ADDRESS//./_}"
     WORKER_ID="${CURRENT_IP}:${RANDOM}"
     echo "Group Channel: $GROUP_CHANNEL"
@@ -382,11 +389,17 @@ main() {
                 follow_leader
             fi
             ;;
+        purge)
+            NUM_WORKERS=${2:-2}
+            QUEUE_NAME="cmd_queue_${NUM_WORKERS}"
+            purge_queue "$QUEUE_NAME"
+            ;;
         *)
             echo "Distributed Command Queue Manager"
             echo "Usage:"
             echo "  $0 enqueue \"<command>\""
             echo "  $0 worker"
+            echo "  $0 purge [num_workers]"
             exit 1
             ;;
     esac
