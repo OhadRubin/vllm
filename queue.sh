@@ -12,7 +12,7 @@ RETRY_DELAY=3
 
 
 get_redis_url() {
-    echo "redis://:$REDIS_PASSWORD@34.13.196.60:6379"
+    echo "redis://:$REDIS_PASSWORD@34.90.196.225:6379"
 }
 
 export REDIS_URL=$(get_redis_url)
