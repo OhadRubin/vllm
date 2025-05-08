@@ -2,6 +2,8 @@
 # ./queue.sh enqueue 'echo hi'
 # ./queue.sh worker
 # ./queue.sh list
+# ./queue.sh purge [num_workers]
+# ./queue.sh reset_barriers [barrier_name]
 # Configuration
 
 WORKERS_SET="active_workers"
@@ -12,7 +14,7 @@ RETRY_DELAY=3
 
 
 get_redis_url() {
-    echo "redis://:$REDIS_PASSWORD@34.90.196.225:6379"
+    echo "redis://:$REDIS_PASSWORD@34.34.31.118:6379"
 }
 
 export REDIS_URL=$(get_redis_url)
@@ -359,6 +361,72 @@ lead_worker() {
     done
 }
 
+# List all jobs in the queue
+list_jobs() {
+    local pattern="queue:cmd_queue_*"
+    local queues=$(redis_cmd KEYS "$pattern")
+    
+    if [[ -z "$queues" ]]; then
+        echo "No active queues found"
+        return
+    fi
+    
+    echo "Current jobs in queues:"
+    echo "----------------------"
+    
+    for queue in $queues; do
+        local queue_name=${queue#queue:}
+        local num_workers=${queue_name#cmd_queue_}
+        local job_count=$(redis_cmd LLEN "$queue")
+        
+        echo "Queue: $queue_name ($job_count jobs, $num_workers workers)"
+        
+        if [[ "$job_count" -gt 0 ]]; then
+            local job_ids=$(redis_cmd LRANGE "$queue" 0 -1)
+            for job_id in $job_ids; do
+                local job_data=$(redis_cmd HGETALL "job:$job_id")
+                local command=$(echo "$job_data" | grep -A1 "data" | tail -1)
+                local status=$(echo "$job_data" | grep -A1 "status" | tail -1)
+                local created_at=$(echo "$job_data" | grep -A1 "created_at" | tail -1)
+                
+                echo "  Job: $job_id"
+                echo "    Command: $command"
+                echo "    Status: $status"
+                echo "    Created: $created_at"
+            done
+        fi
+        echo ""
+    done
+}
+
+# Reset barrier counters to resolve deadlocks
+reset_barriers() {
+    # Delete all barrier arrive/depart counters
+    local arrive_keys=$(redis_cmd KEYS "*:arrive")
+    local depart_keys=$(redis_cmd KEYS "*:depart")
+    
+    echo "Found $(echo "$arrive_keys" | wc -w) arrive barriers and $(echo "$depart_keys" | wc -w) depart barriers"
+    
+    for key in $arrive_keys; do
+        redis_cmd DEL "$key"
+        echo "Reset barrier: $key"
+    done
+    
+    for key in $depart_keys; do
+        redis_cmd DEL "$key"
+        echo "Reset barrier: $key"
+    done
+    
+    # Reset all leader data
+    local leader_keys=$(redis_cmd KEYS "leader_data:*")
+    for key in $leader_keys; do
+        redis_cmd DEL "$key"
+        echo "Reset leader data: $key"
+    done
+    
+    echo "All barriers have been reset"
+}
+
 # Main
 main() {
     case "$1" in
@@ -389,17 +457,26 @@ main() {
                 follow_leader
             fi
             ;;
+        list)
+            list_jobs
+            ;;
         purge)
             NUM_WORKERS=${2:-2}
             QUEUE_NAME="cmd_queue_${NUM_WORKERS}"
             purge_queue "$QUEUE_NAME"
             ;;
+        reset_barriers)
+            barrier_name="${2:-barrier_data:$HOSTNAME}"
+            reset_barriers "$barrier_name"
+            ;;
         *)
             echo "Distributed Command Queue Manager"
             echo "Usage:"
-            echo "  $0 enqueue \"<command>\""
+            echo "  $0 enqueue [num_workers] \"<command>\""
             echo "  $0 worker"
+            echo "  $0 list"
             echo "  $0 purge [num_workers]"
+            echo "  $0 reset_barriers [barrier_name]"
             exit 1
             ;;
     esac
